@@ -10,7 +10,8 @@ const {
   PrivateKey,
   Client,
   TopicCreateTransaction,
-  TopicMessageSubmitTransaction
+  TopicMessageSubmitTransaction,
+  Hbar
 } = require('@hashgraph/sdk');
 
 // Configuration
@@ -33,7 +34,7 @@ const config = {
   files: {
     processedFilesPath: path.join(__dirname, 'processedFiles.json'),
     topicIdPath: path.join(__dirname, 'topicId.txt'),
-    watchDir: process.env.WATCH_DIR || '/root/keralis/logs'
+    watchDir: process.env.WATCH_DIR || '/sender/hash'
   },
   app: {
     logLevel: process.env.LOG_LEVEL || 'info'
@@ -70,11 +71,24 @@ class HederaService {
 
   async createTopic() {
     try {
-      const txResponse = await new TopicCreateTransaction()
-        .freeze() // Ajouter l'appel à freeze() avant d'exécuter la transaction
-        .execute(this.client);
+      // Créer la transaction
+      const transaction = new TopicCreateTransaction();
+      
+      // Configurer explicitement le client
+      transaction.setMaxTransactionFee(new Hbar(2));
+      
+      // Geler la transaction avec le client
+      const freezeTx = transaction.freezeWith(this.client);
+      
+      // Exécuter la transaction
+      const txResponse = await freezeTx.execute(this.client);
+      
+      // Obtenir le reçu
       const receipt = await txResponse.getReceipt(this.client);
+      
+      // Extraire l'ID du topic
       const topicId = receipt.topicId.toString();
+      
       logger.info(`Nouveau topic créé avec ID: ${topicId}`);
       return topicId;
     } catch (error) {
@@ -85,13 +99,20 @@ class HederaService {
 
   async sendMessage(topicId, message) {
     try {
-      const messageTx = await new TopicMessageSubmitTransaction({
-        topicId,
-        message,
-      })
-        .freeze() // Ajouter l'appel à freeze() avant d'exécuter la transaction
-        .execute(this.client);
-      const receipt = await messageTx.getReceipt(this.client);
+      // Créer la transaction
+      const transaction = new TopicMessageSubmitTransaction()
+        .setTopicId(topicId)
+        .setMessage(message);
+      
+      // Geler la transaction avec le client
+      const freezeTx = transaction.freezeWith(this.client);
+      
+      // Exécuter la transaction
+      const txResponse = await freezeTx.execute(this.client);
+      
+      // Obtenir le reçu
+      const receipt = await txResponse.getReceipt(this.client);
+      
       logger.info(`Message envoyé au Topic ID ${topicId}: Statut ${receipt.status}`);
       return receipt;
     } catch (error) {
