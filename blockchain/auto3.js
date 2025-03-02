@@ -63,7 +63,11 @@ class HederaService {
   constructor(config) {
     this.accountId = AccountId.fromString(config.hedera.accountId);
     this.privateKey = PrivateKey.fromString(config.hedera.privateKey);
-    this.client = config.hedera.network === 'mainnet' 
+    this.initClient(config.hedera.network);
+  }
+
+  initClient(network) {
+    this.client = network === 'mainnet' 
       ? Client.forMainnet() 
       : Client.forTestnet();
     this.client.setOperator(this.accountId, this.privateKey);
@@ -99,10 +103,13 @@ class HederaService {
 
   async sendMessage(topicId, message) {
     try {
-      // Créer la transaction
-      const transaction = new TopicMessageSubmitTransaction()
-        .setTopicId(topicId)
-        .setMessage(message);
+      // Créer une nouvelle transaction pour chaque message
+      const transaction = new TopicMessageSubmitTransaction();
+      
+      // Configurer la transaction
+      transaction.setTopicId(topicId);
+      transaction.setMessage(message);
+      transaction.setMaxTransactionFee(new Hbar(2));
       
       // Geler la transaction avec le client
       const freezeTx = transaction.freezeWith(this.client);
@@ -289,6 +296,9 @@ class HashLogBackupApp {
         this.processNextInQueue();
         return;
       }
+
+      // Réinitialiser le client Hedera avant chaque traitement
+      this.hederaService.initClient(this.config.hedera.network);
 
       // Lecture du contenu du fichier
       const fileContent = this.fileService.readFile(filePath);
