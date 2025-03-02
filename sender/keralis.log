@@ -1,0 +1,139 @@
+2025-02-26 23:27:22 - Initialisation du script...
+2025-02-26 23:27:22 - Répertoire créé: logs
+2025-02-26 23:27:22 - Répertoire créé: hash
+2025-02-26 23:27:22 - Répertoire créé: encrypted
+2025-02-26 23:27:22 - Démarrage de la surveillance des fichiers logs...
+2025-02-26 23:27:22 - Dossier surveillé: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/sender/logs
+2025-02-26 23:27:22 - Script en cours d'exécution. Appuyez sur Ctrl+C pour arrêter.
+2025-02-26 23:28:05 - Nouveau fichier log détecté: skksk.log
+2025-02-26 23:28:05 - Hash généré: hash/skksk.log.hash
+2025-02-26 23:28:05 - Fichier chiffré: encrypted/skksk.log.enc
+2025-02-26 23:28:05 - Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user
+2025-02-26 23:28:05 - Connected (version 2.0, client OpenSSH_9.6p1)
+2025-02-26 23:28:06 - Authentication (password) successful!
+2025-02-26 23:28:06 - [chan 0] Opened sftp connection (server version 3)
+2025-02-26 23:28:06 - Connexion SFTP établie avec succès
+2025-02-26 23:28:06 - Création du répertoire distant: /sftp_user/sender/hash
+2025-02-26 23:28:06 - Erreur lors de l'envoi SFTP: [Errno 2] No such file
+2025-02-26 23:28:06 - Type d'erreur: FileNotFoundError
+2025-02-26 23:28:06 - Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user
+2025-02-26 23:28:06 - Connected (version 2.0, client OpenSSH_9.6p1)
+2025-02-26 23:28:07 - Authentication (password) successful!
+2025-02-26 23:28:07 - [chan 0] Opened sftp connection (server version 3)
+2025-02-26 23:28:07 - Connexion SFTP établie avec succès
+2025-02-26 23:28:07 - Création du répertoire distant: /sftp_user/sender/encrypted
+2025-02-26 23:28:07 - Erreur lors de l'envoi SFTP: [Errno 2] No such file
+2025-02-26 23:28:07 - Type d'erreur: FileNotFoundError
+2025-02-26 23:28:12 - Arrêt du script demandé...
+2025-02-26 23:28:12 - Script arrêté.
+2025-02-26 23:28:43 - Initialisation du script...
+2025-02-26 23:28:43 - Démarrage de la surveillance des fichiers logs...
+2025-02-26 23:28:43 - Dossier surveillé: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/logs
+2025-02-26 23:28:43 - Script en cours d'exécution. Appuyez sur Ctrl+C pour arrêter.
+2025-02-26 23:29:33 - Nouveau fichier log détecté: test3.log
+2025-02-26 23:29:33 - Hash généré: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/test3.log.hash
+2025-02-26 23:29:33 - Fichier chiffré: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/test3.log.enc
+2025-02-26 23:29:33 - Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user
+2025-02-26 23:29:33 - Connected (version 2.0, client OpenSSH_9.6p1)
+2025-02-26 23:29:33 - Authentication (password) successful!
+2025-02-26 23:29:34 - [chan 0] Opened sftp connection (server version 3)
+2025-02-26 23:29:34 - Connexion SFTP établie avec succès
+2025-02-26 23:29:34 - Création du dossier distant: /sftp_user/
+2025-02-26 23:29:34 - Erreur lors de l'envoi SFTP: [Errno 13] Permission denied
+2025-02-26 23:29:34 - Type d'erreur: PermissionError
+2025-02-26 23:29:34 - Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user
+2025-02-26 23:29:34 - Connected (version 2.0, client OpenSSH_9.6p1)
+2025-02-26 23:29:34 - Authentication (password) successful!
+2025-02-26 23:29:34 - [chan 0] Opened sftp connection (server version 3)
+2025-02-26 23:29:34 - Connexion SFTP établie avec succès
+2025-02-26 23:29:34 - Création du dossier distant: /sftp_user/
+2025-02-26 23:29:34 - Erreur lors de l'envoi SFTP: [Errno 13] Permission denied
+2025-02-26 23:29:34 - Type d'erreur: PermissionError
+2025-02-26 23:29:43 - Arrêt du script demandé...
+2025-02-26 23:29:43 - Script arrêté.
+2025-02-26 23:33:30 - Initialisation du script...
+2025-02-26 23:33:30 - Démarrage de la surveillance des fichiers logs...
+2025-02-26 23:33:30 - Dossier surveillé: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/logs
+2025-02-26 23:33:30 - Script en cours d'exécution. Appuyez sur Ctrl+C pour arrêter.
+2025-02-26 23:34:20 - Arrêt du script demandé...
+2025-02-26 23:34:20 - Script arrêté.
+2025-02-26 23:34:46 - Initialisation du script...
+2025-02-26 23:34:46 - Démarrage de la surveillance des fichiers logs...
+2025-02-26 23:34:46 - Dossier surveillé: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/logs
+2025-02-26 23:34:46 - Script en cours d'exécution. Appuyez sur Ctrl+C pour arrêter.
+2025-02-26 23:35:05 - Nouveau fichier log détecté: aaa.log
+2025-02-26 23:35:05 - Hash généré: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/aaa.log.hash
+2025-02-26 23:35:05 - Fichier chiffré: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/aaa.log.enc
+2025-02-26 23:35:05 - Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user
+2025-02-26 23:35:05 - Connected (version 2.0, client OpenSSH_9.6p1)
+2025-02-26 23:35:06 - Authentication (password) successful!
+2025-02-26 23:35:06 - [chan 0] Opened sftp connection (server version 3)
+2025-02-26 23:35:06 - Connexion SFTP établie avec succès
+2025-02-26 23:35:06 - Envoi du fichier /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/aaa.log.hash vers /sender/hash/aaa.log.hash
+2025-02-26 23:35:06 - Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/aaa.log.hash -> /sender/hash/aaa.log.hash
+2025-02-26 23:35:06 - [chan 0] sftp session closed.
+2025-02-26 23:35:06 - Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user
+2025-02-26 23:35:06 - Connected (version 2.0, client OpenSSH_9.6p1)
+2025-02-26 23:35:06 - Authentication (password) successful!
+2025-02-26 23:35:07 - [chan 0] Opened sftp connection (server version 3)
+2025-02-26 23:35:07 - Connexion SFTP établie avec succès
+2025-02-26 23:35:07 - Envoi du fichier /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/aaa.log.enc vers /sender/encrypted/aaa.log.enc
+2025-02-26 23:35:07 - Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/aaa.log.enc -> /sender/encrypted/aaa.log.enc
+2025-02-26 23:35:07 - [chan 0] sftp session closed.
+2025-02-26 23:35:23 - Nouveau fichier log détecté: jdjjs.log
+2025-02-26 23:35:23 - Hash généré: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/jdjjs.log.hash
+2025-02-26 23:35:23 - Fichier chiffré: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/jdjjs.log.enc
+2025-02-26 23:35:23 - Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user
+2025-02-26 23:35:23 - Connected (version 2.0, client OpenSSH_9.6p1)
+2025-02-26 23:35:23 - Authentication (password) successful!
+2025-02-26 23:35:24 - [chan 0] Opened sftp connection (server version 3)
+2025-02-26 23:35:24 - Connexion SFTP établie avec succès
+2025-02-26 23:35:24 - Envoi du fichier /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/jdjjs.log.hash vers /sender/hash/jdjjs.log.hash
+2025-02-26 23:35:24 - Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/jdjjs.log.hash -> /sender/hash/jdjjs.log.hash
+2025-02-26 23:35:24 - [chan 0] sftp session closed.
+2025-02-26 23:35:24 - Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user
+2025-02-26 23:35:24 - Connected (version 2.0, client OpenSSH_9.6p1)
+2025-02-26 23:35:24 - Authentication (password) successful!
+2025-02-26 23:35:24 - [chan 0] Opened sftp connection (server version 3)
+2025-02-26 23:35:24 - Connexion SFTP établie avec succès
+2025-02-26 23:35:24 - Envoi du fichier /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/jdjjs.log.enc vers /sender/encrypted/jdjjs.log.enc
+2025-02-26 23:35:24 - Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/jdjjs.log.enc -> /sender/encrypted/jdjjs.log.enc
+2025-02-26 23:35:24 - [chan 0] sftp session closed.
+2025-02-26 23:35:39 - Arrêt du script demandé...
+2025-02-26 23:35:39 - Script arrêté.
+2025-02-27 17:27:28,365 - INFO - [94mℹ️  🚀 Initialisation du script...[0m
+2025-02-27 17:27:28,366 - INFO - [94mℹ️  👀 Démarrage de la surveillance des fichiers logs...[0m
+2025-02-27 17:27:28,366 - INFO - [94mℹ️  📁 Dossier surveillé: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/logs[0m
+2025-02-27 17:27:28,367 - INFO - [94mℹ️  ⏳ Script en cours d'exécution. Appuyez sur Ctrl+C pour arrêter.[0m
+2025-02-27 17:27:58,807 - INFO - [94mℹ️  📝 Nouveau fichier log détecté: sam.log[0m
+2025-02-27 17:27:58,812 - INFO - [94mℹ️  🔒 Hash généré: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/sam.log.hash[0m
+2025-02-27 17:27:58,815 - INFO - [94mℹ️  🔐 Fichier chiffré: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/sam.log.enc[0m
+2025-02-27 17:27:58,815 - INFO - [94mℹ️  Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user[0m
+2025-02-27 17:27:58,846 - INFO - [94mℹ️  Connected (version 2.0, client OpenSSH_9.6p1)[0m
+2025-02-27 17:27:59,056 - INFO - [94mℹ️  Authentication (password) successful![0m
+2025-02-27 17:27:59,699 - INFO - [94mℹ️  [chan 0] Opened sftp connection (server version 3)[0m
+2025-02-27 17:27:59,700 - INFO - [94mℹ️  Connexion SFTP établie avec succès[0m
+2025-02-27 17:27:59,726 - INFO - [94mℹ️  Envoi du fichier /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/sam.log.hash vers /sender/hash/sam.log.hash[0m
+2025-02-27 17:27:59,772 - INFO - [94mℹ️  Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/hash/sam.log.hash -> /sender/hash/sam.log.hash[0m
+2025-02-27 17:27:59,772 - INFO - [94mℹ️  [chan 0] sftp session closed.[0m
+2025-02-27 17:27:59,772 - INFO - [94mℹ️  📤 Hash envoyé avec succès: sam.log.hash[0m
+2025-02-27 17:27:59,772 - INFO - [94mℹ️  Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user[0m
+2025-02-27 17:27:59,796 - INFO - [94mℹ️  Connected (version 2.0, client OpenSSH_9.6p1)[0m
+2025-02-27 17:27:59,987 - INFO - [94mℹ️  Authentication (password) successful![0m
+2025-02-27 17:28:00,077 - INFO - [94mℹ️  [chan 0] Opened sftp connection (server version 3)[0m
+2025-02-27 17:28:00,077 - INFO - [94mℹ️  Connexion SFTP établie avec succès[0m
+2025-02-27 17:28:00,098 - INFO - [94mℹ️  Envoi du fichier /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/sam.log.enc vers /sender/encrypted/sam.log.enc[0m
+2025-02-27 17:28:00,139 - INFO - [94mℹ️  Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/keralis/KeralisGuard/encrypted/sam.log.enc -> /sender/encrypted/sam.log.enc[0m
+2025-02-27 17:28:00,139 - INFO - [94mℹ️  [chan 0] sftp session closed.[0m
+2025-02-27 17:28:00,139 - INFO - [94mℹ️  📤 Fichier chiffré envoyé avec succès: sam.log.enc[0m
+2025-02-27 17:28:19,414 - WARNING - [93m⚠️  🛑 Arrêt du script demandé...[0m
+2025-02-27 17:28:19,415 - INFO - [94mℹ️  ✨ Script arrêté avec succès.[0m
+2025-03-02 17:26:55,290 - INFO - [94mℹ️  🚀 Initialisation du script...[0m
+2025-03-02 17:26:55,291 - INFO - [94mℹ️  Répertoire créé: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/logs[0m
+2025-03-02 17:26:55,291 - INFO - [94mℹ️  Répertoire créé: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/hash[0m
+2025-03-02 17:26:55,291 - INFO - [94mℹ️  Répertoire créé: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/encrypted[0m
+2025-03-02 17:26:55,291 - INFO - [94mℹ️  👀 Démarrage de la surveillance des fichiers logs...[0m
+2025-03-02 17:26:55,291 - INFO - [94mℹ️  📁 Dossier surveillé: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/logs[0m
+2025-03-02 17:26:55,292 - INFO - [94mℹ️  ⏳ Script en cours d'exécution. Appuyez sur Ctrl+C pour arrêter.[0m
+2025-03-02 17:27:28,333 - WARNING - [93m⚠️  🛑 Arrêt du script demandé...[0m
+2025-03-02 17:27:28,334 - INFO - [94mℹ️  ✨ Script arrêté avec succès.[0m
