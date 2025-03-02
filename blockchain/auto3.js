@@ -75,20 +75,27 @@ class HederaService {
 
   async createTopic() {
     try {
-      // Créer la transaction
+      // Créer un nouveau client pour chaque transaction
+      const network = this.client.network;
+      const newClient = network === 'mainnet' 
+        ? Client.forMainnet() 
+        : Client.forTestnet();
+      newClient.setOperator(this.accountId, this.privateKey);
+      
+      // Créer une nouvelle transaction
       const transaction = new TopicCreateTransaction();
       
-      // Configurer explicitement le client
-      transaction.setMaxTransactionFee(new Hbar(2));
+      // Définir les frais maximum
+      transaction.maxTransactionFee = new Hbar(2);
       
-      // Geler la transaction avec le client
-      const freezeTx = transaction.freezeWith(this.client);
+      // Définir le client
+      transaction.freezeWith(newClient);
       
       // Exécuter la transaction
-      const txResponse = await freezeTx.execute(this.client);
+      const txResponse = await transaction.execute(newClient);
       
       // Obtenir le reçu
-      const receipt = await txResponse.getReceipt(this.client);
+      const receipt = await txResponse.getReceipt(newClient);
       
       // Extraire l'ID du topic
       const topicId = receipt.topicId.toString();
@@ -103,22 +110,33 @@ class HederaService {
 
   async sendMessage(topicId, message) {
     try {
-      // Créer une nouvelle transaction pour chaque message
+      // Créer un nouveau client pour chaque transaction
+      const network = this.client.network;
+      const newClient = network === 'mainnet' 
+        ? Client.forMainnet() 
+        : Client.forTestnet();
+      newClient.setOperator(this.accountId, this.privateKey);
+      
+      // Créer une nouvelle transaction
       const transaction = new TopicMessageSubmitTransaction();
       
-      // Configurer la transaction
-      transaction.setTopicId(topicId);
-      transaction.setMessage(message);
-      transaction.setMaxTransactionFee(new Hbar(2));
+      // Définir l'ID du topic
+      transaction.topicId = topicId;
       
-      // Geler la transaction avec le client
-      const freezeTx = transaction.freezeWith(this.client);
+      // Définir le message
+      transaction.message = message;
+      
+      // Définir les frais maximum
+      transaction.maxTransactionFee = new Hbar(2);
+      
+      // Définir le client
+      transaction.freezeWith(newClient);
       
       // Exécuter la transaction
-      const txResponse = await freezeTx.execute(this.client);
+      const txResponse = await transaction.execute(newClient);
       
       // Obtenir le reçu
-      const receipt = await txResponse.getReceipt(this.client);
+      const receipt = await txResponse.getReceipt(newClient);
       
       logger.info(`Message envoyé au Topic ID ${topicId}: Statut ${receipt.status}`);
       return receipt;
@@ -296,9 +314,6 @@ class HashLogBackupApp {
         this.processNextInQueue();
         return;
       }
-
-      // Réinitialiser le client Hedera avant chaque traitement
-      this.hederaService.initClient(this.config.hedera.network);
 
       // Lecture du contenu du fichier
       const fileContent = this.fileService.readFile(filePath);

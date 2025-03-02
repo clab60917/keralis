@@ -193,3 +193,30 @@
 2025-03-03 00:14:54,612 - INFO - [94mℹ️  📤 Fichier chiffré envoyé avec succès: 2.log.enc[0m
 2025-03-03 00:31:25,694 - WARNING - [93m⚠️  🛑 Arrêt du script demandé...[0m
 2025-03-03 00:31:25,697 - INFO - [94mℹ️  ✨ Script arrêté avec succès.[0m
+2025-03-03 00:34:04,474 - INFO - [94mℹ️  🚀 Initialisation du script...[0m
+2025-03-03 00:34:04,474 - INFO - [94mℹ️  👀 Démarrage de la surveillance des fichiers logs...[0m
+2025-03-03 00:34:04,475 - INFO - [94mℹ️  📁 Dossier surveillé: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/logs[0m
+2025-03-03 00:34:04,476 - INFO - [94mℹ️  ⏳ Script en cours d'exécution. Appuyez sur Ctrl+C pour arrêter.[0m
+2025-03-03 00:34:21,203 - INFO - [94mℹ️  📝 Nouveau fichier log détecté: 4.log[0m
+2025-03-03 00:34:21,208 - INFO - [94mℹ️  🔒 Hash généré: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/hash/4.log.hash[0m
+2025-03-03 00:34:21,210 - INFO - [94mℹ️  🔐 Fichier chiffré: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/encrypted/4.log.enc[0m
+2025-03-03 00:34:21,211 - INFO - [94mℹ️  Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user[0m
+2025-03-03 00:34:21,250 - INFO - [94mℹ️  Connected (version 2.0, client OpenSSH_9.6p1)[0m
+2025-03-03 00:34:21,499 - INFO - [94mℹ️  Authentication (password) successful![0m
+2025-03-03 00:34:22,206 - INFO - [94mℹ️  [chan 0] Opened sftp connection (server version 3)[0m
+2025-03-03 00:34:22,207 - INFO - [94mℹ️  Connexion SFTP établie avec succès[0m
+2025-03-03 00:34:22,238 - INFO - [94mℹ️  Envoi du fichier /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/hash/4.log.hash vers /sender/hash/4.log.hash[0m
+2025-03-03 00:34:22,299 - INFO - [94mℹ️  Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/hash/4.log.hash -> /sender/hash/4.log.hash[0m
+2025-03-03 00:34:22,300 - INFO - [94mℹ️  [chan 0] sftp session closed.[0m
+2025-03-03 00:34:22,300 - INFO - [94mℹ️  📤 Hash envoyé avec succès: 4.log.hash[0m
+2025-03-03 00:34:22,300 - INFO - [94mℹ️  Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user[0m
+2025-03-03 00:34:22,331 - INFO - [94mℹ️  Connected (version 2.0, client OpenSSH_9.6p1)[0m
+2025-03-03 00:34:22,586 - INFO - [94mℹ️  Authentication (password) successful![0m
+2025-03-03 00:34:22,692 - INFO - [94mℹ️  [chan 0] Opened sftp connection (server version 3)[0m
+2025-03-03 00:34:22,694 - INFO - [94mℹ️  Connexion SFTP établie avec succès[0m
+2025-03-03 00:34:22,727 - INFO - [94mℹ️  Envoi du fichier /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/encrypted/4.log.enc vers /sender/encrypted/4.log.enc[0m
+2025-03-03 00:34:22,790 - INFO - [94mℹ️  Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/encrypted/4.log.enc -> /sender/encrypted/4.log.enc[0m
+2025-03-03 00:34:22,790 - INFO - [94mℹ️  [chan 0] sftp session closed.[0m
+2025-03-03 00:34:22,790 - INFO - [94mℹ️  📤 Fichier chiffré envoyé avec succès: 4.log.enc[0m
+2025-03-03 00:34:47,993 - WARNING - [93m⚠️  🛑 Arrêt du script demandé...[0m
+2025-03-03 00:34:47,994 - INFO - [94mℹ️  ✨ Script arrêté avec succès.[0m
