@@ -33,7 +33,7 @@ const config = {
   files: {
     processedFilesPath: path.join(__dirname, 'processedFiles.json'),
     topicIdPath: path.join(__dirname, 'topicId.txt'),
-    watchDir: process.env.WATCH_DIR || '/Users/clementarthaud/Documents/VSCODE/PERSO/keralis/sender/hash'
+    watchDir: process.env.WATCH_DIR || '/root/keralis/logs'
   },
   app: {
     logLevel: process.env.LOG_LEVEL || 'info'
@@ -70,7 +70,9 @@ class HederaService {
 
   async createTopic() {
     try {
-      const txResponse = await new TopicCreateTransaction().execute(this.client);
+      const txResponse = await new TopicCreateTransaction()
+        .freeze() // Ajouter l'appel à freeze() avant d'exécuter la transaction
+        .execute(this.client);
       const receipt = await txResponse.getReceipt(this.client);
       const topicId = receipt.topicId.toString();
       logger.info(`Nouveau topic créé avec ID: ${topicId}`);
@@ -86,7 +88,9 @@ class HederaService {
       const messageTx = await new TopicMessageSubmitTransaction({
         topicId,
         message,
-      }).execute(this.client);
+      })
+        .freeze() // Ajouter l'appel à freeze() avant d'exécuter la transaction
+        .execute(this.client);
       const receipt = await messageTx.getReceipt(this.client);
       logger.info(`Message envoyé au Topic ID ${topicId}: Statut ${receipt.status}`);
       return receipt;
@@ -200,6 +204,8 @@ class HashLogBackupApp {
     this.topicId = null;
     this.processedFiles = null;
     this.watcher = null;
+    this.processingQueue = [];
+    this.isProcessing = false;
   }
 
   async initialize() {
@@ -235,10 +241,32 @@ class HashLogBackupApp {
   }
 
   async processFile(filePath) {
+    // Ajouter le fichier à la file d'attente
+    return new Promise((resolve) => {
+      this.processingQueue.push({ filePath, resolve });
+      this.processNextInQueue();
+    });
+  }
+  
+  async processNextInQueue() {
+    // Si déjà en train de traiter un fichier ou si la file est vide, ne rien faire
+    if (this.isProcessing || this.processingQueue.length === 0) {
+      return;
+    }
+    
+    // Marquer comme en cours de traitement
+    this.isProcessing = true;
+    
+    // Récupérer le prochain fichier à traiter
+    const { filePath, resolve } = this.processingQueue.shift();
+    
     try {
       if (this.processedFiles.has(filePath)) {
         logger.info(`Le fichier ${filePath} a déjà été traité.`);
-        return false;
+        this.isProcessing = false;
+        resolve(false);
+        this.processNextInQueue();
+        return;
       }
 
       // Lecture du contenu du fichier
@@ -260,10 +288,18 @@ class HashLogBackupApp {
       this.fileService.saveProcessedFiles(this.processedFiles);
       
       logger.info(`Fichier ${filePath} traité avec succès.`);
-      return true;
+      this.isProcessing = false;
+      resolve(true);
+      
+      // Traiter le fichier suivant dans la file
+      this.processNextInQueue();
     } catch (error) {
       logger.error(`Erreur lors du traitement du fichier ${filePath}`, error);
-      return false;
+      this.isProcessing = false;
+      resolve(false);
+      
+      // Attendre un peu avant de traiter le fichier suivant en cas d'erreur
+      setTimeout(() => this.processNextInQueue(), 2000);
     }
   }
 
