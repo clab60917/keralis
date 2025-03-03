@@ -63,22 +63,24 @@ class HederaService {
   constructor(config) {
     this.accountId = AccountId.fromString(config.hedera.accountId);
     this.privateKey = PrivateKey.fromString(config.hedera.privateKey);
-    this.initClient(config.hedera.network);
+    this.network = config.hedera.network;
     this.transactionLock = false;
+    this.transactionInProgress = false;
   }
 
-  initClient(network) {
-    this.client = network === 'mainnet' 
+  getNewClient() {
+    const client = this.network === 'mainnet' 
       ? Client.forMainnet() 
       : Client.forTestnet();
-    this.client.setOperator(this.accountId, this.privateKey);
+    client.setOperator(this.accountId, this.privateKey);
+    return client;
   }
 
   async waitForLock() {
     return new Promise(resolve => {
       const checkLock = () => {
         if (this.transactionLock) {
-          setTimeout(checkLock, 100);
+          setTimeout(checkLock, 200);
         } else {
           resolve();
         }
@@ -90,20 +92,21 @@ class HederaService {
   async createTopic() {
     await this.waitForLock();
     this.transactionLock = true;
+    let client = null;
     
     try {
-      const network = this.client.network;
-      const newClient = network === 'mainnet' 
-        ? Client.forMainnet() 
-        : Client.forTestnet();
-      newClient.setOperator(this.accountId, this.privateKey);
+      client = this.getNewClient();
       
       const transaction = new TopicCreateTransaction()
         .setMaxTransactionFee(new Hbar(2));
       
-      const frozenTx = await transaction.freezeWith(newClient);
-      const txResponse = await frozenTx.execute(newClient);
-      const receipt = await txResponse.getReceipt(newClient);
+      const frozenTx = transaction.freezeWith(client);
+      
+      const txResponse = await frozenTx.execute(client);
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const receipt = await txResponse.getReceipt(client);
       const topicId = receipt.topicId.toString();
       
       logger.info(`Nouveau topic créé avec ID: ${topicId}`);
@@ -112,6 +115,7 @@ class HederaService {
       logger.error('Erreur lors de la création du topic', error);
       throw error;
     } finally {
+      await new Promise(resolve => setTimeout(resolve, 1000));
       this.transactionLock = false;
     }
   }
@@ -119,26 +123,28 @@ class HederaService {
   async sendMessage(topicId, message) {
     await this.waitForLock();
     this.transactionLock = true;
+    let client = null;
     
     try {
-      const network = this.client.network;
-      const newClient = network === 'mainnet' 
-        ? Client.forMainnet() 
-        : Client.forTestnet();
-      newClient.setOperator(this.accountId, this.privateKey);
+      client = this.getNewClient();
       
-      const transaction = new TopicMessageSubmitTransaction()
-        .setTopicId(topicId)
-        .setMessage(message)
-        .setMaxTransactionFee(new Hbar(2));
+      const transaction = new TopicMessageSubmitTransaction();
+      transaction.setTopicId(topicId);
+      transaction.setMessage(message);
+      transaction.setMaxTransactionFee(new Hbar(2));
       
-      const frozenTx = transaction.freezeWith(newClient);
+      logger.debug('Gel de la transaction...');
+      const frozenTx = transaction.freezeWith(client);
       
-      const txResponse = await frozenTx.execute(newClient);
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      await new Promise(resolve => setTimeout(resolve, 200));
+      logger.debug('Exécution de la transaction...');
+      const txResponse = await frozenTx.execute(client);
       
-      const receipt = await txResponse.getReceipt(newClient);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const receiptClient = this.getNewClient();
+      const receipt = await txResponse.getReceipt(receiptClient);
       
       logger.info(`Message envoyé au Topic ID ${topicId}: Statut ${receipt.status}`);
       return receipt;
@@ -146,7 +152,7 @@ class HederaService {
       logger.error(`Erreur lors de l'envoi du message au topic ${topicId}`, error);
       throw error;
     } finally {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       this.transactionLock = false;
     }
   }
@@ -312,13 +318,23 @@ class HashLogBackupApp {
         logger.info(`Le fichier ${filePath} a déjà été traité.`);
         this.isProcessing = false;
         resolve(false);
-        setTimeout(() => this.processNextInQueue(), 100);
+        
+        setTimeout(() => this.processNextInQueue(), 500);
         return;
       }
 
+      logger.info(`Début du traitement de ${filePath}...`);
+
       const fileContent = this.fileService.readFile(filePath);
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      logger.info(`Envoi du fichier ${filePath} vers Hedera...`);
       const receipt = await this.hederaService.sendMessage(this.topicId, fileContent);
       
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      logger.info(`Sauvegarde du fichier ${filePath} dans MongoDB...`);
       await this.mongoDBService.saveMessage({
         filePath,
         content: fileContent,
@@ -333,13 +349,13 @@ class HashLogBackupApp {
       this.isProcessing = false;
       resolve(true);
       
-      setTimeout(() => this.processNextInQueue(), 500);
+      setTimeout(() => this.processNextInQueue(), 2000);
     } catch (error) {
       logger.error(`Erreur lors du traitement du fichier ${filePath}`, error);
       this.isProcessing = false;
       resolve(false);
       
-      setTimeout(() => this.processNextInQueue(), 3000);
+      setTimeout(() => this.processNextInQueue(), 5000);
     }
   }
 
@@ -350,7 +366,11 @@ class HashLogBackupApp {
     
     this.watcher = chokidar.watch(watchDir, {
       persistent: true,
-      ignoreInitial: false
+      ignoreInitial: false,
+      awaitWriteFinish: {
+        stabilityThreshold: 2000,
+        pollInterval: 100
+      }
     });
 
     this.watcher.on('add', async (filePath) => {
