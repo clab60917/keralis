@@ -16,24 +16,18 @@
             background-color: #f3f4f6;
         }
         .card {
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            will-change: transform;
         }
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-        .animate-pulse {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
+            transition: background-color 0.3s ease;
         }
         .status-dot.active {
             background-color: #10B981;
@@ -139,11 +133,32 @@
     </div>
 
     <script>
+        // Cache des éléments DOM fréquemment utilisés
+        const elements = {
+            connectionStatus: document.getElementById('connectionStatus'),
+            connectionText: document.getElementById('connectionText'),
+            lastUpdated: document.getElementById('lastUpdated'),
+            hashCount: document.getElementById('hashCount'),
+            encryptedCount: document.getElementById('encryptedCount'),
+            messagesCount: document.getElementById('messagesCount'),
+            hashTrend: document.getElementById('hashTrend'),
+            encryptedTrend: document.getElementById('encryptedTrend'),
+            messagesTrend: document.getElementById('messagesTrend'),
+            recentHash: document.getElementById('recentHash'),
+            recentEncrypted: document.getElementById('recentEncrypted'),
+            recentMessages: document.getElementById('recentMessages')
+        };
+
         let activityChart;
         let previousStats = { hash: 0, encrypted: 0, messages: 0 };
-        const socket = io();
+        let refreshTimeout = null;
         
-        // Initialisation du graphique
+        const socket = io({
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: 5
+        });
+
         function initChart() {
             const ctx = document.getElementById('activityChart').getContext('2d');
             activityChart = new Chart(ctx, {
@@ -154,22 +169,28 @@
                         label: 'Hash',
                         data: Array(24).fill(0),
                         borderColor: '#3B82F6',
-                        tension: 0.4
+                        tension: 0.4,
+                        fill: false
                     }, {
                         label: 'Encrypted',
                         data: Array(24).fill(0),
                         borderColor: '#10B981',
-                        tension: 0.4
+                        tension: 0.4,
+                        fill: false
                     }, {
                         label: 'Messages',
                         data: Array(24).fill(0),
                         borderColor: '#8B5CF6',
-                        tension: 0.4
+                        tension: 0.4,
+                        fill: false
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 750
+                    },
                     plugins: {
                         legend: {
                             position: 'top'
@@ -185,79 +206,103 @@
         }
 
         function updateConnectionStatus(connected) {
-            const statusDot = document.getElementById('connectionStatus');
-            const statusText = document.getElementById('connectionText');
-            
-            if (connected) {
-                statusDot.classList.remove('inactive');
-                statusDot.classList.add('active');
-                statusText.textContent = 'Connecté';
-            } else {
-                statusDot.classList.remove('active');
-                statusDot.classList.add('inactive');
-                statusText.textContent = 'Déconnecté';
-            }
+            elements.connectionStatus.classList.toggle('active', connected);
+            elements.connectionStatus.classList.toggle('inactive', !connected);
+            elements.connectionText.textContent = connected ? 'Connecté' : 'Déconnecté';
         }
 
         function updateTrend(currentValue, previousValue, elementId) {
             const element = document.getElementById(elementId);
             const diff = currentValue - previousValue;
             
+            let html;
             if (diff > 0) {
-                element.innerHTML = `<i class="fas fa-arrow-up text-green-500"></i> +${diff} depuis la dernière mise à jour`;
+                html = `<i class="fas fa-arrow-up text-green-500"></i> +${diff} depuis la dernière mise à jour`;
             } else if (diff < 0) {
-                element.innerHTML = `<i class="fas fa-arrow-down text-red-500"></i> ${diff} depuis la dernière mise à jour`;
+                html = `<i class="fas fa-arrow-down text-red-500"></i> ${diff} depuis la dernière mise à jour`;
             } else {
-                element.innerHTML = `<i class="fas fa-minus text-gray-500"></i> Aucun changement`;
+                html = `<i class="fas fa-minus text-gray-500"></i> Aucun changement`;
+            }
+            
+            if (element.innerHTML !== html) {
+                element.innerHTML = html;
             }
         }
 
         function updateChart(stats) {
             const currentHour = new Date().getHours();
+            const datasets = activityChart.data.datasets;
             
-            activityChart.data.datasets[0].data[currentHour] = stats.hash;
-            activityChart.data.datasets[1].data[currentHour] = stats.encrypted;
-            activityChart.data.datasets[2].data[currentHour] = stats.messages;
+            datasets[0].data[currentHour] = stats.hash;
+            datasets[1].data[currentHour] = stats.encrypted;
+            datasets[2].data[currentHour] = stats.messages;
             
-            activityChart.update();
+            activityChart.update('none'); // Mise à jour sans animation
         }
 
-        function formatTimestamp(timestamp) {
-            return moment(timestamp).format('DD/MM/YYYY HH:mm:ss');
-        }
+        const formatTimestamp = (() => {
+            const cache = new Map();
+            return (timestamp) => {
+                if (!timestamp) return 'N/A';
+                if (cache.has(timestamp)) return cache.get(timestamp);
+                const formatted = moment(timestamp).format('DD/MM/YYYY HH:mm:ss');
+                cache.set(timestamp, formatted);
+                return formatted;
+            };
+        })();
 
         function updateRecentItems(items, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
+            const container = elements[containerId];
+            if (!container) return;
+
+            const fragment = document.createDocumentFragment();
             
             if (!items || items.length === 0) {
-                container.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Aucune donnée</div>';
-                return;
+                const div = document.createElement('div');
+                div.className = 'text-sm text-gray-500 text-center py-4';
+                div.textContent = 'Aucune donnée';
+                fragment.appendChild(div);
+            } else {
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'text-sm p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors duration-200';
+                    
+                    const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
+                    const time = formatTimestamp(item.timestamp);
+                    
+                    div.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="font-semibold text-gray-700">${fileName}</div>
+                            <div class="text-xs text-gray-500">${time}</div>
+                        </div>
+                    `;
+                    
+                    fragment.appendChild(div);
+                });
             }
             
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'text-sm p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors duration-200';
-                
-                const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
-                const time = item.timestamp ? formatTimestamp(item.timestamp) : 'N/A';
-                
-                div.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div class="font-semibold text-gray-700">${fileName}</div>
-                        <div class="text-xs text-gray-500">${time}</div>
-                    </div>
-                `;
-                
-                container.appendChild(div);
-            });
+            // Seulement mettre à jour si le contenu a changé
+            if (container.innerHTML !== fragment.innerHTML) {
+                container.innerHTML = '';
+                container.appendChild(fragment);
+            }
         }
 
-        function refreshData() {
+        function throttle(func, limit) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            }
+        }
+
+        const refreshData = throttle(() => {
             socket.emit('requestStats');
-        }
+        }, 2000);
 
-        // Gestion des événements Socket.IO
         socket.on('connect', () => {
             console.log('Connecté au serveur Socket.IO');
             updateConnectionStatus(true);
@@ -274,12 +319,10 @@
         });
 
         socket.on('stats', (stats) => {
-            console.log('Réception des statistiques:', stats);
-            
             // Mettre à jour les compteurs
-            document.getElementById('hashCount').textContent = stats.hash || 0;
-            document.getElementById('encryptedCount').textContent = stats.encrypted || 0;
-            document.getElementById('messagesCount').textContent = stats.messages || 0;
+            elements.hashCount.textContent = stats.hash || 0;
+            elements.encryptedCount.textContent = stats.encrypted || 0;
+            elements.messagesCount.textContent = stats.messages || 0;
             
             // Mettre à jour les tendances
             updateTrend(stats.hash, previousStats.hash, 'hashTrend');
@@ -287,7 +330,7 @@
             updateTrend(stats.messages, previousStats.messages, 'messagesTrend');
             
             // Mettre à jour le graphique
-            updateChart(stats);
+            requestAnimationFrame(() => updateChart(stats));
             
             // Mettre à jour les listes récentes
             updateRecentItems(stats.recentHash, 'recentHash');
@@ -295,7 +338,7 @@
             updateRecentItems(stats.recentMessages, 'recentMessages');
             
             // Mettre à jour l'horodatage
-            document.getElementById('lastUpdated').textContent = stats.lastUpdated || '-';
+            elements.lastUpdated.textContent = stats.lastUpdated || '-';
             
             // Sauvegarder les stats précédentes
             previousStats = {

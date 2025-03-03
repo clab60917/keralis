@@ -22,9 +22,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let mongoClient;
 let statsInterval;
+let lastStats = null;
+let lastUpdate = 0;
+const UPDATE_INTERVAL = 5000; // 5 secondes entre chaque mise à jour
 
 async function getStats() {
     try {
+        const now = Date.now();
+        
+        // Si les dernières stats ont moins de 2 secondes, les renvoyer
+        if (lastStats && (now - lastUpdate) < 2000) {
+            return lastStats;
+        }
+
         const db = mongoClient.db(config.mongodb.dbName);
         
         console.log('Récupération des statistiques...');
@@ -35,31 +45,41 @@ async function getStats() {
             messages: await db.collection('messages').countDocuments(),
             lastUpdated: new Date().toLocaleString()
         };
-        
-        console.log('Statistiques:', stats);
 
         // Obtenir les 5 derniers messages de chaque collection
-        stats.recentHash = await db.collection('hash')
-            .find({})
-            .sort({ timestamp: -1 })
-            .limit(5)
-            .toArray();
+        const [recentHash, recentEncrypted, recentMessages] = await Promise.all([
+            db.collection('hash')
+                .find({})
+                .sort({ timestamp: -1 })
+                .limit(5)
+                .toArray(),
+            db.collection('encrypted')
+                .find({})
+                .sort({ timestamp: -1 })
+                .limit(5)
+                .toArray(),
+            db.collection('messages')
+                .find({})
+                .sort({ timestamp: -1 })
+                .limit(5)
+                .toArray()
+        ]);
 
-        stats.recentEncrypted = await db.collection('encrypted')
-            .find({})
-            .sort({ timestamp: -1 })
-            .limit(5)
-            .toArray();
+        stats.recentHash = recentHash;
+        stats.recentEncrypted = recentEncrypted;
+        stats.recentMessages = recentMessages;
 
-        stats.recentMessages = await db.collection('messages')
-            .find({})
-            .sort({ timestamp: -1 })
-            .limit(5)
-            .toArray();
-            
-        console.log('Derniers hash:', stats.recentHash.length);
-        console.log('Derniers encrypted:', stats.recentEncrypted.length);
-        console.log('Derniers messages:', stats.recentMessages.length);
+        console.log('Statistiques récupérées:', {
+            hash: stats.hash,
+            encrypted: stats.encrypted,
+            messages: stats.messages,
+            recentHashCount: recentHash.length,
+            recentEncryptedCount: recentEncrypted.length,
+            recentMessagesCount: recentMessages.length
+        });
+
+        lastStats = stats;
+        lastUpdate = now;
 
         return stats;
     } catch (error) {
@@ -68,42 +88,40 @@ async function getStats() {
     }
 }
 
-// Configuration de Socket.IO
+// Configuration de Socket.IO avec des options de performance
 io.on('connection', async (socket) => {
     console.log('Nouvelle connexion Socket.IO tentée');
     
     try {
-        // Envoyer les stats initiales
         const initialStats = await getStats();
         if (initialStats) {
-            console.log('Envoi des statistiques initiales au client');
             socket.emit('stats', initialStats);
-        } else {
-            console.log('Pas de statistiques initiales disponibles');
         }
     } catch (error) {
         console.error('Erreur lors de l\'envoi des stats initiales:', error);
     }
 
-    socket.on('disconnect', () => {
-        console.log('Client déconnecté');
-    });
-
-    socket.on('error', (error) => {
-        console.error('Erreur Socket.IO:', error);
-    });
-
-    // Gestion du rafraîchissement manuel
+    // Limiter les demandes de rafraîchissement
+    let lastRefresh = 0;
     socket.on('requestStats', async () => {
+        const now = Date.now();
+        if (now - lastRefresh < 2000) {
+            return; // Ignorer les demandes trop fréquentes
+        }
+        lastRefresh = now;
+
         try {
             const stats = await getStats();
             if (stats) {
-                console.log('Envoi des statistiques suite à une demande manuelle');
                 socket.emit('stats', stats);
             }
         } catch (error) {
             console.error('Erreur lors de la récupération manuelle des stats:', error);
         }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Client déconnecté');
     });
 });
 
@@ -111,7 +129,6 @@ async function broadcastStats() {
     try {
         const stats = await getStats();
         if (stats) {
-            console.log('Diffusion des statistiques mises à jour');
             io.emit('stats', stats);
         }
     } catch (error) {
@@ -121,22 +138,19 @@ async function broadcastStats() {
 
 async function startServer() {
     try {
-        // Connexion à MongoDB
         console.log('Tentative de connexion à MongoDB...');
         mongoClient = new MongoClient(config.mongodb.uri);
         await mongoClient.connect();
         console.log('Connecté à MongoDB');
 
-        // Vérifier l'existence des collections
         const db = mongoClient.db(config.mongodb.dbName);
         const collections = await db.listCollections().toArray();
         const collectionNames = collections.map(c => c.name);
         console.log('Collections disponibles:', collectionNames);
 
-        // Démarrer la diffusion des stats toutes les 5 secondes
-        statsInterval = setInterval(broadcastStats, 5000);
+        // Démarrer la diffusion des stats
+        statsInterval = setInterval(broadcastStats, UPDATE_INTERVAL);
 
-        // Démarrer le serveur sur toutes les interfaces
         const PORT = process.env.DASHBOARD_PORT || 3000;
         const HOST = '0.0.0.0';
         http.listen(PORT, HOST, () => {
@@ -149,7 +163,6 @@ async function startServer() {
     }
 }
 
-// Gestion de l'arrêt propre
 process.on('SIGINT', async () => {
     clearInterval(statsInterval);
     if (mongoClient) {
