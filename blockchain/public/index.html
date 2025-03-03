@@ -92,7 +92,9 @@
         <!-- Graphique d'activité -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Activité des dernières 24 heures</h2>
-            <canvas id="activityChart" height="100"></canvas>
+            <div style="height: 400px;">
+                <canvas id="activityChart"></canvas>
+            </div>
         </div>
 
         <!-- Dernières activités -->
@@ -172,25 +174,39 @@
                         data: [...initialData],
                         borderColor: '#3B82F6',
                         tension: 0.4,
-                        fill: false
+                        fill: false,
+                        pointRadius: 0
                     }, {
                         label: 'Encrypted',
                         data: [...initialData],
                         borderColor: '#10B981',
                         tension: 0.4,
-                        fill: false
+                        fill: false,
+                        pointRadius: 0
                     }, {
                         label: 'Messages',
                         data: [...initialData],
                         borderColor: '#8B5CF6',
                         tension: 0.4,
-                        fill: false
+                        fill: false,
+                        pointRadius: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: false,
+                    animation: {
+                        duration: 0
+                    },
+                    hover: {
+                        animationDuration: 0
+                    },
+                    responsiveAnimationDuration: 0,
+                    elements: {
+                        line: {
+                            tension: 0
+                        }
+                    },
                     plugins: {
                         legend: {
                             position: 'top'
@@ -200,14 +216,15 @@
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                precision: 0
+                                precision: 0,
+                                maxTicksLimit: 5
                             }
                         },
                         x: {
                             ticks: {
                                 maxRotation: 0,
                                 autoSkip: true,
-                                maxTicksLimit: 12
+                                maxTicksLimit: 8
                             }
                         }
                     }
@@ -216,6 +233,8 @@
         }
 
         let lastUpdateHour = new Date().getHours();
+        let lastUpdateTime = Date.now();
+        const UPDATE_INTERVAL = 5000; // 5 secondes
 
         function updateConnectionStatus(connected) {
             elements.connectionStatus.classList.toggle('active', connected);
@@ -242,17 +261,18 @@
         }
 
         function updateChart(stats) {
-            const currentHour = new Date().getHours();
+            const now = Date.now();
+            if (now - lastUpdateTime < UPDATE_INTERVAL) {
+                return;
+            }
             
-            // Ne mettre à jour que si l'heure a changé
+            const currentHour = new Date().getHours();
             if (currentHour !== lastUpdateHour) {
-                // Mettre à jour les données
                 activityChart.data.datasets.forEach(dataset => {
-                    dataset.data.shift(); // Enlever la première valeur
-                    dataset.data.push(0); // Ajouter un nouveau point à 0
+                    dataset.data.shift();
+                    dataset.data.push(0);
                 });
                 
-                // Mettre à jour les labels
                 activityChart.data.labels = Array(24).fill('').map((_, i) => 
                     moment().subtract(23-i, 'hours').format('HH:mm')
                 );
@@ -260,12 +280,12 @@
                 lastUpdateHour = currentHour;
             }
             
-            // Mettre à jour le dernier point avec les valeurs actuelles
             activityChart.data.datasets[0].data[23] = stats.hash;
             activityChart.data.datasets[1].data[23] = stats.encrypted;
             activityChart.data.datasets[2].data[23] = stats.messages;
             
-            activityChart.update();
+            activityChart.update('none'); // Désactive les animations lors de la mise à jour
+            lastUpdateTime = now;
         }
 
         const formatTimestamp = (() => {
