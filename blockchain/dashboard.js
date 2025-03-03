@@ -26,12 +26,16 @@ async function getStats() {
     try {
         const db = mongoClient.db(config.mongodb.dbName);
         
+        console.log('Récupération des statistiques...');
+        
         const stats = {
             hash: await db.collection('hash').countDocuments(),
             encrypted: await db.collection('encrypted').countDocuments(),
             messages: await db.collection('messages').countDocuments(),
             lastUpdated: new Date().toLocaleString()
         };
+        
+        console.log('Statistiques:', stats);
 
         // Obtenir les 5 derniers messages de chaque collection
         stats.recentHash = await db.collection('hash')
@@ -51,6 +55,10 @@ async function getStats() {
             .sort({ timestamp: -1 })
             .limit(5)
             .toArray();
+            
+        console.log('Derniers hash:', stats.recentHash.length);
+        console.log('Derniers encrypted:', stats.recentEncrypted.length);
+        console.log('Derniers messages:', stats.recentMessages.length);
 
         return stats;
     } catch (error) {
@@ -75,7 +83,9 @@ io.on('connection', async (socket) => {
     
     // Envoyer les stats initiales
     const initialStats = await getStats();
-    socket.emit('stats', initialStats);
+    if (initialStats) {
+        socket.emit('stats', initialStats);
+    }
 });
 
 async function broadcastStats() {
@@ -88,10 +98,7 @@ async function broadcastStats() {
 async function startServer() {
     try {
         // Connexion à MongoDB
-        mongoClient = new MongoClient(config.mongodb.uri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
+        mongoClient = new MongoClient(config.mongodb.uri);
         await mongoClient.connect();
         console.log('Connecté à MongoDB');
 
@@ -100,7 +107,7 @@ async function startServer() {
 
         // Démarrer le serveur sur toutes les interfaces
         const PORT = process.env.DASHBOARD_PORT || 3000;
-        const HOST = '0.0.0.0';  // Écoute sur toutes les interfaces
+        const HOST = '0.0.0.0';
         http.listen(PORT, HOST, () => {
             console.log(`Dashboard disponible sur http://${HOST}:${PORT}`);
         });
