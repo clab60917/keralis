@@ -61,20 +61,20 @@
     </div>
 
     <script>
-        // Récupérer les identifiants de l'URL (ils sont déjà dans l'en-tête d'authentification basique)
-        const auth = {
-            username: document.querySelector('meta[name="username"]')?.content || 'admin',
-            password: document.querySelector('meta[name="password"]')?.content || 'changeme'
-        };
-
-        // Initialiser Socket.IO avec authentification
-        const socket = io({
-            auth: auth
-        });
+        // Initialiser Socket.IO
+        const socket = io();
         
+        // Gestion des erreurs de connexion
         socket.on('connect_error', (error) => {
             console.error('Erreur de connexion Socket.IO:', error);
-            alert('Erreur de connexion au serveur. Veuillez rafraîchir la page.');
+        });
+
+        socket.on('connect', () => {
+            console.log('Connecté au serveur Socket.IO');
+        });
+
+        socket.on('disconnect', (reason) => {
+            console.log('Déconnecté du serveur:', reason);
         });
         
         function formatTimestamp(timestamp) {
@@ -85,12 +85,17 @@
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div class="text-sm text-gray-500">Aucune donnée</div>';
+                return;
+            }
+            
             items.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'text-sm p-3 bg-gray-50 rounded';
                 
-                const fileName = item.filePath.split('/').pop();
-                const time = formatTimestamp(item.timestamp);
+                const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
+                const time = item.timestamp ? formatTimestamp(item.timestamp) : 'N/A';
                 
                 div.innerHTML = `
                     <div class="font-semibold text-gray-700">${fileName}</div>
@@ -102,10 +107,12 @@
         }
 
         socket.on('stats', (stats) => {
+            console.log('Réception des statistiques:', stats);
+            
             // Mettre à jour les compteurs
-            document.getElementById('hashCount').textContent = stats.hash;
-            document.getElementById('encryptedCount').textContent = stats.encrypted;
-            document.getElementById('messagesCount').textContent = stats.messages;
+            document.getElementById('hashCount').textContent = stats.hash || 0;
+            document.getElementById('encryptedCount').textContent = stats.encrypted || 0;
+            document.getElementById('messagesCount').textContent = stats.messages || 0;
             
             // Mettre à jour les listes récentes
             updateRecentItems(stats.recentHash, 'recentHash');
@@ -113,7 +120,7 @@
             updateRecentItems(stats.recentMessages, 'recentMessages');
             
             // Mettre à jour l'horodatage
-            document.getElementById('lastUpdated').textContent = stats.lastUpdated;
+            document.getElementById('lastUpdated').textContent = stats.lastUpdated || '-';
         });
     </script>
 </body>

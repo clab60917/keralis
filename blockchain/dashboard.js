@@ -9,10 +9,11 @@ const basicAuth = require('express-basic-auth');
 const config = require('./auto3').config;
 
 // Configuration de l'authentification basique
+const users = {};
+users[process.env.DASHBOARD_USER || 'admin'] = process.env.DASHBOARD_PASSWORD || 'changeme';
+
 app.use(basicAuth({
-    users: { 
-        [process.env.DASHBOARD_USER || 'admin']: process.env.DASHBOARD_PASSWORD || 'changeme'
-    },
+    users: users,
     challenge: true,
     realm: 'Dashboard Blockchain'
 }));
@@ -67,40 +68,57 @@ async function getStats() {
     }
 }
 
-// Configuration de Socket.IO avec authentification
-io.use((socket, next) => {
-    const auth = socket.handshake.auth;
-    if (auth && auth.username === (process.env.DASHBOARD_USER || 'admin') && 
-        auth.password === (process.env.DASHBOARD_PASSWORD || 'changeme')) {
-        next();
-    } else {
-        next(new Error('Authentification non autorisée'));
-    }
-});
-
+// Configuration de Socket.IO
 io.on('connection', async (socket) => {
-    console.log('Nouveau client connecté');
+    console.log('Nouvelle connexion Socket.IO tentée');
     
-    // Envoyer les stats initiales
-    const initialStats = await getStats();
-    if (initialStats) {
-        socket.emit('stats', initialStats);
+    try {
+        // Envoyer les stats initiales
+        const initialStats = await getStats();
+        if (initialStats) {
+            console.log('Envoi des statistiques initiales au client');
+            socket.emit('stats', initialStats);
+        } else {
+            console.log('Pas de statistiques initiales disponibles');
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'envoi des stats initiales:', error);
     }
+
+    socket.on('disconnect', () => {
+        console.log('Client déconnecté');
+    });
+
+    socket.on('error', (error) => {
+        console.error('Erreur Socket.IO:', error);
+    });
 });
 
 async function broadcastStats() {
-    const stats = await getStats();
-    if (stats) {
-        io.emit('stats', stats);
+    try {
+        const stats = await getStats();
+        if (stats) {
+            console.log('Diffusion des statistiques mises à jour');
+            io.emit('stats', stats);
+        }
+    } catch (error) {
+        console.error('Erreur lors de la diffusion des stats:', error);
     }
 }
 
 async function startServer() {
     try {
         // Connexion à MongoDB
+        console.log('Tentative de connexion à MongoDB...');
         mongoClient = new MongoClient(config.mongodb.uri);
         await mongoClient.connect();
         console.log('Connecté à MongoDB');
+
+        // Vérifier l'existence des collections
+        const db = mongoClient.db(config.mongodb.dbName);
+        const collections = await db.listCollections().toArray();
+        const collectionNames = collections.map(c => c.name);
+        console.log('Collections disponibles:', collectionNames);
 
         // Démarrer la diffusion des stats toutes les 5 secondes
         statsInterval = setInterval(broadcastStats, 5000);

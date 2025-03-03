@@ -470,3 +470,5 @@
 2025-03-03 11:50:46,311 - INFO - [94mℹ️  Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/encrypted/su.log.enc -> /sender/encrypted/su.log.enc[0m
 2025-03-03 11:50:46,312 - INFO - [94mℹ️  [chan 0] sftp session closed.[0m
 2025-03-03 11:50:46,314 - INFO - [94mℹ️  📤 Fichier chiffré envoyé avec succès: su.log.enc[0m
+2025-03-03 11:57:53,173 - WARNING - [93m⚠️  🛑 Arrêt du script demandé...[0m
+2025-03-03 11:57:53,174 - INFO - [94mℹ️  ✨ Script arrêté avec succès.[0m
