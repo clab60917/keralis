@@ -132,8 +132,12 @@ class HederaService {
         .setMessage(message)
         .setMaxTransactionFee(new Hbar(2));
       
-      const frozenTx = await transaction.freezeWith(newClient);
+      const frozenTx = transaction.freezeWith(newClient);
+      
       const txResponse = await frozenTx.execute(newClient);
+      
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       const receipt = await txResponse.getReceipt(newClient);
       
       logger.info(`Message envoyé au Topic ID ${topicId}: Statut ${receipt.status}`);
@@ -142,6 +146,7 @@ class HederaService {
       logger.error(`Erreur lors de l'envoi du message au topic ${topicId}`, error);
       throw error;
     } finally {
+      await new Promise(resolve => setTimeout(resolve, 500));
       this.transactionLock = false;
     }
   }
