@@ -92,6 +92,19 @@ io.on('connection', async (socket) => {
     socket.on('error', (error) => {
         console.error('Erreur Socket.IO:', error);
     });
+
+    // Gestion du rafraîchissement manuel
+    socket.on('requestStats', async () => {
+        try {
+            const stats = await getStats();
+            if (stats) {
+                console.log('Envoi des statistiques suite à une demande manuelle');
+                socket.emit('stats', stats);
+            }
+        } catch (error) {
+            console.error('Erreur lors de la récupération manuelle des stats:', error);
+        }
+    });
 });
 
 async function broadcastStats() {
