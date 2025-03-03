@@ -37,6 +37,42 @@
             background-color: #EF4444;
             box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
         }
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .refresh-button {
+            transition: transform 0.3s ease;
+        }
+        .refresh-button.rotating {
+            transform: rotate(180deg);
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 4px 8px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
     </style>
 </head>
 <body class="p-6 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -57,9 +93,9 @@
         
         <!-- Cartes des statistiques -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="card bg-white rounded-lg shadow p-6">
+            <div class="card bg-white rounded-lg shadow p-6" id="hashCard">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold text-gray-700">Fichiers Hash</h2>
+                    <h2 class="text-lg font-semibold text-gray-700 tooltip" data-tooltip="Nombre total de fichiers hash traités">Fichiers Hash</h2>
                     <i class="fas fa-file-code text-blue-500"></i>
                 </div>
                 <p class="text-3xl font-bold text-blue-600" id="hashCount">0</p>
@@ -347,8 +383,30 @@
             }
         }
 
+        let isLoading = false;
+        const REFRESH_ANIMATION_DURATION = 500;
+
+        function setLoading(loading) {
+            isLoading = loading;
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.toggle('loading', loading);
+            });
+            document.querySelectorAll('.refresh-button').forEach(btn => {
+                btn.classList.toggle('rotating', loading);
+            });
+        }
+
+        function highlightNewValue(elementId) {
+            const element = document.getElementById(elementId);
+            element.classList.add('pulse');
+            setTimeout(() => element.classList.remove('pulse'), 2000);
+        }
+
         const refreshData = throttle(() => {
+            if (isLoading) return;
+            setLoading(true);
             socket.emit('requestStats');
+            setTimeout(() => setLoading(false), REFRESH_ANIMATION_DURATION);
         }, 2000);
 
         socket.on('connect', () => {
@@ -394,10 +452,28 @@
                 encrypted: stats.encrypted || 0,
                 messages: stats.messages || 0
             };
+
+            // Vérifier les changements pour l'animation
+            if (stats.hash !== parseInt(elements.hashCount.textContent)) {
+                highlightNewValue('hashCard');
+            }
         });
 
         // Initialisation
         initChart();
+
+        // Ajouter un gestionnaire d'erreurs global
+        window.addEventListener('error', (event) => {
+            console.error('Erreur globale:', event.error);
+            // Optionnel : afficher une notification à l'utilisateur
+        });
+
+        // Détecter si la page est visible
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                refreshData();
+            }
+        });
     </script>
 </body>
 </html> 
