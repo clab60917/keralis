@@ -80,10 +80,21 @@
         <!-- En-tête avec statut -->
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Dashboard Blockchain</h1>
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center">
-                    <div id="connectionStatus" class="status-dot inactive mr-2"></div>
-                    <span id="connectionText" class="text-sm text-gray-600">Déconnecté</span>
+            <div class="flex items-center space-x-6">
+                <!-- Statuts des services -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center tooltip" data-tooltip="Service d'envoi Blockchain">
+                        <div id="blockchainStatus" class="status-dot inactive mr-2"></div>
+                        <span class="text-sm text-gray-600">Blockchain</span>
+                    </div>
+                    <div class="flex items-center tooltip" data-tooltip="Service SFTP">
+                        <div id="sftpStatus" class="status-dot inactive mr-2"></div>
+                        <span class="text-sm text-gray-600">SFTP</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div id="connectionStatus" class="status-dot inactive mr-2"></div>
+                        <span id="connectionText" class="text-sm text-gray-600">Déconnecté</span>
+                    </div>
                 </div>
                 <div class="text-sm text-gray-500">
                     Dernière mise à jour: <span id="lastUpdated" class="font-medium">-</span>
@@ -91,6 +102,76 @@
             </div>
         </div>
         
+        <!-- Sélecteur de période -->
+        <div class="bg-white rounded-lg shadow p-4 mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="dayView" class="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors">Jour</button>
+                    <button id="weekView" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Semaine</button>
+                    <button id="monthView" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Mois</button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="prevPeriod" class="p-2 rounded-lg bg-gray-200 hover:bg-gray-300">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="currentPeriod" class="text-lg font-semibold text-gray-700">Aujourd'hui</span>
+                    <button id="nextPeriod" class="p-2 rounded-lg bg-gray-200 hover:bg-gray-300">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques avancées -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">Statistiques avancées</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Taux de traitement</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Hash</span>
+                            <span id="hashRate" class="font-semibold text-blue-600">0/min</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Encrypted</span>
+                            <span id="encryptedRate" class="font-semibold text-green-600">0/min</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Messages</span>
+                            <span id="messagesRate" class="font-semibold text-purple-600">0/min</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Temps moyen de traitement</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Hash</span>
+                            <span id="hashProcessingTime" class="font-semibold text-blue-600">0ms</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Encrypted</span>
+                            <span id="encryptedProcessingTime" class="font-semibold text-green-600">0ms</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">État du système</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Mémoire utilisée</span>
+                            <span id="memoryUsage" class="font-semibold text-gray-600">0%</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">CPU</span>
+                            <span id="cpuUsage" class="font-semibold text-gray-600">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Cartes des statistiques -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="card bg-white rounded-lg shadow p-6" id="hashCard">
@@ -184,7 +265,22 @@
             messagesTrend: document.getElementById('messagesTrend'),
             recentHash: document.getElementById('recentHash'),
             recentEncrypted: document.getElementById('recentEncrypted'),
-            recentMessages: document.getElementById('recentMessages')
+            recentMessages: document.getElementById('recentMessages'),
+            blockchainStatus: document.getElementById('blockchainStatus'),
+            sftpStatus: document.getElementById('sftpStatus'),
+            dayView: document.getElementById('dayView'),
+            weekView: document.getElementById('weekView'),
+            monthView: document.getElementById('monthView'),
+            prevPeriod: document.getElementById('prevPeriod'),
+            nextPeriod: document.getElementById('nextPeriod'),
+            currentPeriod: document.getElementById('currentPeriod'),
+            hashRate: document.getElementById('hashRate'),
+            encryptedRate: document.getElementById('encryptedRate'),
+            messagesRate: document.getElementById('messagesRate'),
+            hashProcessingTime: document.getElementById('hashProcessingTime'),
+            encryptedProcessingTime: document.getElementById('encryptedProcessingTime'),
+            memoryUsage: document.getElementById('memoryUsage'),
+            cpuUsage: document.getElementById('cpuUsage')
         };
 
         let activityChart;
@@ -457,6 +553,23 @@
             if (stats.hash !== parseInt(elements.hashCount.textContent)) {
                 highlightNewValue('hashCard');
             }
+
+            // Mise à jour des taux et temps de traitement
+            if (stats.rates) {
+                elements.hashRate.textContent = `${stats.rates.hash}/min`;
+                elements.encryptedRate.textContent = `${stats.rates.encrypted}/min`;
+                elements.messagesRate.textContent = `${stats.rates.messages}/min`;
+            }
+
+            if (stats.processingTimes) {
+                elements.hashProcessingTime.textContent = `${stats.processingTimes.hash}ms`;
+                elements.encryptedProcessingTime.textContent = `${stats.processingTimes.encrypted}ms`;
+            }
+
+            if (stats.system) {
+                elements.memoryUsage.textContent = `${stats.system.memory}%`;
+                elements.cpuUsage.textContent = `${stats.system.cpu}%`;
+            }
         });
 
         // Initialisation
@@ -473,6 +586,70 @@
             if (document.visibilityState === 'visible') {
                 refreshData();
             }
+        });
+
+        let currentView = 'day';
+        let currentDate = new Date();
+
+        function updatePeriodDisplay() {
+            const options = { 
+                day: { weekday: 'long', day: 'numeric', month: 'long' },
+                week: { day: 'numeric', month: 'long' },
+                month: { month: 'long', year: 'numeric' }
+            };
+            
+            let text;
+            if (currentView === 'day') {
+                text = currentDate.toLocaleDateString('fr-FR', options.day);
+            } else if (currentView === 'week') {
+                const weekStart = new Date(currentDate);
+                weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                text = `${weekStart.toLocaleDateString('fr-FR', { day: 'numeric' })} - ${weekEnd.toLocaleDateString('fr-FR', options.week)}`;
+            } else {
+                text = currentDate.toLocaleDateString('fr-FR', options.month);
+            }
+            
+            elements.currentPeriod.textContent = text;
+        }
+
+        function switchView(view) {
+            currentView = view;
+            ['dayView', 'weekView', 'monthView'].forEach(id => {
+                elements[id].classList.toggle('bg-blue-500', id === `${view}View`);
+                elements[id].classList.toggle('text-white', id === `${view}View`);
+                elements[id].classList.toggle('bg-gray-200', id !== `${view}View`);
+                elements[id].classList.toggle('text-gray-700', id !== `${view}View`);
+            });
+            updatePeriodDisplay();
+            refreshData();
+        }
+
+        function navigatePeriod(direction) {
+            const periods = {
+                day: 1,
+                week: 7,
+                month: 30
+            };
+            
+            const days = periods[currentView] * direction;
+            currentDate.setDate(currentDate.getDate() + days);
+            updatePeriodDisplay();
+            refreshData();
+        }
+
+        // Gestionnaires d'événements pour la navigation
+        elements.dayView.addEventListener('click', () => switchView('day'));
+        elements.weekView.addEventListener('click', () => switchView('week'));
+        elements.monthView.addEventListener('click', () => switchView('month'));
+        elements.prevPeriod.addEventListener('click', () => navigatePeriod(-1));
+        elements.nextPeriod.addEventListener('click', () => navigatePeriod(1));
+
+        // Mise à jour des statuts des services
+        socket.on('serviceStatus', (status) => {
+            elements.blockchainStatus.classList.toggle('active', status.blockchain);
+            elements.sftpStatus.classList.toggle('active', status.sftp);
         });
     </script>
 </body>

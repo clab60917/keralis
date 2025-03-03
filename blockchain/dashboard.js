@@ -15,7 +15,7 @@ users[process.env.DASHBOARD_USER || 'admin'] = process.env.DASHBOARD_PASSWORD ||
 app.use(basicAuth({
     users: users,
     challenge: true,
-    realm: 'Dashboard Blockchain'
+    realm: 'Keralis Dashboard'
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
