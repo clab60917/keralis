@@ -1,12 +1,11 @@
 {
-  "name": "hedera-log-backup",
+  "name": "blockchain-dashboard",
   "version": "1.0.0",
-  "description": "Système de sauvegarde de fichiers de hash logs dans la blockchain Hedera",
-  "main": "auto3.js",
+  "description": "Dashboard en temps réel pour le suivi des fichiers et messages blockchain",
+  "main": "dashboard.js",
   "scripts": {
-    "start": "node auto3.js",
-    "test": "mocha tests/*.test.js",
-    "dev": "nodemon auto3.js"
+    "start": "node dashboard.js",
+    "dev": "nodemon dashboard.js"
   },
   "keywords": [
     "hedera",
@@ -18,16 +17,13 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@hashgraph/sdk": "^2.19.2",
-    "chokidar": "^3.5.3",
-    "dotenv": "^16.0.3",
-    "mongodb": "^4.13.0"
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "mongodb": "^6.3.0",
+    "express-basic-auth": "^1.2.1"
   },
   "devDependencies": {
-    "chai": "^4.3.7",
-    "mocha": "^10.2.0",
-    "nodemon": "^2.0.22",
-    "sinon": "^15.0.1"
+    "nodemon": "^3.0.2"
   },
   "engines": {
     "node": ">=14.0.0"

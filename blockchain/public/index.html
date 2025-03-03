@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Blockchain</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Dashboard Blockchain</h1>
+        
+        <!-- Cartes des statistiques -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-2">Fichiers Hash</h2>
+                <p class="text-3xl font-bold text-blue-600" id="hashCount">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-2">Fichiers Encrypted</h2>
+                <p class="text-3xl font-bold text-green-600" id="encryptedCount">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-2">Messages Blockchain</h2>
+                <p class="text-3xl font-bold text-purple-600" id="messagesCount">0</p>
+            </div>
+        </div>
+
+        <!-- Dernières activités -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Derniers Hash -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Derniers Hash</h2>
+                <div id="recentHash" class="space-y-3"></div>
+            </div>
+
+            <!-- Derniers Encrypted -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Derniers Encrypted</h2>
+                <div id="recentEncrypted" class="space-y-3"></div>
+            </div>
+
+            <!-- Derniers Messages -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Derniers Messages Blockchain</h2>
+                <div id="recentMessages" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div class="text-center text-sm text-gray-500 mt-8">
+            Dernière mise à jour: <span id="lastUpdated">-</span>
+        </div>
+    </div>
+
+    <script>
+        // Récupérer les identifiants de l'URL (ils sont déjà dans l'en-tête d'authentification basique)
+        const auth = {
+            username: document.querySelector('meta[name="username"]')?.content || 'admin',
+            password: document.querySelector('meta[name="password"]')?.content || 'changeme'
+        };
+
+        // Initialiser Socket.IO avec authentification
+        const socket = io({
+            auth: auth
+        });
+        
+        socket.on('connect_error', (error) => {
+            console.error('Erreur de connexion Socket.IO:', error);
+            alert('Erreur de connexion au serveur. Veuillez rafraîchir la page.');
+        });
+        
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+
+        function updateRecentItems(items, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'text-sm p-3 bg-gray-50 rounded';
+                
+                const fileName = item.filePath.split('/').pop();
+                const time = formatTimestamp(item.timestamp);
+                
+                div.innerHTML = `
+                    <div class="font-semibold text-gray-700">${fileName}</div>
+                    <div class="text-gray-500">${time}</div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        socket.on('stats', (stats) => {
+            // Mettre à jour les compteurs
+            document.getElementById('hashCount').textContent = stats.hash;
+            document.getElementById('encryptedCount').textContent = stats.encrypted;
+            document.getElementById('messagesCount').textContent = stats.messages;
+            
+            // Mettre à jour les listes récentes
+            updateRecentItems(stats.recentHash, 'recentHash');
+            updateRecentItems(stats.recentEncrypted, 'recentEncrypted');
+            updateRecentItems(stats.recentMessages, 'recentMessages');
+            
+            // Mettre à jour l'horodatage
+            document.getElementById('lastUpdated').textContent = stats.lastUpdated;
+        });
+    </script>
+</body>
+</html> 

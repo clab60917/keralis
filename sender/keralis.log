@@ -422,3 +422,26 @@
 2025-03-03 11:21:30,698 - INFO - [94mℹ️  Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/encrypted/kk.log.enc -> /sender/encrypted/kk.log.enc[0m
 2025-03-03 11:21:30,698 - INFO - [94mℹ️  [chan 0] sftp session closed.[0m
 2025-03-03 11:21:30,699 - INFO - [94mℹ️  📤 Fichier chiffré envoyé avec succès: kk.log.enc[0m
+2025-03-03 11:30:34,867 - INFO - [94mℹ️  📝 Nouveau fichier log détecté: pp.log[0m
+2025-03-03 11:30:34,868 - INFO - [94mℹ️  🔒 Hash généré: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/hash/pp.log.hash[0m
+2025-03-03 11:30:34,869 - INFO - [94mℹ️  🔐 Fichier chiffré: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/encrypted/pp.log.enc[0m
+2025-03-03 11:30:34,869 - INFO - [94mℹ️  Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user[0m
+2025-03-03 11:30:34,894 - INFO - [94mℹ️  Connected (version 2.0, client OpenSSH_9.6p1)[0m
+2025-03-03 11:30:35,091 - INFO - [94mℹ️  Authentication (password) successful![0m
+2025-03-03 11:30:35,674 - INFO - [94mℹ️  [chan 0] Opened sftp connection (server version 3)[0m
+2025-03-03 11:30:35,675 - INFO - [94mℹ️  Connexion SFTP établie avec succès[0m
+2025-03-03 11:30:35,697 - INFO - [94mℹ️  Envoi du fichier /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/hash/pp.log.hash vers /sender/hash/pp.log.hash[0m
+2025-03-03 11:30:35,752 - INFO - [94mℹ️  Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/hash/pp.log.hash -> /sender/hash/pp.log.hash[0m
+2025-03-03 11:30:35,752 - INFO - [94mℹ️  [chan 0] sftp session closed.[0m
+2025-03-03 11:30:35,752 - INFO - [94mℹ️  📤 Hash envoyé avec succès: pp.log.hash[0m
+2025-03-03 11:30:35,753 - INFO - [94mℹ️  Tentative de connexion SFTP à 172.232.35.196:22 avec l'utilisateur sftp_user[0m
+2025-03-03 11:30:35,778 - INFO - [94mℹ️  Connected (version 2.0, client OpenSSH_9.6p1)[0m
+2025-03-03 11:30:35,974 - INFO - [94mℹ️  Authentication (password) successful![0m
+2025-03-03 11:30:36,084 - INFO - [94mℹ️  [chan 0] Opened sftp connection (server version 3)[0m
+2025-03-03 11:30:36,085 - INFO - [94mℹ️  Connexion SFTP établie avec succès[0m
+2025-03-03 11:30:36,112 - INFO - [94mℹ️  Envoi du fichier /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/encrypted/pp.log.enc vers /sender/encrypted/pp.log.enc[0m
+2025-03-03 11:30:36,160 - INFO - [94mℹ️  Fichier envoyé avec succès: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/encrypted/pp.log.enc -> /sender/encrypted/pp.log.enc[0m
+2025-03-03 11:30:36,161 - INFO - [94mℹ️  [chan 0] sftp session closed.[0m
+2025-03-03 11:30:36,162 - INFO - [94mℹ️  📤 Fichier chiffré envoyé avec succès: pp.log.enc[0m
+2025-03-03 11:32:10,088 - WARNING - [93m⚠️  🛑 Arrêt du script demandé...[0m
+2025-03-03 11:32:10,090 - INFO - [94mℹ️  ✨ Script arrêté avec succès.[0m
