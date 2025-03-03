@@ -24,7 +24,8 @@ const config = {
   mongodb: {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017',
     dbName: process.env.MONGODB_DB_NAME || 'Blockchain',
-    collectionName: process.env.MONGODB_COLLECTION || 'messages',
+    hashCollection: 'hash',
+    encryptedCollection: 'encrypted',
     user: process.env.MONGODB_USER,
     password: process.env.MONGODB_PASSWORD,
     host: process.env.MONGODB_HOST || 'localhost',
@@ -34,7 +35,8 @@ const config = {
   files: {
     processedFilesPath: path.join(__dirname, 'processedFiles.json'),
     topicIdPath: path.join(__dirname, 'topicId.txt'),
-    watchDir: process.env.WATCH_DIR || '/sender/hash'
+    hashDir: '/sender/hash',
+    encryptedDir: '/sender/encrypted'
   },
   app: {
     logLevel: process.env.LOG_LEVEL || 'info'
@@ -163,10 +165,10 @@ class MongoDBService {
   constructor(config) {
     this.uri = config.mongodb.uri;
     this.dbName = config.mongodb.dbName;
-    this.collectionName = config.mongodb.collectionName;
+    this.hashCollection = null;
+    this.encryptedCollection = null;
     this.client = null;
     this.db = null;
-    this.collection = null;
   }
 
   async connect() {
@@ -175,24 +177,26 @@ class MongoDBService {
       this.client = new MongoClient(this.uri, { useNewUrlParser: true, useUnifiedTopology: true });
       await this.client.connect();
       this.db = this.client.db(this.dbName);
-      this.collection = this.db.collection(this.collectionName);
-      logger.info(`Connecté à MongoDB: ${this.dbName}.${this.collectionName}`);
+      this.hashCollection = this.db.collection('hash');
+      this.encryptedCollection = this.db.collection('encrypted');
+      logger.info(`Connecté à MongoDB: ${this.dbName}`);
     } catch (error) {
       logger.error('Erreur de connexion à MongoDB', error);
       throw error;
     }
   }
 
-  async saveMessage(data) {
+  async saveMessage(data, type) {
     try {
-      const result = await this.collection.insertOne({
+      const collection = type === 'hash' ? this.hashCollection : this.encryptedCollection;
+      const result = await collection.insertOne({
         ...data,
         timestamp: new Date()
       });
-      logger.info(`Message sauvegardé dans MongoDB avec ID: ${result.insertedId}`);
+      logger.info(`Message sauvegardé dans MongoDB (${type}) avec ID: ${result.insertedId}`);
       return result;
     } catch (error) {
-      logger.error('Erreur lors de la sauvegarde du message dans MongoDB', error);
+      logger.error(`Erreur lors de la sauvegarde du message dans MongoDB (${type})`, error);
       throw error;
     }
   }
@@ -210,7 +214,8 @@ class FileService {
   constructor(config) {
     this.processedFilesPath = config.files.processedFilesPath;
     this.topicIdPath = config.files.topicIdPath;
-    this.watchDir = config.files.watchDir;
+    this.hashDir = config.files.hashDir;
+    this.encryptedDir = config.files.encryptedDir;
   }
 
   loadProcessedFiles() {
@@ -243,11 +248,24 @@ class FileService {
     return fs.readFileSync(filePath, 'utf8');
   }
 
-  ensureWatchDirExists() {
-    if (!fs.existsSync(this.watchDir)) {
-      logger.info(`Création du répertoire de surveillance: ${this.watchDir}`);
-      fs.mkdirSync(this.watchDir, { recursive: true });
+  ensureWatchDirsExist() {
+    if (!fs.existsSync(this.hashDir)) {
+      logger.info(`Création du répertoire hash: ${this.hashDir}`);
+      fs.mkdirSync(this.hashDir, { recursive: true });
     }
+    if (!fs.existsSync(this.encryptedDir)) {
+      logger.info(`Création du répertoire encrypted: ${this.encryptedDir}`);
+      fs.mkdirSync(this.encryptedDir, { recursive: true });
+    }
+  }
+
+  getFileType(filePath) {
+    if (filePath.includes(this.hashDir)) {
+      return 'hash';
+    } else if (filePath.includes(this.encryptedDir)) {
+      return 'encrypted';
+    }
+    return null;
   }
 }
 
@@ -267,8 +285,8 @@ class HashLogBackupApp {
 
   async initialize() {
     try {
-      // S'assurer que le répertoire à surveiller existe
-      this.fileService.ensureWatchDirExists();
+      // S'assurer que les répertoires à surveiller existent
+      this.fileService.ensureWatchDirsExist();
       
       // Connexion à MongoDB
       await this.mongoDBService.connect();
@@ -323,7 +341,16 @@ class HashLogBackupApp {
         return;
       }
 
-      logger.info(`Début du traitement de ${filePath}...`);
+      const fileType = this.fileService.getFileType(filePath);
+      if (!fileType) {
+        logger.error(`Type de fichier non reconnu pour ${filePath}`);
+        this.isProcessing = false;
+        resolve(false);
+        setTimeout(() => this.processNextInQueue(), 500);
+        return;
+      }
+
+      logger.info(`Début du traitement de ${filePath} (${fileType})...`);
 
       const fileContent = this.fileService.readFile(filePath);
       
@@ -334,13 +361,13 @@ class HashLogBackupApp {
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      logger.info(`Sauvegarde du fichier ${filePath} dans MongoDB...`);
+      logger.info(`Sauvegarde du fichier ${filePath} dans MongoDB (${fileType})...`);
       await this.mongoDBService.saveMessage({
         filePath,
         content: fileContent,
         topicId: this.topicId,
         status: receipt.status.toString()
-      });
+      }, fileType);
       
       this.processedFiles.add(filePath);
       this.fileService.saveProcessedFiles(this.processedFiles);
@@ -360,11 +387,9 @@ class HashLogBackupApp {
   }
 
   startWatching() {
-    const watchDir = this.config.files.watchDir;
+    logger.info(`Surveillance des répertoires: ${this.fileService.hashDir} et ${this.fileService.encryptedDir}`);
     
-    logger.info(`Surveillance du répertoire: ${watchDir}`);
-    
-    this.watcher = chokidar.watch(watchDir, {
+    this.watcher = chokidar.watch([this.fileService.hashDir, this.fileService.encryptedDir], {
       persistent: true,
       ignoreInitial: false,
       awaitWriteFinish: {
@@ -374,12 +399,13 @@ class HashLogBackupApp {
     });
 
     this.watcher.on('add', async (filePath) => {
-      logger.info(`Nouveau fichier détecté: ${filePath}`);
+      const fileType = this.fileService.getFileType(filePath);
+      logger.info(`Nouveau fichier détecté (${fileType}): ${filePath}`);
       await this.processFile(filePath);
     });
 
     this.watcher.on('error', (error) => {
-      logger.error('Erreur de surveillance du répertoire', error);
+      logger.error('Erreur de surveillance des répertoires', error);
     });
   }
 
