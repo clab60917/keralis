@@ -161,25 +161,27 @@
 
         function initChart() {
             const ctx = document.getElementById('activityChart').getContext('2d');
+            const initialData = Array(24).fill(0);
+            
             activityChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: Array(24).fill('').map((_, i) => moment().subtract(23-i, 'hours').format('HH:mm')),
                     datasets: [{
                         label: 'Hash',
-                        data: Array(24).fill(0),
+                        data: [...initialData],
                         borderColor: '#3B82F6',
                         tension: 0.4,
                         fill: false
                     }, {
                         label: 'Encrypted',
-                        data: Array(24).fill(0),
+                        data: [...initialData],
                         borderColor: '#10B981',
                         tension: 0.4,
                         fill: false
                     }, {
                         label: 'Messages',
-                        data: Array(24).fill(0),
+                        data: [...initialData],
                         borderColor: '#8B5CF6',
                         tension: 0.4,
                         fill: false
@@ -188,9 +190,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: {
-                        duration: 750
-                    },
+                    animation: false,
                     plugins: {
                         legend: {
                             position: 'top'
@@ -214,6 +214,8 @@
                 }
             });
         }
+
+        let lastUpdateHour = new Date().getHours();
 
         function updateConnectionStatus(connected) {
             elements.connectionStatus.classList.toggle('active', connected);
@@ -239,31 +241,31 @@
             }
         }
 
-        function updateChartLabels() {
-            const newLabels = Array(24).fill('').map((_, i) => 
-                moment().subtract(23-i, 'hours').format('HH:mm')
-            );
-            activityChart.data.labels = newLabels;
-        }
-
         function updateChart(stats) {
             const currentHour = new Date().getHours();
-            const datasets = activityChart.data.datasets;
             
-            // Faire glisser les données d'une heure
-            datasets.forEach(dataset => {
-                dataset.data = [...dataset.data.slice(1), dataset.data[dataset.data.length - 1]];
-            });
+            // Ne mettre à jour que si l'heure a changé
+            if (currentHour !== lastUpdateHour) {
+                // Mettre à jour les données
+                activityChart.data.datasets.forEach(dataset => {
+                    dataset.data.shift(); // Enlever la première valeur
+                    dataset.data.push(0); // Ajouter un nouveau point à 0
+                });
+                
+                // Mettre à jour les labels
+                activityChart.data.labels = Array(24).fill('').map((_, i) => 
+                    moment().subtract(23-i, 'hours').format('HH:mm')
+                );
+                
+                lastUpdateHour = currentHour;
+            }
             
-            // Mettre à jour la dernière valeur
-            datasets[0].data[23] = stats.hash;
-            datasets[1].data[23] = stats.encrypted;
-            datasets[2].data[23] = stats.messages;
+            // Mettre à jour le dernier point avec les valeurs actuelles
+            activityChart.data.datasets[0].data[23] = stats.hash;
+            activityChart.data.datasets[1].data[23] = stats.encrypted;
+            activityChart.data.datasets[2].data[23] = stats.messages;
             
-            // Mettre à jour les labels
-            updateChartLabels();
-            
-            activityChart.update('none'); // Mise à jour sans animation
+            activityChart.update();
         }
 
         const formatTimestamp = (() => {
