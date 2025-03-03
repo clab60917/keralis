@@ -64,6 +64,7 @@ class HederaService {
     this.accountId = AccountId.fromString(config.hedera.accountId);
     this.privateKey = PrivateKey.fromString(config.hedera.privateKey);
     this.initClient(config.hedera.network);
+    this.transactionLock = false;
   }
 
   initClient(network) {
@@ -73,29 +74,36 @@ class HederaService {
     this.client.setOperator(this.accountId, this.privateKey);
   }
 
+  async waitForLock() {
+    return new Promise(resolve => {
+      const checkLock = () => {
+        if (this.transactionLock) {
+          setTimeout(checkLock, 100);
+        } else {
+          resolve();
+        }
+      };
+      checkLock();
+    });
+  }
+
   async createTopic() {
+    await this.waitForLock();
+    this.transactionLock = true;
+    
     try {
-      // Créer un nouveau client pour chaque transaction
       const network = this.client.network;
       const newClient = network === 'mainnet' 
         ? Client.forMainnet() 
         : Client.forTestnet();
       newClient.setOperator(this.accountId, this.privateKey);
       
-      // Créer une nouvelle transaction
       const transaction = new TopicCreateTransaction()
         .setMaxTransactionFee(new Hbar(2));
       
-      // Geler la transaction avec le client
-      const frozenTx = transaction.freezeWith(newClient);
-      
-      // Exécuter la transaction
+      const frozenTx = await transaction.freezeWith(newClient);
       const txResponse = await frozenTx.execute(newClient);
-      
-      // Obtenir le reçu
       const receipt = await txResponse.getReceipt(newClient);
-      
-      // Extraire l'ID du topic
       const topicId = receipt.topicId.toString();
       
       logger.info(`Nouveau topic créé avec ID: ${topicId}`);
@@ -103,31 +111,29 @@ class HederaService {
     } catch (error) {
       logger.error('Erreur lors de la création du topic', error);
       throw error;
+    } finally {
+      this.transactionLock = false;
     }
   }
 
   async sendMessage(topicId, message) {
+    await this.waitForLock();
+    this.transactionLock = true;
+    
     try {
-      // Créer un nouveau client pour chaque transaction
       const network = this.client.network;
       const newClient = network === 'mainnet' 
         ? Client.forMainnet() 
         : Client.forTestnet();
       newClient.setOperator(this.accountId, this.privateKey);
       
-      // Créer une nouvelle transaction
       const transaction = new TopicMessageSubmitTransaction()
         .setTopicId(topicId)
         .setMessage(message)
         .setMaxTransactionFee(new Hbar(2));
       
-      // Geler la transaction avec le client
-      const frozenTx = transaction.freezeWith(newClient);
-      
-      // Exécuter la transaction
+      const frozenTx = await transaction.freezeWith(newClient);
       const txResponse = await frozenTx.execute(newClient);
-      
-      // Obtenir le reçu
       const receipt = await txResponse.getReceipt(newClient);
       
       logger.info(`Message envoyé au Topic ID ${topicId}: Statut ${receipt.status}`);
@@ -135,6 +141,8 @@ class HederaService {
     } catch (error) {
       logger.error(`Erreur lors de l'envoi du message au topic ${topicId}`, error);
       throw error;
+    } finally {
+      this.transactionLock = false;
     }
   }
 }
@@ -287,15 +295,11 @@ class HashLogBackupApp {
   }
   
   async processNextInQueue() {
-    // Si déjà en train de traiter un fichier ou si la file est vide, ne rien faire
     if (this.isProcessing || this.processingQueue.length === 0) {
       return;
     }
     
-    // Marquer comme en cours de traitement
     this.isProcessing = true;
-    
-    // Récupérer le prochain fichier à traiter
     const { filePath, resolve } = this.processingQueue.shift();
     
     try {
@@ -303,17 +307,13 @@ class HashLogBackupApp {
         logger.info(`Le fichier ${filePath} a déjà été traité.`);
         this.isProcessing = false;
         resolve(false);
-        this.processNextInQueue();
+        setTimeout(() => this.processNextInQueue(), 100);
         return;
       }
 
-      // Lecture du contenu du fichier
       const fileContent = this.fileService.readFile(filePath);
-      
-      // Envoi du message à Hedera
       const receipt = await this.hederaService.sendMessage(this.topicId, fileContent);
       
-      // Sauvegarde dans MongoDB
       await this.mongoDBService.saveMessage({
         filePath,
         content: fileContent,
@@ -321,7 +321,6 @@ class HashLogBackupApp {
         status: receipt.status.toString()
       });
       
-      // Marquer le fichier comme traité
       this.processedFiles.add(filePath);
       this.fileService.saveProcessedFiles(this.processedFiles);
       
@@ -329,15 +328,13 @@ class HashLogBackupApp {
       this.isProcessing = false;
       resolve(true);
       
-      // Traiter le fichier suivant dans la file
-      this.processNextInQueue();
+      setTimeout(() => this.processNextInQueue(), 500);
     } catch (error) {
       logger.error(`Erreur lors du traitement du fichier ${filePath}`, error);
       this.isProcessing = false;
       resolve(false);
       
-      // Attendre un peu avant de traiter le fichier suivant en cas d'erreur
-      setTimeout(() => this.processNextInQueue(), 2000);
+      setTimeout(() => this.processNextInQueue(), 3000);
     }
   }
 
