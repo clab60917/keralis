@@ -220,3 +220,9 @@
 2025-03-03 00:34:22,790 - INFO - [94mℹ️  📤 Fichier chiffré envoyé avec succès: 4.log.enc[0m
 2025-03-03 00:34:47,993 - WARNING - [93m⚠️  🛑 Arrêt du script demandé...[0m
 2025-03-03 00:34:47,994 - INFO - [94mℹ️  ✨ Script arrêté avec succès.[0m
+2025-03-03 00:36:18,648 - INFO - [94mℹ️  🚀 Initialisation du script...[0m
+2025-03-03 00:36:18,649 - INFO - [94mℹ️  👀 Démarrage de la surveillance des fichiers logs...[0m
+2025-03-03 00:36:18,649 - INFO - [94mℹ️  📁 Dossier surveillé: /Users/clementarthaud/Documents/VSCODE/PERSO/keralis/logs[0m
+2025-03-03 00:36:18,650 - INFO - [94mℹ️  ⏳ Script en cours d'exécution. Appuyez sur Ctrl+C pour arrêter.[0m
+2025-03-03 00:36:39,126 - WARNING - [93m⚠️  🛑 Arrêt du script demandé...[0m
+2025-03-03 00:36:39,128 - INFO - [94mℹ️  ✨ Script arrêté avec succès.[0m

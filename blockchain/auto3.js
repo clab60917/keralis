@@ -83,16 +83,14 @@ class HederaService {
       newClient.setOperator(this.accountId, this.privateKey);
       
       // Créer une nouvelle transaction
-      const transaction = new TopicCreateTransaction();
+      const transaction = new TopicCreateTransaction()
+        .setMaxTransactionFee(new Hbar(2));
       
-      // Définir les frais maximum
-      transaction.maxTransactionFee = new Hbar(2);
-      
-      // Définir le client
-      transaction.freezeWith(newClient);
+      // Geler la transaction avec le client
+      const frozenTx = transaction.freezeWith(newClient);
       
       // Exécuter la transaction
-      const txResponse = await transaction.execute(newClient);
+      const txResponse = await frozenTx.execute(newClient);
       
       // Obtenir le reçu
       const receipt = await txResponse.getReceipt(newClient);
@@ -118,22 +116,16 @@ class HederaService {
       newClient.setOperator(this.accountId, this.privateKey);
       
       // Créer une nouvelle transaction
-      const transaction = new TopicMessageSubmitTransaction();
+      const transaction = new TopicMessageSubmitTransaction()
+        .setTopicId(topicId)
+        .setMessage(message)
+        .setMaxTransactionFee(new Hbar(2));
       
-      // Définir l'ID du topic
-      transaction.topicId = topicId;
-      
-      // Définir le message
-      transaction.message = message;
-      
-      // Définir les frais maximum
-      transaction.maxTransactionFee = new Hbar(2);
-      
-      // Définir le client
-      transaction.freezeWith(newClient);
+      // Geler la transaction avec le client
+      const frozenTx = transaction.freezeWith(newClient);
       
       // Exécuter la transaction
-      const txResponse = await transaction.execute(newClient);
+      const txResponse = await frozenTx.execute(newClient);
       
       // Obtenir le reçu
       const receipt = await txResponse.getReceipt(newClient);
