@@ -198,7 +198,17 @@
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 12
+                            }
                         }
                     }
                 }
@@ -229,13 +239,29 @@
             }
         }
 
+        function updateChartLabels() {
+            const newLabels = Array(24).fill('').map((_, i) => 
+                moment().subtract(23-i, 'hours').format('HH:mm')
+            );
+            activityChart.data.labels = newLabels;
+        }
+
         function updateChart(stats) {
             const currentHour = new Date().getHours();
             const datasets = activityChart.data.datasets;
             
-            datasets[0].data[currentHour] = stats.hash;
-            datasets[1].data[currentHour] = stats.encrypted;
-            datasets[2].data[currentHour] = stats.messages;
+            // Faire glisser les données d'une heure
+            datasets.forEach(dataset => {
+                dataset.data = [...dataset.data.slice(1), dataset.data[dataset.data.length - 1]];
+            });
+            
+            // Mettre à jour la dernière valeur
+            datasets[0].data[23] = stats.hash;
+            datasets[1].data[23] = stats.encrypted;
+            datasets[2].data[23] = stats.messages;
+            
+            // Mettre à jour les labels
+            updateChartLabels();
             
             activityChart.update('none'); // Mise à jour sans animation
         }
