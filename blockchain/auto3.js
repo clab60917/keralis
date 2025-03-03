@@ -186,17 +186,17 @@ class MongoDBService {
     }
   }
 
-  async saveMessage(data, type) {
+  async saveFile(data, type) {
     try {
       const collection = type === 'hash' ? this.hashCollection : this.encryptedCollection;
       const result = await collection.insertOne({
         ...data,
         timestamp: new Date()
       });
-      logger.info(`Message sauvegardé dans MongoDB (${type}) avec ID: ${result.insertedId}`);
+      logger.info(`Fichier sauvegardé dans MongoDB (${type}) avec ID: ${result.insertedId}`);
       return result;
     } catch (error) {
-      logger.error(`Erreur lors de la sauvegarde du message dans MongoDB (${type})`, error);
+      logger.error(`Erreur lors de la sauvegarde du fichier dans MongoDB (${type})`, error);
       throw error;
     }
   }
@@ -336,7 +336,6 @@ class HashLogBackupApp {
         logger.info(`Le fichier ${filePath} a déjà été traité.`);
         this.isProcessing = false;
         resolve(false);
-        
         setTimeout(() => this.processNextInQueue(), 500);
         return;
       }
@@ -351,23 +350,27 @@ class HashLogBackupApp {
       }
 
       logger.info(`Début du traitement de ${filePath} (${fileType})...`);
-
       const fileContent = this.fileService.readFile(filePath);
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      logger.info(`Envoi du fichier ${filePath} vers Hedera...`);
-      const receipt = await this.hederaService.sendMessage(this.topicId, fileContent);
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      logger.info(`Sauvegarde du fichier ${filePath} dans MongoDB (${fileType})...`);
-      await this.mongoDBService.saveMessage({
-        filePath,
-        content: fileContent,
-        topicId: this.topicId,
-        status: receipt.status.toString()
-      }, fileType);
+
+      // Si c'est un fichier hash, l'envoyer sur Hedera
+      if (fileType === 'hash') {
+        logger.info(`Envoi du hash ${filePath} vers Hedera...`);
+        const receipt = await this.hederaService.sendMessage(this.topicId, fileContent);
+        
+        // Sauvegarder le hash dans MongoDB avec les infos Hedera
+        await this.mongoDBService.saveFile({
+          filePath,
+          content: fileContent,
+          topicId: this.topicId,
+          status: receipt.status.toString()
+        }, fileType);
+      } else {
+        // Pour les fichiers encrypted, juste sauvegarder dans MongoDB
+        await this.mongoDBService.saveFile({
+          filePath,
+          content: fileContent
+        }, fileType);
+      }
       
       this.processedFiles.add(filePath);
       this.fileService.saveProcessedFiles(this.processedFiles);
