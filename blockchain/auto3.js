@@ -51,12 +51,35 @@ if (!process.env.MONGODB_URI && config.mongodb.user && config.mongodb.password) 
 
 // Logger
 const logger = {
-  info: (message) => console.log(`[INFO] ${new Date().toISOString()}: ${message}`),
-  error: (message, error) => console.error(`[ERROR] ${new Date().toISOString()}: ${message}`, error),
+  info: (message, type = 'INFO') => {
+    const timestamp = new Date().toISOString();
+    const prefix = `[${type.padEnd(8)}] ${timestamp}`;
+    console.log('\x1b[32m%s\x1b[0m', `${prefix}: ${message}`);  // Vert pour info
+  },
+  error: (message, error) => {
+    const timestamp = new Date().toISOString();
+    const prefix = `[ERROR  ] ${timestamp}`;
+    console.error('\x1b[31m%s\x1b[0m', `${prefix}: ${message}`);  // Rouge pour erreur
+    if (error) {
+      console.error('\x1b[31m%s\x1b[0m', `${' '.repeat(prefix.length + 2)}${error.message}`);
+    }
+  },
   debug: (message) => {
     if (config.app.logLevel === 'debug') {
-      console.log(`[DEBUG] ${new Date().toISOString()}: ${message}`);
+      const timestamp = new Date().toISOString();
+      const prefix = `[DEBUG  ] ${timestamp}`;
+      console.log('\x1b[36m%s\x1b[0m', `${prefix}: ${message}`);  // Cyan pour debug
     }
+  },
+  hedera: (message) => {
+    const timestamp = new Date().toISOString();
+    const prefix = `[HEDERA ] ${timestamp}`;
+    console.log('\x1b[35m%s\x1b[0m', `${prefix}: ${message}`);  // Magenta pour Hedera
+  },
+  mongodb: (message) => {
+    const timestamp = new Date().toISOString();
+    const prefix = `[MONGODB] ${timestamp}`;
+    console.log('\x1b[33m%s\x1b[0m', `${prefix}: ${message}`);  // Jaune pour MongoDB
   }
 };
 
@@ -167,6 +190,7 @@ class MongoDBService {
     this.dbName = config.mongodb.dbName;
     this.hashCollection = null;
     this.encryptedCollection = null;
+    this.messagesCollection = null;
     this.client = null;
     this.db = null;
   }
@@ -179,7 +203,8 @@ class MongoDBService {
       this.db = this.client.db(this.dbName);
       this.hashCollection = this.db.collection('hash');
       this.encryptedCollection = this.db.collection('encrypted');
-      logger.info(`Connecté à MongoDB: ${this.dbName}`);
+      this.messagesCollection = this.db.collection('messages');
+      logger.mongodb(`Connecté à la base de données ${this.dbName}`);
     } catch (error) {
       logger.error('Erreur de connexion à MongoDB', error);
       throw error;
@@ -193,10 +218,24 @@ class MongoDBService {
         ...data,
         timestamp: new Date()
       });
-      logger.info(`Fichier sauvegardé dans MongoDB (${type}) avec ID: ${result.insertedId}`);
+      logger.mongodb(`Fichier sauvegardé dans la collection ${type} avec ID: ${result.insertedId}`);
       return result;
     } catch (error) {
-      logger.error(`Erreur lors de la sauvegarde du fichier dans MongoDB (${type})`, error);
+      logger.error(`Erreur lors de la sauvegarde dans la collection ${type}`, error);
+      throw error;
+    }
+  }
+
+  async saveHederaMessage(data) {
+    try {
+      const result = await this.messagesCollection.insertOne({
+        ...data,
+        timestamp: new Date()
+      });
+      logger.mongodb(`Message Hedera sauvegardé dans la collection messages avec ID: ${result.insertedId}`);
+      return result;
+    } catch (error) {
+      logger.error('Erreur lors de la sauvegarde du message Hedera', error);
       throw error;
     }
   }
@@ -204,7 +243,7 @@ class MongoDBService {
   async close() {
     if (this.client) {
       await this.client.close();
-      logger.info('Connexion MongoDB fermée');
+      logger.mongodb('Connexion fermée');
     }
   }
 }
@@ -333,7 +372,7 @@ class HashLogBackupApp {
     
     try {
       if (this.processedFiles.has(filePath)) {
-        logger.info(`Le fichier ${filePath} a déjà été traité.`);
+        logger.info(`Le fichier ${filePath} a déjà été traité.`, 'FILE');
         this.isProcessing = false;
         resolve(false);
         setTimeout(() => this.processNextInQueue(), 500);
@@ -349,15 +388,23 @@ class HashLogBackupApp {
         return;
       }
 
-      logger.info(`Début du traitement de ${filePath} (${fileType})...`);
+      logger.info(`Début du traitement de ${filePath}`, fileType.toUpperCase());
       const fileContent = this.fileService.readFile(filePath);
 
       // Si c'est un fichier hash, l'envoyer sur Hedera
       if (fileType === 'hash') {
-        logger.info(`Envoi du hash ${filePath} vers Hedera...`);
+        logger.hedera(`Envoi du hash ${filePath} vers le topic ${this.topicId}`);
         const receipt = await this.hederaService.sendMessage(this.topicId, fileContent);
         
-        // Sauvegarder le hash dans MongoDB avec les infos Hedera
+        // Sauvegarder dans la collection messages
+        await this.mongoDBService.saveHederaMessage({
+          filePath,
+          content: fileContent,
+          topicId: this.topicId,
+          status: receipt.status.toString()
+        });
+        
+        // Sauvegarder aussi dans la collection hash
         await this.mongoDBService.saveFile({
           filePath,
           content: fileContent,
@@ -375,7 +422,7 @@ class HashLogBackupApp {
       this.processedFiles.add(filePath);
       this.fileService.saveProcessedFiles(this.processedFiles);
       
-      logger.info(`Fichier ${filePath} traité avec succès.`);
+      logger.info(`Traitement terminé pour ${filePath}`, fileType.toUpperCase());
       this.isProcessing = false;
       resolve(true);
       
