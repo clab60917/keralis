@@ -5,6 +5,7 @@ const io = require('socket.io')(http);
 const { MongoClient } = require('mongodb');
 const path = require('path');
 const basicAuth = require('express-basic-auth');
+const systemMonitor = require('./system_monitor');
 
 const config = require('./auto3').config;
 
@@ -39,11 +40,15 @@ async function getStats() {
         
         console.log('Récupération des statistiques...');
         
+        // Récupérer les stats système
+        const systemStats = await systemMonitor.getSystemStats();
+        
         const stats = {
             hash: await db.collection('hash').countDocuments(),
             encrypted: await db.collection('encrypted').countDocuments(),
             messages: await db.collection('messages').countDocuments(),
-            lastUpdated: new Date().toLocaleString()
+            lastUpdated: new Date().toLocaleString(),
+            system: systemStats
         };
 
         // Obtenir les 5 derniers messages de chaque collection
@@ -75,7 +80,8 @@ async function getStats() {
             messages: stats.messages,
             recentHashCount: recentHash.length,
             recentEncryptedCount: recentEncrypted.length,
-            recentMessagesCount: recentMessages.length
+            recentMessagesCount: recentMessages.length,
+            systemStatus: systemStats ? 'OK' : 'Error'
         });
 
         lastStats = stats;
