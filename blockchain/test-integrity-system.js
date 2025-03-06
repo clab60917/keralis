@@ -8,23 +8,14 @@ const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
 const TEST_FILE_NAME = '20250305012039.log';  // Un des fichiers existants
 
-// Configuration email améliorée pour Gmail
+// Configuration email avec Elastic Email
 const transporter = nodemailer.createTransport({
-    service: 'gmail',  // Utilisation du service prédéfini Gmail
-    host: 'smtp.gmail.com',
-    port: 587,
+    host: 'smtp.elasticemail.com',
+    port: 2525,
     secure: false,
     auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-    debug: true, // Active les logs de debug
-    logger: true, // Active les logs détaillés
-    // Options de sécurité requises par Gmail
-    requireTLS: true,
-    tls: {
-        ciphers: 'SSLv3',
-        rejectUnauthorized: false
+        user: process.env.ELASTIC_EMAIL_USER,
+        pass: process.env.ELASTIC_EMAIL_API_KEY
     }
 });
 
@@ -54,9 +45,9 @@ async function sendAlertEmail(fileName, oldHash, newHash) {
     const mailOptions = {
         from: {
             name: 'Système Keralis',
-            address: process.env.SMTP_USER
+            address: process.env.ELASTIC_EMAIL_USER
         },
-        to: process.env.ALERT_EMAIL_TO,
+        to: process.env.ELASTIC_EMAIL_USER, // Même adresse pour l'envoi et la réception
         subject: `🚨 Alerte : Modification détectée dans ${fileName}`,
         html: `
             <h2>Une modification a été détectée dans un fichier de log</h2>
@@ -88,12 +79,6 @@ async function sendAlertEmail(fileName, oldHash, newHash) {
             console.error('Code d\'erreur:', error.code);
         }
         console.log('⚠️ Le test continue malgré l\'échec de l\'envoi d\'email');
-    } finally {
-        try {
-            await transporter.close();
-        } catch (error) {
-            console.error('Erreur lors de la fermeture du transporteur:', error.message);
-        }
     }
 }
 
