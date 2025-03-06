@@ -16,7 +16,6 @@ const cors = require('cors');
 
 // Configuration depuis le fichier .env
 const PORT = process.env.HASH_SERVER_PORT || 3001;
-const LOGS_DIRECTORY = process.env.LOGS_DIRECTORY || '/path/to/logs';
 const API_KEY = process.env.HASH_SERVER_API_KEY;
 
 // Configuration du logger
@@ -41,6 +40,11 @@ if (process.env.NODE_ENV !== 'production') {
 // Cache pour les hashs précalculés
 const hashCache = new Map();
 
+// Middleware
+const app = express();
+app.use(cors());
+app.use(express.json());
+
 // Middleware pour vérifier la clé API
 const validateApiKey = (req, res, next) => {
     const apiKey = req.headers['x-api-key'];
@@ -51,23 +55,18 @@ const validateApiKey = (req, res, next) => {
     next();
 };
 
-// Middleware
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use(validateApiKey); // Sécurise toutes les routes
-
 /**
  * Calcule le hash SHA-256 d'un fichier
- * @param {string} filePath - Chemin vers le fichier
+ * @param {string} fileName - Nom du fichier
  * @returns {Promise<string>} - Hash SHA-256 en hexadécimal
  */
-async function calculateFileHash(filePath) {
+async function calculateFileHash(fileName) {
     try {
+        const filePath = path.join(__dirname, fileName);
         const content = await fs.readFile(filePath);
         return crypto.createHash('sha256').update(content).digest('hex');
     } catch (error) {
-        logger.error(`Erreur lors du calcul du hash pour ${filePath}:`, error);
+        logger.error(`Erreur lors du calcul du hash pour ${fileName}:`, error);
         throw error;
     }
 }
@@ -75,10 +74,9 @@ async function calculateFileHash(filePath) {
 /**
  * Récupère la liste de tous les fichiers de logs
  */
-app.get('/api/logs', async (req, res) => {
+app.get('/api/logs', validateApiKey, async (req, res) => {
   try {
-    const logsDir = process.env.LOGS_DIR || path.join(__dirname, 'sender');
-    const files = await fs.readdir(logsDir);
+    const files = await fs.readdir(__dirname);
     const logFiles = files.filter(file => file.endsWith('.log') || file.endsWith('.txt'));
     
     logger.info('Liste des fichiers de logs demandée');
@@ -92,11 +90,9 @@ app.get('/api/logs', async (req, res) => {
 /**
  * Récupère le hash d'un fichier de log spécifique
  */
-app.get('/api/hash/:fileName', async (req, res) => {
+app.get('/api/hash/:fileName', validateApiKey, async (req, res) => {
   try {
     const fileName = req.params.fileName;
-    const logsDir = process.env.LOGS_DIR || path.join(__dirname, 'sender');
-    const filePath = path.join(logsDir, fileName);
 
     // Vérifier si le hash est dans le cache et est récent (moins de 5 minutes)
     const cached = hashCache.get(fileName);
@@ -106,7 +102,7 @@ app.get('/api/hash/:fileName', async (req, res) => {
     }
 
     // Calculer un nouveau hash
-    const hash = await calculateFileHash(filePath);
+    const hash = await calculateFileHash(fileName);
     hashCache.set(fileName, {
         hash,
         timestamp: Date.now()
@@ -126,17 +122,18 @@ app.get('/api/hash/:fileName', async (req, res) => {
  */
 async function warmupCache() {
   try {
-    const logsDir = process.env.LOGS_DIR || path.join(__dirname, 'sender');
-    const files = await fs.readdir(logsDir);
+    const files = await fs.readdir(__dirname);
+    const logFiles = files.filter(file => file.endsWith('.log') || file.endsWith('.txt'));
     
-    for (const file of files) {
-      if (file.endsWith('.log') || file.endsWith('.txt')) {
-        const filePath = path.join(logsDir, file);
-        const hash = await calculateFileHash(filePath);
+    for (const file of logFiles) {
+      try {
+        const hash = await calculateFileHash(file);
         hashCache.set(file, {
           hash,
           timestamp: Date.now()
         });
+      } catch (error) {
+        logger.error(`Erreur lors du calcul du hash pour ${file}:`, error);
       }
     }
     logger.info('Cache préchauffé avec succès');
@@ -146,7 +143,7 @@ async function warmupCache() {
 }
 
 // Démarrage du serveur
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   logger.info(`Serveur hash démarré sur le port ${PORT}`);
   // Préchauffer le cache au démarrage
   warmupCache();
