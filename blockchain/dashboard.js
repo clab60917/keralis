@@ -114,7 +114,7 @@ async function getStats() {
         };
 
         // Obtenir les 5 derniers messages de chaque collection
-        const [recentHashList, recentEncryptedList, recentMessages] = await Promise.all([
+        const [recentHashList, recentEncryptedList, recentMessages, recentAlerts] = await Promise.all([
             db.collection('hash')
                 .find({})
                 .sort({ timestamp: -1 })
@@ -129,12 +129,18 @@ async function getStats() {
                 .find({})
                 .sort({ timestamp: -1 })
                 .limit(5)
+                .toArray(),
+            db.collection('alerts')
+                .find({})
+                .sort({ timestamp: -1 })
+                .limit(5)
                 .toArray()
         ]);
 
         stats.recentHash = recentHashList;
         stats.recentEncrypted = recentEncryptedList;
         stats.recentMessages = recentMessages;
+        stats.alerts = recentAlerts;
 
         console.log('Statistiques récupérées:', {
             hash: stats.hash,
@@ -143,6 +149,7 @@ async function getStats() {
             recentHashCount: recentHashList.length,
             recentEncryptedCount: recentEncryptedList.length,
             recentMessagesCount: recentMessages.length,
+            alertsCount: recentAlerts.length,
             systemStatus: systemStats ? 'OK' : 'Error',
             rates,
             processingTimes
@@ -239,33 +246,6 @@ process.on('SIGINT', async () => {
         await mongoClient.close();
     }
     process.exit(0);
-});
-
-// Ajouter la route pour les alertes
-app.get('/alerts', async (req, res) => {
-    try {
-        const db = await connectToMongoDB();
-        const alerts = await db.collection('alerts')
-            .find({})
-            .sort({ timestamp: -1 })
-            .toArray();
-        
-        console.log(`${alerts.length} alertes trouvées`);
-        
-        res.render('alerts', {
-            title: 'Alertes',
-            alerts: alerts,
-            active: 'alerts'
-        });
-    } catch (error) {
-        console.error('Erreur lors de la récupération des alertes:', error);
-        res.render('alerts', {
-            title: 'Alertes',
-            alerts: [],
-            error: 'Erreur lors de la récupération des alertes',
-            active: 'alerts'
-        });
-    }
 });
 
 startServer(); 
