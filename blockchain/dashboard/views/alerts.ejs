@@ -1,0 +1,130 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+    <h2>Alertes de Modification</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Fichier</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th>Hash Original</th>
+                            <th>Nouveau Hash</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTableBody">
+                        <!-- Les alertes seront injectées ici via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fonction pour formater la date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+}
+
+// Fonction pour charger les alertes
+async function loadAlerts() {
+    try {
+        const response = await fetch('/api/alerts');
+        const alerts = await response.json();
+        
+        const tableBody = document.getElementById('alertsTableBody');
+        tableBody.innerHTML = '';
+        
+        alerts.forEach(alert => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${formatDate(alert.timestamp)}</td>
+                <td>${alert.fileName}</td>
+                <td><span class="badge bg-warning">${alert.type}</span></td>
+                <td>
+                    <span class="badge bg-${alert.status === 'restored' ? 'success' : 'danger'}">
+                        ${alert.status}
+                    </span>
+                </td>
+                <td><small>${alert.oldHash}</small></td>
+                <td><small>${alert.newHash}</small></td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="viewDetails('${alert._id}')">
+                        Détails
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Erreur lors du chargement des alertes:', error);
+        alert('Erreur lors du chargement des alertes');
+    }
+}
+
+// Fonction pour voir les détails d'une alerte
+async function viewDetails(alertId) {
+    try {
+        const response = await fetch(`/api/alerts/${alertId}`);
+        const alert = await response.json();
+        
+        // Afficher les détails dans une modal
+        const detailsHtml = `
+            <div class="modal fade" id="alertDetailsModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Détails de l'Alerte</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Fichier:</strong> ${alert.fileName}</p>
+                            <p><strong>Date de détection:</strong> ${formatDate(alert.timestamp)}</p>
+                            <p><strong>Statut:</strong> ${alert.status}</p>
+                            <p><strong>Hash Original:</strong> ${alert.oldHash}</p>
+                            <p><strong>Nouveau Hash:</strong> ${alert.newHash}</p>
+                            <p><strong>Email envoyé:</strong> ${alert.emailSent ? 'Oui' : 'Non'}</p>
+                            <p><strong>Serveur:</strong> ${alert.details.serverUrl}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', detailsHtml);
+        const modal = new bootstrap.Modal(document.getElementById('alertDetailsModal'));
+        modal.show();
+        
+        // Nettoyer la modal après fermeture
+        document.getElementById('alertDetailsModal').addEventListener('hidden.bs.modal', function () {
+            this.remove();
+        });
+    } catch (error) {
+        console.error('Erreur lors du chargement des détails:', error);
+        alert('Erreur lors du chargement des détails');
+    }
+}
+
+// Charger les alertes au chargement de la page
+document.addEventListener('DOMContentLoaded', loadAlerts);
+
+// Rafraîchir les alertes toutes les 30 secondes
+setInterval(loadAlerts, 30000);
+</script>
+
+<%- include('partials/footer') %> 

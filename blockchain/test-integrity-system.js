@@ -3,10 +3,15 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const axios = require('axios');
 const fs = require('fs').promises;
 const nodemailer = require('nodemailer');
+const { MongoClient } = require('mongodb');
 
 const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3001';
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
 const TEST_FILE_NAME = '20250305012039.log';  // Un des fichiers existants
+
+// Configuration MongoDB
+const MONGODB_URI = `mongodb://${process.env.MONGODB_USER}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DB_NAME}?authSource=${process.env.MONGODB_AUTH_SOURCE}`;
+let mongoClient;
 
 // Configuration email avec Elastic Email
 const transporter = nodemailer.createTransport({
@@ -18,6 +23,65 @@ const transporter = nodemailer.createTransport({
         pass: process.env.ELASTIC_EMAIL_API_KEY
     }
 });
+
+// Fonction pour se connecter à MongoDB
+async function connectToMongoDB() {
+    try {
+        mongoClient = new MongoClient(MONGODB_URI);
+        await mongoClient.connect();
+        console.log('✓ Connexion à MongoDB établie');
+        return mongoClient.db(process.env.MONGODB_DB_NAME);
+    } catch (error) {
+        console.error('❌ Erreur de connexion à MongoDB:', error.message);
+        throw error;
+    }
+}
+
+// Fonction pour sauvegarder une alerte dans MongoDB
+async function saveAlert(fileName, oldHash, newHash) {
+    try {
+        const db = await connectToMongoDB();
+        const alertsCollection = db.collection('alerts');
+        
+        const alert = {
+            timestamp: new Date(),
+            fileName,
+            oldHash,
+            newHash,
+            status: 'new',
+            emailSent: true,
+            type: 'modification',
+            details: {
+                detectionTime: new Date(),
+                serverUrl: HASH_SERVER_URL,
+                restored: false
+            }
+        };
+
+        const result = await alertsCollection.insertOne(alert);
+        console.log('✓ Alerte sauvegardée dans MongoDB:', result.insertedId);
+        return result.insertedId;
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde de l\'alerte:', error.message);
+        throw error;
+    }
+}
+
+// Fonction pour mettre à jour le statut d'une alerte
+async function updateAlertStatus(alertId, status) {
+    try {
+        const db = await connectToMongoDB();
+        const alertsCollection = db.collection('alerts');
+        
+        await alertsCollection.updateOne(
+            { _id: alertId },
+            { $set: { status, restored: status === 'restored' } }
+        );
+        console.log(`✓ Statut de l'alerte mis à jour: ${status}`);
+    } catch (error) {
+        console.error('❌ Erreur lors de la mise à jour du statut de l\'alerte:', error.message);
+    }
+}
 
 // Vérification de la configuration avant utilisation
 async function verifyEmailConfig() {
@@ -73,12 +137,14 @@ async function sendAlertEmail(fileName, oldHash, newHash) {
         console.log('Tentative d\'envoi de l\'email d\'alerte...');
         await transporter.sendMail(mailOptions);
         console.log('✓ Email d\'alerte envoyé avec succès');
+        return true;
     } catch (error) {
         console.error('❌ Erreur lors de l\'envoi de l\'email:', error.message);
         if (error.code) {
             console.error('Code d\'erreur:', error.code);
         }
         console.log('⚠️ Le test continue malgré l\'échec de l\'envoi d\'email');
+        return false;
     }
 }
 
@@ -92,6 +158,8 @@ function debugInfo() {
 async function runTests() {
     console.log('Démarrage des tests du système d\'intégrité...');
     debugInfo();
+
+    let alertId = null;
 
     // Configuration Axios avec les headers par défaut
     const axiosConfig = {
@@ -114,7 +182,7 @@ async function runTests() {
         const hashResponse = await axios.get(`${HASH_SERVER_URL}/api/hash/${TEST_FILE_NAME}`, axiosConfig);
         console.log('✓ Hash initial calculé:', hashResponse.data);
 
-        // 2. Simuler une modification de fichier en envoyant une requête au serveur
+        // 2. Simuler une modification de fichier
         console.log('\nSimulation d\'une modification de fichier...');
         const modifyResponse = await axios.post(`${HASH_SERVER_URL}/api/modify/${TEST_FILE_NAME}`, {
             modification: `Test modification ${Date.now()}`
@@ -127,7 +195,15 @@ async function runTests() {
 
         if (hashResponse.data.hash !== newHashResponse.data.hash) {
             console.log('✓ Modification correctement détectée');
-            // Envoyer un email d'alerte
+            
+            // Sauvegarder l'alerte dans MongoDB
+            alertId = await saveAlert(
+                TEST_FILE_NAME,
+                hashResponse.data.hash,
+                newHashResponse.data.hash
+            );
+            
+            // Envoyer l'email d'alerte
             await sendAlertEmail(
                 TEST_FILE_NAME,
                 hashResponse.data.hash,
@@ -141,6 +217,11 @@ async function runTests() {
         const restoreResponse = await axios.post(`${HASH_SERVER_URL}/api/restore/${TEST_FILE_NAME}`, {}, axiosConfig);
         console.log('✓ Contenu original restauré:', restoreResponse.data);
 
+        // Mettre à jour le statut de l'alerte si elle existe
+        if (alertId) {
+            await updateAlertStatus(alertId, 'restored');
+        }
+
         console.log('\nTests terminés avec succès!');
     } catch (error) {
         console.error('\n❌ Erreur lors des tests:', error.message);
@@ -148,6 +229,12 @@ async function runTests() {
             console.error('Détails de l\'erreur:', error.response.data);
             console.error('Headers de la requête:', axiosConfig.headers);
             console.error('Status:', error.response.status);
+        }
+    } finally {
+        // Fermer la connexion MongoDB
+        if (mongoClient) {
+            await mongoClient.close();
+            console.log('Connexion MongoDB fermée');
         }
     }
 }
