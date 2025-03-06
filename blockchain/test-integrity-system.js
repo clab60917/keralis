@@ -8,34 +8,54 @@ const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
 const TEST_FILE_NAME = '20250305012039.log';  // Un des fichiers existants
 
-// Configuration email améliorée
+// Configuration email améliorée pour Gmail
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE === 'true',
+    service: 'gmail',  // Utilisation du service prédéfini Gmail
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
     },
-    // Ajout des options de timeout
-    connectionTimeout: 10000, // 10 secondes
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-    // Options de sécurité TLS
+    debug: true, // Active les logs de debug
+    logger: true, // Active les logs détaillés
+    // Options de sécurité requises par Gmail
+    requireTLS: true,
     tls: {
-        rejectUnauthorized: false // Permet les certificats auto-signés
-    },
-    // Retry en cas d'échec
-    pool: true,
-    maxConnections: 1,
-    maxMessages: 1,
-    rateDelta: 1000,
-    rateLimit: 1
+        ciphers: 'SSLv3',
+        rejectUnauthorized: false
+    }
 });
 
+// Vérification de la configuration avant utilisation
+async function verifyEmailConfig() {
+    try {
+        console.log('Vérification de la configuration email...');
+        await transporter.verify();
+        console.log('✓ Configuration email valide');
+        return true;
+    } catch (error) {
+        console.error('❌ Configuration email invalide:', error.message);
+        if (error.code) {
+            console.error('Code d\'erreur:', error.code);
+        }
+        return false;
+    }
+}
+
 async function sendAlertEmail(fileName, oldHash, newHash) {
+    // Vérifier la configuration avant d'envoyer
+    if (!await verifyEmailConfig()) {
+        console.log('⚠️ Envoi d\'email désactivé en raison d\'une configuration invalide');
+        return;
+    }
+
     const mailOptions = {
-        from: process.env.ALERT_EMAIL_FROM,
+        from: {
+            name: 'Système Keralis',
+            address: process.env.SMTP_USER
+        },
         to: process.env.ALERT_EMAIL_TO,
         subject: `🚨 Alerte : Modification détectée dans ${fileName}`,
         html: `
@@ -46,7 +66,6 @@ async function sendAlertEmail(fileName, oldHash, newHash) {
             <p><strong>Date de détection :</strong> ${new Date().toISOString()}</p>
             <p>Cette alerte a été générée automatiquement par le système de test d'intégrité.</p>
         `,
-        // Ajout d'une version texte pour plus de compatibilité
         text: `
             ALERTE : Modification détectée dans ${fileName}
             
@@ -61,23 +80,15 @@ async function sendAlertEmail(fileName, oldHash, newHash) {
 
     try {
         console.log('Tentative d\'envoi de l\'email d\'alerte...');
-        // Ajout d'un timeout de 30 secondes pour l'envoi complet
-        const sendPromise = transporter.sendMail(mailOptions);
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout global dépassé')), 30000)
-        );
-
-        await Promise.race([sendPromise, timeoutPromise]);
+        await transporter.sendMail(mailOptions);
         console.log('✓ Email d\'alerte envoyé avec succès');
     } catch (error) {
         console.error('❌ Erreur lors de l\'envoi de l\'email:', error.message);
         if (error.code) {
             console.error('Code d\'erreur:', error.code);
         }
-        // On continue l'exécution même si l'email échoue
         console.log('⚠️ Le test continue malgré l\'échec de l\'envoi d\'email');
     } finally {
-        // Fermeture propre du transporteur
         try {
             await transporter.close();
         } catch (error) {
