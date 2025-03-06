@@ -44,11 +44,26 @@ function formatDate(dateString) {
 // Fonction pour charger les alertes
 async function loadAlerts() {
     try {
+        console.log('Chargement des alertes...');
         const response = await fetch('/api/alerts');
+        console.log('Réponse reçue:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const alerts = await response.json();
+        console.log('Alertes reçues:', alerts);
         
         const tableBody = document.getElementById('alertsTableBody');
         tableBody.innerHTML = '';
+        
+        if (alerts.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="7" class="text-center">Aucune alerte trouvée</td>';
+            tableBody.appendChild(tr);
+            return;
+        }
         
         alerts.forEach(alert => {
             const tr = document.createElement('tr');
@@ -71,17 +86,30 @@ async function loadAlerts() {
             `;
             tableBody.appendChild(tr);
         });
+
+        // Mettre à jour le compteur d'alertes
+        const alertCount = alerts.filter(a => a.status !== 'restored').length;
+        document.getElementById('alertCount').textContent = alertCount > 0 ? alertCount : '';
     } catch (error) {
         console.error('Erreur lors du chargement des alertes:', error);
-        alert('Erreur lors du chargement des alertes');
+        const tableBody = document.getElementById('alertsTableBody');
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erreur lors du chargement des alertes</td></tr>';
     }
 }
 
 // Fonction pour voir les détails d'une alerte
 async function viewDetails(alertId) {
     try {
+        console.log('Chargement des détails pour l\'alerte:', alertId);
         const response = await fetch(`/api/alerts/${alertId}`);
+        console.log('Réponse reçue:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const alert = await response.json();
+        console.log('Détails reçus:', alert);
         
         // Afficher les détails dans une modal
         const detailsHtml = `

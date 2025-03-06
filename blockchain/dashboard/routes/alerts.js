@@ -9,20 +9,28 @@ const MONGODB_URI = `mongodb://${process.env.MONGODB_USER}:${encodeURIComponent(
 router.get('/', async (req, res) => {
     let client;
     try {
+        console.log('Tentative de connexion à MongoDB...');
         client = await MongoClient.connect(MONGODB_URI);
+        console.log('Connexion établie');
+        
         const db = client.db(process.env.MONGODB_DB_NAME);
+        console.log('Base de données sélectionnée:', process.env.MONGODB_DB_NAME);
+        
         const alerts = await db.collection('alerts')
             .find({})
             .sort({ timestamp: -1 })
             .toArray();
-
+        
+        console.log(`${alerts.length} alertes trouvées`);
         res.json(alerts);
     } catch (error) {
         console.error('Erreur lors de la récupération des alertes:', error);
+        console.error('URI MongoDB:', MONGODB_URI.replace(/(mongodb:\/\/[^:]+:)[^@]+(@.*)/, '$1****$2'));
         res.status(500).json({ error: 'Erreur lors de la récupération des alertes' });
     } finally {
         if (client) {
             await client.close();
+            console.log('Connexion MongoDB fermée');
         }
     }
 });
