@@ -1,7 +1,7 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const axios = require('axios');
 const fs = require('fs').promises;
-const path = require('path');
 
 const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3001';
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
