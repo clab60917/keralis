@@ -143,6 +143,67 @@ async function warmupCache() {
   }
 }
 
+/**
+ * Modifie un fichier de log pour les tests
+ */
+app.post('/api/modify/:fileName', validateApiKey, async (req, res) => {
+  try {
+    const fileName = req.params.fileName;
+    const filePath = path.join(LOGS_DIR, fileName);
+    
+    // Lire le contenu actuel
+    const originalContent = await fs.readFile(filePath, 'utf8');
+    
+    // Sauvegarder le contenu original dans le cache
+    hashCache.set(`${fileName}_original`, {
+      content: originalContent,
+      timestamp: Date.now()
+    });
+    
+    // Ajouter la modification
+    const newContent = originalContent + '\n' + req.body.modification;
+    await fs.writeFile(filePath, newContent);
+    
+    // Invalider le cache du hash
+    hashCache.delete(fileName);
+    
+    logger.info(`Fichier ${fileName} modifié pour les tests`);
+    res.json({ status: 'success', message: 'Fichier modifié avec succès' });
+  } catch (error) {
+    logger.error(`Erreur lors de la modification du fichier ${req.params.fileName}:`, error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+/**
+ * Restaure le contenu original d'un fichier de log
+ */
+app.post('/api/restore/:fileName', validateApiKey, async (req, res) => {
+  try {
+    const fileName = req.params.fileName;
+    const filePath = path.join(LOGS_DIR, fileName);
+    
+    // Récupérer le contenu original depuis le cache
+    const originalData = hashCache.get(`${fileName}_original`);
+    if (!originalData) {
+      throw new Error('Contenu original non trouvé dans le cache');
+    }
+    
+    // Restaurer le contenu original
+    await fs.writeFile(filePath, originalData.content);
+    
+    // Nettoyer le cache
+    hashCache.delete(`${fileName}_original`);
+    hashCache.delete(fileName);
+    
+    logger.info(`Fichier ${fileName} restauré à son état original`);
+    res.json({ status: 'success', message: 'Fichier restauré avec succès' });
+  } catch (error) {
+    logger.error(`Erreur lors de la restauration du fichier ${req.params.fileName}:`, error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // Démarrage du serveur
 app.listen(PORT, '0.0.0.0', () => {
   logger.info(`Serveur hash démarré sur le port ${PORT}`);

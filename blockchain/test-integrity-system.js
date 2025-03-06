@@ -39,11 +39,12 @@ async function runTests() {
         const hashResponse = await axios.get(`${HASH_SERVER_URL}/api/hash/${TEST_FILE_NAME}`, axiosConfig);
         console.log('✓ Hash initial calculé:', hashResponse.data);
 
-        // 2. Simuler une modification de fichier
+        // 2. Simuler une modification de fichier en envoyant une requête au serveur
         console.log('\nSimulation d\'une modification de fichier...');
-        const originalContent = await fs.readFile(path.join('/root/keralis/logs', TEST_FILE_NAME), 'utf8');
-        await fs.writeFile(path.join('/root/keralis/logs', TEST_FILE_NAME), originalContent + '\nModification test ' + Date.now());
-        console.log('✓ Fichier modifié');
+        const modifyResponse = await axios.post(`${HASH_SERVER_URL}/api/modify/${TEST_FILE_NAME}`, {
+            modification: `Test modification ${Date.now()}`
+        }, axiosConfig);
+        console.log('✓ Fichier modifié:', modifyResponse.data);
         
         // 3. Vérifier que le changement est détecté
         const newHashResponse = await axios.get(`${HASH_SERVER_URL}/api/hash/${TEST_FILE_NAME}`, axiosConfig);
@@ -56,8 +57,8 @@ async function runTests() {
         }
 
         // 4. Restaurer le contenu original
-        await fs.writeFile(path.join('/root/keralis/logs', TEST_FILE_NAME), originalContent);
-        console.log('✓ Contenu original restauré');
+        const restoreResponse = await axios.post(`${HASH_SERVER_URL}/api/restore/${TEST_FILE_NAME}`, {}, axiosConfig);
+        console.log('✓ Contenu original restauré:', restoreResponse.data);
 
         console.log('\nTests terminés avec succès!');
     } catch (error) {
