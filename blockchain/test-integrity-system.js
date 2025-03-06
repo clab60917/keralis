@@ -45,9 +45,9 @@ async function sendAlertEmail(fileName, oldHash, newHash) {
     const mailOptions = {
         from: {
             name: 'Système Keralis',
-            address: 'alerte@keralis.com'
+            address: 'alert@keralis.org'
         },
-        to: process.env.ELASTIC_EMAIL_USER,
+        to: process.env.ALERT_EMAIL_TO,
         subject: `🚨 Alerte : Modification détectée dans ${fileName}`,
         html: `
             <h2>Une modification a été détectée dans un fichier de log</h2>
