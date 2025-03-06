@@ -8,7 +8,7 @@ const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
 const TEST_FILE_NAME = '20250305012039.log';  // Un des fichiers existants
 
-// Configuration email
+// Configuration email améliorée
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
@@ -16,7 +16,21 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
-    }
+    },
+    // Ajout des options de timeout
+    connectionTimeout: 10000, // 10 secondes
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    // Options de sécurité TLS
+    tls: {
+        rejectUnauthorized: false // Permet les certificats auto-signés
+    },
+    // Retry en cas d'échec
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 1,
+    rateDelta: 1000,
+    rateLimit: 1
 });
 
 async function sendAlertEmail(fileName, oldHash, newHash) {
@@ -31,14 +45,44 @@ async function sendAlertEmail(fileName, oldHash, newHash) {
             <p><strong>Nouveau hash :</strong> ${newHash}</p>
             <p><strong>Date de détection :</strong> ${new Date().toISOString()}</p>
             <p>Cette alerte a été générée automatiquement par le système de test d'intégrité.</p>
+        `,
+        // Ajout d'une version texte pour plus de compatibilité
+        text: `
+            ALERTE : Modification détectée dans ${fileName}
+            
+            Fichier : ${fileName}
+            Hash original : ${oldHash}
+            Nouveau hash : ${newHash}
+            Date de détection : ${new Date().toISOString()}
+            
+            Cette alerte a été générée automatiquement par le système de test d'intégrité.
         `
     };
 
     try {
-        await transporter.sendMail(mailOptions);
+        console.log('Tentative d\'envoi de l\'email d\'alerte...');
+        // Ajout d'un timeout de 30 secondes pour l'envoi complet
+        const sendPromise = transporter.sendMail(mailOptions);
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout global dépassé')), 30000)
+        );
+
+        await Promise.race([sendPromise, timeoutPromise]);
         console.log('✓ Email d\'alerte envoyé avec succès');
     } catch (error) {
-        console.error('❌ Erreur lors de l\'envoi de l\'email:', error);
+        console.error('❌ Erreur lors de l\'envoi de l\'email:', error.message);
+        if (error.code) {
+            console.error('Code d\'erreur:', error.code);
+        }
+        // On continue l'exécution même si l'email échoue
+        console.log('⚠️ Le test continue malgré l\'échec de l\'envoi d\'email');
+    } finally {
+        // Fermeture propre du transporteur
+        try {
+            await transporter.close();
+        } catch (error) {
+            console.error('Erreur lors de la fermeture du transporteur:', error.message);
+        }
     }
 }
 
