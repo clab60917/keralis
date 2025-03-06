@@ -17,6 +17,7 @@ const cors = require('cors');
 // Configuration depuis le fichier .env
 const PORT = process.env.HASH_SERVER_PORT || 3001;
 const API_KEY = process.env.HASH_SERVER_API_KEY;
+const LOGS_DIR = '/root/keralis/logs';  // Chemin absolu vers le répertoire des logs
 
 // Configuration du logger
 const logger = winston.createLogger({
@@ -62,7 +63,7 @@ const validateApiKey = (req, res, next) => {
  */
 async function calculateFileHash(fileName) {
     try {
-        const filePath = path.join(__dirname, fileName);
+        const filePath = path.join(LOGS_DIR, fileName);
         const content = await fs.readFile(filePath);
         return crypto.createHash('sha256').update(content).digest('hex');
     } catch (error) {
@@ -76,7 +77,7 @@ async function calculateFileHash(fileName) {
  */
 app.get('/api/logs', validateApiKey, async (req, res) => {
   try {
-    const files = await fs.readdir(__dirname);
+    const files = await fs.readdir(LOGS_DIR);
     const logFiles = files.filter(file => file.endsWith('.log') || file.endsWith('.txt'));
     
     logger.info('Liste des fichiers de logs demandée');
@@ -122,7 +123,7 @@ app.get('/api/hash/:fileName', validateApiKey, async (req, res) => {
  */
 async function warmupCache() {
   try {
-    const files = await fs.readdir(__dirname);
+    const files = await fs.readdir(LOGS_DIR);
     const logFiles = files.filter(file => file.endsWith('.log') || file.endsWith('.txt'));
     
     for (const file of logFiles) {

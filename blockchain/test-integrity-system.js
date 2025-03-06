@@ -5,7 +5,7 @@ const fs = require('fs').promises;
 
 const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3001';
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
-const TEST_FILE_NAME = '20250306122942.log';
+const TEST_FILE_NAME = '20250305012039.log';  // Un des fichiers existants
 
 // Fonction pour afficher les informations de debug
 function debugInfo() {
