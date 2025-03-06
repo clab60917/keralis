@@ -75,14 +75,39 @@ app.get('/api/alerts/:id', async (req, res) => {
     }
 });
 
-// Routes des vues
-app.get('/alerts', (req, res) => {
-    console.log('Rendu de la page des alertes');
-    res.render('alerts', {
-        title: 'Alertes',
-        user: { username: 'admin' },
-        active: 'alerts'
-    });
+// Route des alertes
+app.get('/alerts', async (req, res) => {
+    let client;
+    try {
+        client = await MongoClient.connect(MONGODB_URI);
+        const db = client.db(process.env.MONGODB_DB_NAME);
+        const alerts = await db.collection('alerts')
+            .find({})
+            .sort({ timestamp: -1 })
+            .toArray();
+        
+        console.log(`${alerts.length} alertes trouvées`);
+        
+        res.render('alerts', {
+            title: 'Alertes',
+            user: { username: 'admin' },
+            active: 'alerts',
+            alerts: alerts
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des alertes:', error);
+        res.render('alerts', {
+            title: 'Alertes',
+            user: { username: 'admin' },
+            active: 'alerts',
+            alerts: [],
+            error: 'Erreur lors de la récupération des alertes'
+        });
+    } finally {
+        if (client) {
+            await client.close();
+        }
+    }
 });
 
 // Gestion des erreurs

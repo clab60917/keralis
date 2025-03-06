@@ -5,6 +5,12 @@
     
     <div class="card">
         <div class="card-body">
+            <% if (error) { %>
+                <div class="alert alert-danger">
+                    <%= error %>
+                </div>
+            <% } %>
+            
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -18,141 +24,58 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="alertsTableBody">
-                        <!-- Les alertes seront injectées ici via JavaScript -->
+                    <tbody>
+                        <% if (alerts && alerts.length > 0) { %>
+                            <% alerts.forEach(function(alert) { %>
+                                <tr>
+                                    <td><%= new Date(alert.timestamp).toLocaleString('fr-FR') %></td>
+                                    <td><%= alert.fileName %></td>
+                                    <td><span class="badge bg-warning"><%= alert.type %></span></td>
+                                    <td>
+                                        <span class="badge bg-<%= alert.status === 'restored' ? 'success' : 'danger' %>">
+                                            <%= alert.status %>
+                                        </span>
+                                    </td>
+                                    <td><small><%= alert.oldHash %></small></td>
+                                    <td><small><%= alert.newHash %></small></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#alertModal<%= alert._id %>">
+                                            Détails
+                                        </button>
+                                        
+                                        <!-- Modal pour les détails -->
+                                        <div class="modal fade" id="alertModal<%= alert._id %>" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Détails de l'Alerte</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p><strong>Fichier:</strong> <%= alert.fileName %></p>
+                                                        <p><strong>Date de détection:</strong> <%= new Date(alert.timestamp).toLocaleString('fr-FR') %></p>
+                                                        <p><strong>Statut:</strong> <%= alert.status %></p>
+                                                        <p><strong>Hash Original:</strong> <%= alert.oldHash %></p>
+                                                        <p><strong>Nouveau Hash:</strong> <%= alert.newHash %></p>
+                                                        <p><strong>Email envoyé:</strong> <%= alert.emailSent ? 'Oui' : 'Non' %></p>
+                                                        <p><strong>Serveur:</strong> <%= alert.details.serverUrl %></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="text-center">Aucune alerte trouvée</td>
+                            </tr>
+                        <% } %>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-// Fonction pour formater la date
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-}
-
-// Fonction pour charger les alertes
-async function loadAlerts() {
-    try {
-        console.log('Chargement des alertes...');
-        const response = await fetch('/api/alerts');
-        console.log('Réponse reçue:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const alerts = await response.json();
-        console.log('Alertes reçues:', alerts);
-        
-        const tableBody = document.getElementById('alertsTableBody');
-        tableBody.innerHTML = '';
-        
-        if (alerts.length === 0) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="7" class="text-center">Aucune alerte trouvée</td>';
-            tableBody.appendChild(tr);
-            return;
-        }
-        
-        alerts.forEach(alert => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${formatDate(alert.timestamp)}</td>
-                <td>${alert.fileName}</td>
-                <td><span class="badge bg-warning">${alert.type}</span></td>
-                <td>
-                    <span class="badge bg-${alert.status === 'restored' ? 'success' : 'danger'}">
-                        ${alert.status}
-                    </span>
-                </td>
-                <td><small>${alert.oldHash}</small></td>
-                <td><small>${alert.newHash}</small></td>
-                <td>
-                    <button class="btn btn-sm btn-info" onclick="viewDetails('${alert._id}')">
-                        Détails
-                    </button>
-                </td>
-            `;
-            tableBody.appendChild(tr);
-        });
-
-        // Mettre à jour le compteur d'alertes
-        const alertCount = alerts.filter(a => a.status !== 'restored').length;
-        document.getElementById('alertCount').textContent = alertCount > 0 ? alertCount : '';
-    } catch (error) {
-        console.error('Erreur lors du chargement des alertes:', error);
-        const tableBody = document.getElementById('alertsTableBody');
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erreur lors du chargement des alertes</td></tr>';
-    }
-}
-
-// Fonction pour voir les détails d'une alerte
-async function viewDetails(alertId) {
-    try {
-        console.log('Chargement des détails pour l\'alerte:', alertId);
-        const response = await fetch(`/api/alerts/${alertId}`);
-        console.log('Réponse reçue:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const alert = await response.json();
-        console.log('Détails reçus:', alert);
-        
-        // Afficher les détails dans une modal
-        const detailsHtml = `
-            <div class="modal fade" id="alertDetailsModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Détails de l'Alerte</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p><strong>Fichier:</strong> ${alert.fileName}</p>
-                            <p><strong>Date de détection:</strong> ${formatDate(alert.timestamp)}</p>
-                            <p><strong>Statut:</strong> ${alert.status}</p>
-                            <p><strong>Hash Original:</strong> ${alert.oldHash}</p>
-                            <p><strong>Nouveau Hash:</strong> ${alert.newHash}</p>
-                            <p><strong>Email envoyé:</strong> ${alert.emailSent ? 'Oui' : 'Non'}</p>
-                            <p><strong>Serveur:</strong> ${alert.details.serverUrl}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', detailsHtml);
-        const modal = new bootstrap.Modal(document.getElementById('alertDetailsModal'));
-        modal.show();
-        
-        // Nettoyer la modal après fermeture
-        document.getElementById('alertDetailsModal').addEventListener('hidden.bs.modal', function () {
-            this.remove();
-        });
-    } catch (error) {
-        console.error('Erreur lors du chargement des détails:', error);
-        alert('Erreur lors du chargement des détails');
-    }
-}
-
-// Charger les alertes au chargement de la page
-document.addEventListener('DOMContentLoaded', loadAlerts);
-
-// Rafraîchir les alertes toutes les 30 secondes
-setInterval(loadAlerts, 30000);
-</script>
 
 <%- include('partials/footer') %> 
