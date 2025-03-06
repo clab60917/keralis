@@ -1,0 +1,239 @@
+<%- include('partials/header') %>
+
+<div class="container-fluid mt-4">
+    <!-- Section des statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Statistiques Générales
+                </div>
+                <div class="card-body">
+                    <div id="stats">
+                        <p>Hash: <span id="hashCount">0</span> (<span id="hashRate">0</span>/min)</p>
+                        <p>Encrypted: <span id="encryptedCount">0</span> (<span id="encryptedRate">0</span>/min)</p>
+                        <p>Messages: <span id="messagesCount">0</span> (<span id="messagesRate">0</span>/min)</p>
+                        <p>Dernière mise à jour: <span id="lastUpdated">-</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Performances Système
+                </div>
+                <div class="card-body">
+                    <div id="systemStats">
+                        <p>CPU: <span id="cpuUsage">0</span>%</p>
+                        <p>Mémoire: <span id="memoryUsage">0</span>%</p>
+                        <p>Temps de traitement Hash: <span id="hashProcessingTime">0</span>ms</p>
+                        <p>Temps de traitement Encrypted: <span id="encryptedProcessingTime">0</span>ms</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Alertes
+                </div>
+                <div class="card-body">
+                    <div id="alerts">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Fichier</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alertsTableBody">
+                                    <!-- Les alertes seront injectées ici via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section des derniers messages -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Derniers Hash
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Fichier</th>
+                                    <th>Hash</th>
+                                    <th>Temps</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentHashTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Derniers Encrypted
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Fichier</th>
+                                    <th>Status</th>
+                                    <th>Temps</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentEncryptedTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Derniers Messages
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Message</th>
+                                    <th>Temps</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentMessagesTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    
+    // Fonction pour mettre à jour les statistiques
+    function updateStats(stats) {
+        if (!stats) return;
+        
+        // Mise à jour des compteurs
+        document.getElementById('hashCount').textContent = stats.hash;
+        document.getElementById('encryptedCount').textContent = stats.encrypted;
+        document.getElementById('messagesCount').textContent = stats.messages;
+        
+        // Mise à jour des taux
+        document.getElementById('hashRate').textContent = stats.rates.hash;
+        document.getElementById('encryptedRate').textContent = stats.rates.encrypted;
+        document.getElementById('messagesRate').textContent = stats.rates.messages;
+        
+        // Mise à jour des temps de traitement
+        document.getElementById('hashProcessingTime').textContent = stats.processingTimes.hash;
+        document.getElementById('encryptedProcessingTime').textContent = stats.processingTimes.encrypted;
+        
+        // Mise à jour des stats système
+        if (stats.system) {
+            document.getElementById('cpuUsage').textContent = stats.system.cpu.toFixed(1);
+            document.getElementById('memoryUsage').textContent = stats.system.memory.toFixed(1);
+        }
+        
+        // Mise à jour de la dernière mise à jour
+        document.getElementById('lastUpdated').textContent = stats.lastUpdated;
+        
+        // Mise à jour des tableaux récents
+        updateRecentTable('recentHashTableBody', stats.recentHash);
+        updateRecentTable('recentEncryptedTableBody', stats.recentEncrypted);
+        updateRecentTable('recentMessagesTableBody', stats.recentMessages);
+        
+        // Mise à jour des alertes
+        if (stats.alerts) {
+            updateAlertsTable(stats.alerts);
+        }
+    }
+    
+    // Fonction pour mettre à jour les tableaux récents
+    function updateRecentTable(tableId, items) {
+        const tbody = document.getElementById(tableId);
+        if (!tbody || !items) return;
+        
+        tbody.innerHTML = '';
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+            
+            if (tableId === 'recentHashTableBody') {
+                tr.innerHTML = `
+                    <td>${item.fileName}</td>
+                    <td><small>${item.hash}</small></td>
+                    <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
+                `;
+            } else if (tableId === 'recentEncryptedTableBody') {
+                tr.innerHTML = `
+                    <td>${item.fileName}</td>
+                    <td>${item.status}</td>
+                    <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
+                `;
+            } else if (tableId === 'recentMessagesTableBody') {
+                tr.innerHTML = `
+                    <td>${item.type}</td>
+                    <td>${item.message}</td>
+                    <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
+                `;
+            }
+            
+            tbody.appendChild(tr);
+        });
+    }
+    
+    // Fonction pour mettre à jour le tableau des alertes
+    function updateAlertsTable(alerts) {
+        const tbody = document.getElementById('alertsTableBody');
+        if (!tbody || !alerts) return;
+        
+        tbody.innerHTML = '';
+        alerts.slice(0, 5).forEach(alert => {
+            const tr = document.createElement('tr');
+            const statusClass = alert.status === 'restored' ? 'success' : 'danger';
+            
+            tr.innerHTML = `
+                <td>${new Date(alert.timestamp).toLocaleTimeString()}</td>
+                <td>${alert.fileName}</td>
+                <td><span class="badge bg-${statusClass}">${alert.status}</span></td>
+            `;
+            
+            tbody.appendChild(tr);
+        });
+    }
+    
+    // Écoute des événements Socket.IO
+    socket.on('stats', updateStats);
+    
+    // Demande de mise à jour toutes les 5 secondes
+    setInterval(() => {
+        socket.emit('requestStats');
+    }, 5000);
+</script>
+
+<%- include('partials/footer') %> 

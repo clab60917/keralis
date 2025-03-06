@@ -58,6 +58,13 @@ async function getStats() {
             messages: await db.collection('messages').countDocuments()
         };
 
+        // Récupérer les alertes
+        const alerts = await db.collection('alerts')
+            .find({})
+            .sort({ timestamp: -1 })
+            .limit(5)
+            .toArray();
+
         // Calculer les taux de traitement (par minute)
         const timeDiffMinutes = (now - previousCounts.timestamp) / (1000 * 60);
         const rates = {
@@ -102,7 +109,8 @@ async function getStats() {
             lastUpdated: new Date().toLocaleString(),
             system: systemStats,
             rates,
-            processingTimes
+            processingTimes,
+            alerts
         };
 
         // Obtenir les 5 derniers messages de chaque collection
