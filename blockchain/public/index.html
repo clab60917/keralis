@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Blockchain</title>
+    <title>Keralis Dashboard</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -487,6 +487,19 @@
             document.getElementById('encryptedCount').textContent = stats.encrypted;
             document.getElementById('messagesCount').textContent = stats.messages;
             document.getElementById('lastUpdated').textContent = stats.lastUpdated;
+
+            // Mise à jour des taux de traitement
+            if (stats.rates) {
+                document.getElementById('hashRate').textContent = `${stats.rates.hash}/min`;
+                document.getElementById('encryptedRate').textContent = `${stats.rates.encrypted}/min`;
+                document.getElementById('messagesRate').textContent = `${stats.rates.messages}/min`;
+            }
+
+            // Mise à jour des temps de traitement
+            if (stats.processingTimes) {
+                document.getElementById('hashProcessingTime').textContent = `${stats.processingTimes.hash}ms`;
+                document.getElementById('encryptedProcessingTime').textContent = `${stats.processingTimes.encrypted}ms`;
+            }
 
             // Mise à jour des tendances
             updateTrend(stats.hash, previousStats.hash, 'hashTrend');

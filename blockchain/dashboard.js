@@ -7,7 +7,7 @@ const path = require('path');
 const basicAuth = require('express-basic-auth');
 const systemMonitor = require('./system_monitor');
 
-const config = require('./auto3').config;
+const config = require('./auto3').config; 
 
 // Configuration de l'authentification basique
 const users = {};
@@ -27,6 +27,14 @@ let lastStats = null;
 let lastUpdate = 0;
 const UPDATE_INTERVAL = 5000; // 5 secondes entre chaque mise à jour
 
+// Stockage des dernières statistiques pour le calcul des taux
+let previousCounts = {
+    hash: 0,
+    encrypted: 0,
+    messages: 0,
+    timestamp: Date.now()
+};
+
 async function getStats() {
     try {
         const now = Date.now();
@@ -43,16 +51,62 @@ async function getStats() {
         // Récupérer les stats système
         const systemStats = await systemMonitor.getSystemStats();
         
-        const stats = {
+        // Obtenir les compteurs actuels
+        const currentCounts = {
             hash: await db.collection('hash').countDocuments(),
             encrypted: await db.collection('encrypted').countDocuments(),
-            messages: await db.collection('messages').countDocuments(),
+            messages: await db.collection('messages').countDocuments()
+        };
+
+        // Calculer les taux de traitement (par minute)
+        const timeDiffMinutes = (now - previousCounts.timestamp) / (1000 * 60);
+        const rates = {
+            hash: Math.round((currentCounts.hash - previousCounts.hash) / timeDiffMinutes),
+            encrypted: Math.round((currentCounts.encrypted - previousCounts.encrypted) / timeDiffMinutes),
+            messages: Math.round((currentCounts.messages - previousCounts.messages) / timeDiffMinutes)
+        };
+
+        // Obtenir les temps de traitement moyens des 5 dernières minutes
+        const fiveMinutesAgo = new Date(now - 5 * 60 * 1000);
+        const [recentHash, recentEncrypted] = await Promise.all([
+            db.collection('hash')
+                .find({ timestamp: { $gte: fiveMinutesAgo } })
+                .sort({ timestamp: -1 })
+                .limit(50)
+                .toArray(),
+            db.collection('encrypted')
+                .find({ timestamp: { $gte: fiveMinutesAgo } })
+                .sort({ timestamp: -1 })
+                .limit(50)
+                .toArray()
+        ]);
+
+        // Calculer les temps de traitement moyens
+        const processingTimes = {
+            hash: recentHash.length > 0 
+                ? Math.round(recentHash.reduce((acc, curr) => acc + (curr.processingTime || 0), 0) / recentHash.length)
+                : 0,
+            encrypted: recentEncrypted.length > 0
+                ? Math.round(recentEncrypted.reduce((acc, curr) => acc + (curr.processingTime || 0), 0) / recentEncrypted.length)
+                : 0
+        };
+
+        // Mettre à jour les compteurs précédents
+        previousCounts = {
+            ...currentCounts,
+            timestamp: now
+        };
+
+        const stats = {
+            ...currentCounts,
             lastUpdated: new Date().toLocaleString(),
-            system: systemStats
+            system: systemStats,
+            rates,
+            processingTimes
         };
 
         // Obtenir les 5 derniers messages de chaque collection
-        const [recentHash, recentEncrypted, recentMessages] = await Promise.all([
+        const [recentHashList, recentEncryptedList, recentMessages] = await Promise.all([
             db.collection('hash')
                 .find({})
                 .sort({ timestamp: -1 })
@@ -70,18 +124,20 @@ async function getStats() {
                 .toArray()
         ]);
 
-        stats.recentHash = recentHash;
-        stats.recentEncrypted = recentEncrypted;
+        stats.recentHash = recentHashList;
+        stats.recentEncrypted = recentEncryptedList;
         stats.recentMessages = recentMessages;
 
         console.log('Statistiques récupérées:', {
             hash: stats.hash,
             encrypted: stats.encrypted,
             messages: stats.messages,
-            recentHashCount: recentHash.length,
-            recentEncryptedCount: recentEncrypted.length,
+            recentHashCount: recentHashList.length,
+            recentEncryptedCount: recentEncryptedList.length,
             recentMessagesCount: recentMessages.length,
-            systemStatus: systemStats ? 'OK' : 'Error'
+            systemStatus: systemStats ? 'OK' : 'Error',
+            rates,
+            processingTimes
         });
 
         lastStats = stats;
