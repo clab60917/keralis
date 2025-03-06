@@ -233,4 +233,31 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
+// Ajouter la route pour les alertes
+app.get('/alerts', async (req, res) => {
+    try {
+        const db = await connectToMongoDB();
+        const alerts = await db.collection('alerts')
+            .find({})
+            .sort({ timestamp: -1 })
+            .toArray();
+        
+        console.log(`${alerts.length} alertes trouvées`);
+        
+        res.render('alerts', {
+            title: 'Alertes',
+            alerts: alerts,
+            active: 'alerts'
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des alertes:', error);
+        res.render('alerts', {
+            title: 'Alertes',
+            alerts: [],
+            error: 'Erreur lors de la récupération des alertes',
+            active: 'alerts'
+        });
+    }
+});
+
 startServer(); 

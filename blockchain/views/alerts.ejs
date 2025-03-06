@@ -1,0 +1,83 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+    <h2>Alertes de Modification</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <% if (error) { %>
+                <div class="alert alert-danger">
+                    <%= error %>
+                </div>
+            <% } %>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Fichier</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th>Hash Original</th>
+                            <th>Nouveau Hash</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (alerts && alerts.length > 0) { %>
+                            <% alerts.forEach(function(alert) { %>
+                                <tr>
+                                    <td><%= new Date(alert.timestamp).toLocaleString('fr-FR') %></td>
+                                    <td><%= alert.fileName %></td>
+                                    <td><span class="badge bg-warning"><%= alert.type %></span></td>
+                                    <td>
+                                        <span class="badge bg-<%= alert.status === 'restored' ? 'success' : 'danger' %>">
+                                            <%= alert.status %>
+                                        </span>
+                                    </td>
+                                    <td><small><%= alert.oldHash %></small></td>
+                                    <td><small><%= alert.newHash %></small></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#alertModal<%= alert._id %>">
+                                            Détails
+                                        </button>
+                                        
+                                        <!-- Modal pour les détails -->
+                                        <div class="modal fade" id="alertModal<%= alert._id %>" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Détails de l'Alerte</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p><strong>Fichier:</strong> <%= alert.fileName %></p>
+                                                        <p><strong>Date de détection:</strong> <%= new Date(alert.timestamp).toLocaleString('fr-FR') %></p>
+                                                        <p><strong>Statut:</strong> <%= alert.status %></p>
+                                                        <p><strong>Hash Original:</strong> <%= alert.oldHash %></p>
+                                                        <p><strong>Nouveau Hash:</strong> <%= alert.newHash %></p>
+                                                        <p><strong>Email envoyé:</strong> <%= alert.emailSent ? 'Oui' : 'Non' %></p>
+                                                        <% if (alert.details) { %>
+                                                            <p><strong>Serveur:</strong> <%= alert.details.serverUrl %></p>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="text-center">Aucune alerte trouvée</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %> 
