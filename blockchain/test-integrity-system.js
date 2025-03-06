@@ -10,8 +10,8 @@ const TEST_FILE_NAME = '20250305012039.log';  // Un des fichiers existants
 
 // Configuration email avec Elastic Email
 const transporter = nodemailer.createTransport({
-    host: 'smtp.elasticemail.com',
-    port: 2525,
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
     secure: false,
     auth: {
         user: process.env.ELASTIC_EMAIL_USER,
@@ -45,9 +45,9 @@ async function sendAlertEmail(fileName, oldHash, newHash) {
     const mailOptions = {
         from: {
             name: 'Système Keralis',
-            address: process.env.ELASTIC_EMAIL_USER
+            address: 'alerte@keralis.com'
         },
-        to: process.env.ELASTIC_EMAIL_USER, // Même adresse pour l'envoi et la réception
+        to: process.env.ELASTIC_EMAIL_USER,
         subject: `🚨 Alerte : Modification détectée dans ${fileName}`,
         html: `
             <h2>Une modification a été détectée dans un fichier de log</h2>
