@@ -164,7 +164,7 @@
             </div>
         </div>
         
-        <div class="bg-white rounded-lg shadow p-4 mb-8">
+        <!-- <div class="bg-white rounded-lg shadow p-4 mb-8">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <button id="dayView" class="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors">Jour</button>
@@ -217,7 +217,7 @@
                     </div>
                 </div>
             </div>
-        </div> 
+        </div>  -->
 
         <!-- Cartes des statistiques -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -326,7 +326,11 @@
             };
             function initChart() {
     const ctx = document.getElementById('activityChart').getContext('2d');
-    
+    const timeLabels = Array(24).fill('').map((_, i) => {
+        // Ajouter 2 heures pour corriger le décalage
+        const adjustedTime = moment().subtract(23-i, 'hours').add(2, 'hours');
+        return adjustedTime.format('HH:mm');
+    });
     activityChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -488,7 +492,9 @@ function updateChart(stats) {
     if (!activityChart) return;
 
     const now = new Date();
-    const currentHour = now.getHours();
+    const adjustedNow = new Date(now);
+    adjustedNow.setHours(now.getHours() + 2);
+    const currentHour = adjustedNow.getHours();
     
     // Si on est passé à une nouvelle heure depuis la dernière mise à jour
     if (currentHour !== chartHistory.lastUpdatedHour) {
