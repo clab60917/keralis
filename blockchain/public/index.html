@@ -263,6 +263,17 @@
                 <canvas id="activityChart"></canvas>
             </div>
         </div>
+        <div class="flex items-center ml-4">
+            <label for="timeOffset" class="mr-2 text-sm text-gray-600">Ajustement horaire:</label>
+            <select id="timeOffset" class="px-2 py-1 border rounded text-sm" onchange="updateTimeOffset(this.value)">
+                <option value="0">+0h</option>
+                <option value="1">+1h</option>
+                <option value="2" selected>+2h</option>
+                <option value="3">+3h</option>
+                <option value="-1">-1h</option>
+                <option value="-2">-2h</option>
+            </select>
+        </div>
 
         <!-- Dernières activités -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -703,6 +714,14 @@ function updateChart(stats) {
             updatePeriodDisplay();
             socket.emit('requestStats');
         }
+        function updateTimeOffset(offset) {
+    const newOffset = parseInt(offset);
+    // Stocker le nouveau décalage
+    localStorage.setItem('timeOffsetSetting', newOffset);
+    // Recharger le graphique avec le nouveau décalage
+    resetChartHistory();
+    initChart();
+}
     </script>
 </body>
 </html> 
