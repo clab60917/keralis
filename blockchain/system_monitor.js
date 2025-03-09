@@ -26,6 +26,9 @@ class SystemMonitor {
             const sftpStatus = await this.checkSFTPStatus();
             stats.sftp = sftpStatus;
 
+            const blockchainStatus = await this.checkBlockchainStatus();
+            stats.blockchain = blockchainStatus;
+
             // Ajouter l'utilisation du disque
             const diskUsage = await this.getDiskUsage();
             stats.disk = diskUsage;
@@ -40,7 +43,7 @@ class SystemMonitor {
     async checkSFTPStatus() {
         try {
             // Vérifier le statut du service SFTP (adapté pour macOS/Linux)
-            const { stdout } = await execAsync('ps aux | grep "[s]ftp"');
+            const { stdout } = await execAsync('ps aux | grep "sftp"');
             return {
                 running: stdout.length > 0,
                 processInfo: stdout.trim()
@@ -49,6 +52,28 @@ class SystemMonitor {
             return {
                 running: false,
                 error: error.message
+            };
+        }
+    }
+
+    async checkBlockchainStatus() {
+        try {
+            // Vérifier si le processus auto3.js est en cours d'exécution
+            const { stdout } = await execAsync('ps aux | grep "auto3.js"');
+            
+            // Si stdout contient quelque chose, le processus est en cours d'exécution
+            const isRunning = stdout.length > 0;
+            
+            return {
+                running: isRunning,
+                processInfo: isRunning ? stdout.trim() : 'Processus auto3.js non trouvé',
+                lastChecked: new Date().toISOString()
+            };
+        } catch (error) {
+            return {
+                running: false,
+                error: error.message,
+                lastChecked: new Date().toISOString()
             };
         }
     }

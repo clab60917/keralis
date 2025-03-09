@@ -413,6 +413,14 @@
                 } else {
                     sftpDot.className = 'status-dot inactive';
                 }
+                //Blockchain Status
+                  const blockchainDot = document.getElementById('BlockchainStatus');
+                if (stats.system.blockchain.running) {
+                    blockchainDot.className = 'status-dot active';
+                } else {
+                    blockchainDot.className = 'status-dot inactive';
+                }
+
                 
                 // Hostname et autres infos système
                 document.getElementById('hostname').textContent = stats.system.hostname;
