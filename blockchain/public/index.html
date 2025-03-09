@@ -328,7 +328,7 @@
     const ctx = document.getElementById('activityChart').getContext('2d');
     const timeLabels = Array(24).fill('').map((_, i) => {
         // Ajouter 2 heures pour corriger le décalage
-        const adjustedTime = moment().subtract(23-i, 'hours').add(2, 'hours');
+        const adjustedTime = moment().subtract(23-i, 'hours').add(-2, 'hours');
         return adjustedTime.format('HH:mm');
     });
     activityChart = new Chart(ctx, {
@@ -493,7 +493,7 @@ function updateChart(stats) {
 
     const now = new Date();
     const adjustedNow = new Date(now);
-    adjustedNow.setHours(now.getHours() + 2);
+    adjustedNow.setHours(now.getHours() - 2);
     const currentHour = adjustedNow.getHours();
     
     // Si on est passé à une nouvelle heure depuis la dernière mise à jour
@@ -602,17 +602,17 @@ function updateChart(stats) {
             document.getElementById('lastUpdated').textContent = stats.lastUpdated;
 
             // Mise à jour des taux de traitement
-            if (stats.rates) {
-                document.getElementById('hashRate').textContent = `${stats.rates.hash}/min`;
-                document.getElementById('encryptedRate').textContent = `${stats.rates.encrypted}/min`;
-                document.getElementById('messagesRate').textContent = `${stats.rates.messages}/min`;
-            }
+            // if (stats.rates) {
+            //     document.getElementById('hashRate').textContent = `${stats.rates.hash}/min`;
+            //     document.getElementById('encryptedRate').textContent = `${stats.rates.encrypted}/min`;
+            //     document.getElementById('messagesRate').textContent = `${stats.rates.messages}/min`;
+            // }
 
             // Mise à jour des temps de traitement
-            if (stats.processingTimes) {
-                document.getElementById('hashProcessingTime').textContent = `${stats.processingTimes.hash}ms`;
-                document.getElementById('encryptedProcessingTime').textContent = `${stats.processingTimes.encrypted}ms`;
-            }
+            // if (stats.processingTimes) {
+            //     document.getElementById('hashProcessingTime').textContent = `${stats.processingTimes.hash}ms`;
+            //     document.getElementById('encryptedProcessingTime').textContent = `${stats.processingTimes.encrypted}ms`;
+            // }
 
             // Mise à jour des tendances
             updateTrend(stats.hash, previousStats.hash, 'hashTrend');
@@ -647,11 +647,11 @@ function updateChart(stats) {
         }, 5000);
 
         // Gestionnaires pour le sélecteur de période
-        document.getElementById('dayView').addEventListener('click', () => switchView('day'));
-        document.getElementById('weekView').addEventListener('click', () => switchView('week'));
-        document.getElementById('monthView').addEventListener('click', () => switchView('month'));
-        document.getElementById('prevPeriod').addEventListener('click', () => navigatePeriod(-1));
-        document.getElementById('nextPeriod').addEventListener('click', () => navigatePeriod(1));
+        // document.getElementById('dayView').addEventListener('click', () => switchView('day'));
+        // document.getElementById('weekView').addEventListener('click', () => switchView('week'));
+        // document.getElementById('monthView').addEventListener('click', () => switchView('month'));
+        // document.getElementById('prevPeriod').addEventListener('click', () => navigatePeriod(-1));
+        // document.getElementById('nextPeriod').addEventListener('click', () => navigatePeriod(1));
 
         let currentView = 'day';
         let currentDate = new Date();
