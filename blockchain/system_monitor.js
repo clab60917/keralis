@@ -58,30 +58,55 @@ class SystemMonitor {
 
     async checkBlockchainStatus() {
         try {
-            // Vérifier si le processus auto3.js est en cours d'exécution
-            // const { stdout } = await execAsync('pm2 show blockchain-app | grep status');
+            // Utiliser une commande plus précise pour obtenir le statut
+            const { stdout, stderr } = await execAsync('pm2 jlist');
             
-            // const match = stdout.match(/status:\s+(\w+)/);
-            // const status = match ? match[1] : "unknown";
-
-            // const isRunning = status === "online";
-            const { stdout } = await exec("pm2 pid blockchain-app");
-            const isRunning = stdout.trim().length > 0; // Si un PID est retourné, l'application tourne
-    
-            return {
-                running: isRunning,
-                processInfo: isRunning ? stdout.trim() : 'Processus  blockchain-app non trouvé',
-                lastChecked: new Date().toISOString()
-            };
+            // Analyser le JSON renvoyé par pm2 jlist
+            const processList = JSON.parse(stdout);
+            
+            // Chercher l'application blockchain-app
+            const blockchainApp = processList.find(process => process.name === 'blockchain-app');
+            
+            if (blockchainApp) {
+                const isRunning = blockchainApp.pm2_env.status === 'online';
+                
+                return {
+                    running: isRunning,
+                    status: blockchainApp.pm2_env.status,
+                    uptime: isRunning ? blockchainApp.pm2_env.pm_uptime : null,
+                    restarts: blockchainApp.pm2_env.restart_time,
+                    memory: blockchainApp.monit ? `${Math.round(blockchainApp.monit.memory / 1024 / 1024)}MB` : 'N/A',
+                    cpu: blockchainApp.monit ? `${blockchainApp.monit.cpu}%` : 'N/A',
+                    lastChecked: new Date().toISOString()
+                };
+            } else {
+                return {
+                    running: false,
+                    status: 'not-found',
+                    error: 'Processus blockchain-app non trouvé dans la liste PM2',
+                    lastChecked: new Date().toISOString()
+                };
+            }
         } catch (error) {
+            // Gérer spécifiquement l'erreur si PM2 n'est pas installé ou accessible
+            if (error.message.includes('pm2: command not found')) {
+                return {
+                    running: false,
+                    status: 'error',
+                    error: 'PM2 n\'est pas installé ou n\'est pas accessible',
+                    lastChecked: new Date().toISOString()
+                };
+            }
+            
             return {
                 running: false,
+                status: 'error',
                 error: error.message,
+                stack: error.stack,
                 lastChecked: new Date().toISOString()
             };
         }
     }
-
     async getDiskUsage() {
         try {
             // Obtenir l'utilisation du disque (adapté pour macOS/Linux)
