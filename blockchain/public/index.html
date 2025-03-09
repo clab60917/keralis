@@ -409,16 +409,16 @@
                 // SFTP Status
                 const sftpDot = document.getElementById('sftpStatus');
                 if (stats.system.sftp.running) {
-                    sftpDot.className = 'status-dot active';
+                    sftpDot.className = 'status-dot active mr-2';
                 } else {
-                    sftpDot.className = 'status-dot inactive';
+                    sftpDot.className = 'status-dot inactive mr-2';
                 }
                 //Blockchain Status
-                  const blockchainDot = document.getElementById('BlockchainStatus');
+                  const blockchainDot = document.getElementById('blockchainStatus');
                 if (stats.system.blockchain.running) {
-                    blockchainDot.className = 'status-dot active';
+                    blockchainDot.className = 'status-dot active mr-2';
                 } else {
-                    blockchainDot.className = 'status-dot inactive';
+                    blockchainDot.className = 'status-dot inactive mr-2';
                 }
 
                 
@@ -480,12 +480,12 @@
         }
 
         socket.on('connect', () => {
-            document.getElementById('connectionStatus').className = 'status-dot active';
+            document.getElementById('connectionStatus').className = 'status-dot active mr-2';
             document.getElementById('connectionText').textContent = 'Connecté';
         });
 
         socket.on('disconnect', () => {
-            document.getElementById('connectionStatus').className = 'status-dot inactive';
+            document.getElementById('connectionStatus').className = 'status-dot inactive mr-2';
             document.getElementById('connectionText').textContent = 'Déconnecté';
         });
 
