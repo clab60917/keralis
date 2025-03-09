@@ -163,8 +163,7 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Sélecteur de période -->
+<!--         
         <div class="bg-white rounded-lg shadow p-4 mb-8">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
@@ -184,7 +183,6 @@
             </div>
         </div>
 
-        <!-- Statistiques avancées -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Statistiques avancées</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -219,7 +217,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Cartes des statistiques -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -254,7 +252,10 @@
                 </div>
             </div>
         </div>
-
+        <!-- Reset du graphique d'activité -->
+        <button onclick="resetChartHistory()" class="ml-2 text-gray-500 hover:text-gray-700">
+            <i class="fas fa-trash-alt"></i> Réinitialiser
+        </button>
         <!-- Graphique d'activité -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Activité des dernières 24 heures</h2>
@@ -317,118 +318,178 @@
         let activityChart;
         let previousStats = { hash: 0, encrypted: 0, messages: 0 };
         let refreshTimeout = null;
-
-        function initChart() {
-            const ctx = document.getElementById('activityChart').getContext('2d');
-            const initialData = Array(24).fill(0);
-            
-            activityChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array(24).fill('').map((_, i) => moment().subtract(23-i, 'hours').format('HH:mm')),
-                    datasets: [{
-                        label: 'Hash',
-                        data: [...initialData],
-                        borderColor: '#3B82F6',
-                        tension: 0.4,
-                        fill: false,
-                        pointRadius: 0
-                    }, {
-                        label: 'Encrypted',
-                        data: [...initialData],
-                        borderColor: '#10B981',
-                        tension: 0.4,
-                        fill: false,
-                        pointRadius: 0
-                    }, {
-                        label: 'Messages',
-                        data: [...initialData],
-                        borderColor: '#8B5CF6',
-                        tension: 0.4,
-                        fill: false,
-                        pointRadius: 0
-                    }]
+        let chartHistory = {
+            hash: Array(24).fill(0),
+            encrypted: Array(24).fill(0),
+            messages: Array(24).fill(0),
+            lastUpdatedHour: -1
+            };
+            function initChart() {
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    
+    activityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array(24).fill('').map((_, i) => moment().subtract(23-i, 'hours').format('HH:mm')),
+            datasets: [{
+                label: 'Hash',
+                data: [...chartHistory.hash],
+                borderColor: '#3B82F6',
+                tension: 0.4,
+                fill: false,
+                pointRadius: 0
+            }, {
+                label: 'Encrypted',
+                data: [...chartHistory.encrypted],
+                borderColor: '#10B981',
+                tension: 0.4,
+                fill: false,
+                pointRadius: 0
+            }, {
+                label: 'Messages',
+                data: [...chartHistory.messages],
+                borderColor: '#8B5CF6',
+                tension: 0.4,
+                fill: false,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 500
+            },
+            hover: {
+                animationDuration: 200
+            },
+            responsiveAnimationDuration: 0,
+            elements: {
+                line: {
+                    tension: 0.4
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: 0
-                    },
-                    hover: {
-                        animationDuration: 0
-                    },
-                    responsiveAnimationDuration: 0,
-                    elements: {
-                        line: {
-                            tension: 0
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0,
-                                maxTicksLimit: 5
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                maxRotation: 0,
-                                autoSkip: true,
-                                maxTicksLimit: 8
-                            }
-                        }
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        maxTicksLimit: 5
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 8
                     }
                 }
-            });
-        }
-
-        function updateSystemInfo(stats) {
-            if (stats.system) {
-                // CPU
-                const cpuLoad = stats.system.cpu.loadAverage[0].toFixed(2);
-                document.getElementById('cpuLoad').textContent = 
-                    `${cpuLoad} (${stats.system.cpu.cpuCount} cœurs)`;
-
-                // Mémoire
-                document.getElementById('memoryUsage').textContent = 
-                    `${stats.system.memory.usedPercentage}% utilisé`;
-
-                // Disque
-                if (stats.system.disk && !stats.system.disk.error) {
-                    document.getElementById('diskUsage').textContent = 
-                        `${stats.system.disk.percentage} utilisé (${stats.system.disk.available} disponible)`;
-                }
-
-                // SFTP Status
-                const sftpDot = document.getElementById('sftpStatus');
-                if (stats.system.sftp.running) {
-                    sftpDot.className = 'status-dot active mr-2';
-                } else {
-                    sftpDot.className = 'status-dot inactive mr-2';
-                }
-                //Blockchain Status
-                  const blockchainDot = document.getElementById('blockchainStatus');
-                if (stats.system.blockchain.running) {
-                    blockchainDot.className = 'status-dot active mr-2';
-                } else {
-                    blockchainDot.className = 'status-dot inactive mr-2';
-                }
-
-                
-                // Hostname et autres infos système
-                document.getElementById('hostname').textContent = stats.system.hostname;
-                document.getElementById('uptime').textContent = formatUptime(stats.system.cpu.uptime);
-                document.getElementById('platform').textContent = stats.system.platform;
             }
         }
+    });
+    
+    // Charger les données stockées dans localStorage si disponibles
+    loadChartHistoryFromStorage();
+}
 
+       // Sauvegarder l'historique du graphique dans localStorage
+function saveChartHistoryToStorage() {
+    localStorage.setItem('chartHistory', JSON.stringify(chartHistory));
+}
+// Charger l'historique du graphique depuis localStorage
+function loadChartHistoryFromStorage() {
+    const savedHistory = localStorage.getItem('chartHistory');
+    if (savedHistory) {
+        const parsedHistory = JSON.parse(savedHistory);
+        // Vérifier si les données sauvegardées sont valides
+        if (parsedHistory && 
+            Array.isArray(parsedHistory.hash) && 
+            Array.isArray(parsedHistory.encrypted) && 
+            Array.isArray(parsedHistory.messages)) {
+            
+            chartHistory = parsedHistory;
+            
+            // Mettre à jour le graphique avec les données chargées
+            activityChart.data.datasets[0].data = [...chartHistory.hash];
+            activityChart.data.datasets[1].data = [...chartHistory.encrypted];
+            activityChart.data.datasets[2].data = [...chartHistory.messages];
+            activityChart.update();
+        }
+    }
+    
+    // Mettre à jour l'heure de dernière mise à jour
+    chartHistory.lastUpdatedHour = new Date().getHours();
+}
+// Fonction pour réinitialiser l'historique du graphique
+function resetChartHistory() {
+    chartHistory = {
+        hash: Array(24).fill(0),
+        encrypted: Array(24).fill(0),
+        messages: Array(24).fill(0),
+        lastUpdatedHour: new Date().getHours()
+    };
+    
+    activityChart.data.datasets[0].data = [...chartHistory.hash];
+    activityChart.data.datasets[1].data = [...chartHistory.encrypted];
+    activityChart.data.datasets[2].data = [...chartHistory.messages];
+    activityChart.update();
+    
+    saveChartHistoryToStorage();
+}
+// Mettre à jour le graphique avec les nouvelles données
+function updateChart(stats) {
+    if (!activityChart) return;
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    // Si on est passé à une nouvelle heure depuis la dernière mise à jour
+    if (currentHour !== chartHistory.lastUpdatedHour) {
+        // Mettre à jour les étiquettes des heures pour refléter le temps actuel
+        activityChart.data.labels = Array(24).fill('').map((_, i) => 
+            moment().subtract(23-i, 'hours').format('HH:mm')
+        );
+        
+        // Si on a changé d'heure, décaler les données d'une position
+        if (chartHistory.lastUpdatedHour !== -1) {
+            // Décaler toutes les données d'une position vers la gauche
+            chartHistory.hash.shift();
+            chartHistory.hash.push(0);
+            
+            chartHistory.encrypted.shift();
+            chartHistory.encrypted.push(0);
+            
+            chartHistory.messages.shift();
+            chartHistory.messages.push(0);
+        }
+        
+        chartHistory.lastUpdatedHour = currentHour;
+    }
+    
+    // Accumuler les nouvelles données plutôt que de les écraser
+    chartHistory.hash[23] += stats.hash - previousStats.hash > 0 ? stats.hash - previousStats.hash : 0;
+    chartHistory.encrypted[23] += stats.encrypted - previousStats.encrypted > 0 ? stats.encrypted - previousStats.encrypted : 0;
+    chartHistory.messages[23] += stats.messages - previousStats.messages > 0 ? stats.messages - previousStats.messages : 0;
+    
+    // Mettre à jour le graphique avec les nouvelles données
+    activityChart.data.datasets[0].data = [...chartHistory.hash];
+    activityChart.data.datasets[1].data = [...chartHistory.encrypted];
+    activityChart.data.datasets[2].data = [...chartHistory.messages];
+    
+    activityChart.update();
+    
+    // Sauvegarder l'historique dans localStorage
+    saveChartHistoryToStorage();
+}
         function updateTrend(currentValue, previousValue, elementId) {
             const element = document.getElementById(elementId);
             const diff = currentValue - previousValue;
