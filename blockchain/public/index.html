@@ -400,7 +400,45 @@
     // Charger les données stockées dans localStorage si disponibles
     loadChartHistoryFromStorage();
 }
+function updateSystemInfo(stats) {
+            if (stats.system) {
+                // CPU
+                const cpuLoad = stats.system.cpu.loadAverage[0].toFixed(2);
+                document.getElementById('cpuLoad').textContent = 
+                    `${cpuLoad} (${stats.system.cpu.cpuCount} cœurs)`;
 
+                // Mémoire
+                document.getElementById('memoryUsage').textContent = 
+                    `${stats.system.memory.usedPercentage}% utilisé`;
+
+                // Disque
+                if (stats.system.disk && !stats.system.disk.error) {
+                    document.getElementById('diskUsage').textContent = 
+                        `${stats.system.disk.percentage} utilisé (${stats.system.disk.available} disponible)`;
+                }
+
+                // SFTP Status
+                const sftpDot = document.getElementById('sftpStatus');
+                if (stats.system.sftp.running) {
+                    sftpDot.className = 'status-dot active mr-2';
+                } else {
+                    sftpDot.className = 'status-dot inactive mr-2';
+                }
+                //Blockchain Status
+                  const blockchainDot = document.getElementById('blockchainStatus');
+                if (stats.system.blockchain.running) {
+                    blockchainDot.className = 'status-dot active mr-2';
+                } else {
+                    blockchainDot.className = 'status-dot inactive mr-2';
+                }
+
+                
+                // Hostname et autres infos système
+                document.getElementById('hostname').textContent = stats.system.hostname;
+                document.getElementById('uptime').textContent = formatUptime(stats.system.cpu.uptime);
+                document.getElementById('platform').textContent = stats.system.platform;
+            }
+        }
        // Sauvegarder l'historique du graphique dans localStorage
 function saveChartHistoryToStorage() {
     localStorage.setItem('chartHistory', JSON.stringify(chartHistory));
