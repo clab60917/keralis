@@ -59,16 +59,18 @@ class SystemMonitor {
     async checkBlockchainStatus() {
         try {
             // Vérifier si le processus auto3.js est en cours d'exécution
-            const { stdout } = await execAsync('pm2 show blockchain-app | grep status');
+            // const { stdout } = await execAsync('pm2 show blockchain-app | grep status');
             
-            const match = stdout.match(/status:\s+(\w+)/);
-            const status = match ? match[1] : "unknown";
+            // const match = stdout.match(/status:\s+(\w+)/);
+            // const status = match ? match[1] : "unknown";
 
-            const isRunning = status === "online";
-            
+            // const isRunning = status === "online";
+            const { stdout } = await exec("pm2 pid blockchain-app");
+            const isRunning = stdout.trim().length > 0; // Si un PID est retourné, l'application tourne
+    
             return {
                 running: isRunning,
-                processInfo: isRunning ? stdout.trim() : 'Processus auto3.js non trouvé',
+                processInfo: isRunning ? stdout.trim() : 'Processus  blockchain-app non trouvé',
                 lastChecked: new Date().toISOString()
             };
         } catch (error) {
