@@ -59,10 +59,12 @@ class SystemMonitor {
     async checkBlockchainStatus() {
         try {
             // Vérifier si le processus auto3.js est en cours d'exécution
-            const { stdout } = await execAsync('ps aux | grep "auto3.js"');
+            const { stdout } = await execAsync('pm2 show blockchain-app | grep status');
             
-            // Si stdout contient quelque chose, le processus est en cours d'exécution
-            const isRunning = stdout.length > 0;
+            const match = stdout.match(/status:\s+(\w+)/);
+            const status = match ? match[1] : "unknown";
+
+            const isRunning = status === "online";
             
             return {
                 running: isRunning,
