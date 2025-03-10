@@ -504,7 +504,7 @@ function updateChart(stats) {
 
     const now = new Date();
     const adjustedNow = new Date(now);
-    adjustedNow.setHours(now.getHours());
+    adjustedNow.setHours(now.getHours() );
     const currentHour = adjustedNow.getHours();
     
     // Si on est passé à une nouvelle heure depuis la dernière mise à jour
@@ -578,7 +578,7 @@ function updateChart(stats) {
             const container = document.getElementById(containerId);
             if (!container || !items) return;
 
-            container.innerHTML = '';
+          //  container.innerHTML = '';
             
             if (items.length === 0) {
                 container.innerHTML = '<div class="text-sm text-gray-500 text-center">Aucune donnée</div>';
@@ -688,15 +688,15 @@ function updateChart(stats) {
             
             let text;
             if (currentView === 'day') {
-                text = currentDate.toLocaleDateString('en-US', options.day);
+                text = currentDate.toLocaleDateString('fr-FR', options.day);
             } else if (currentView === 'week') {
                 const weekStart = new Date(currentDate);
                 weekStart.setDate(currentDate.getDate() - currentDate.getDay());
                 const weekEnd = new Date(weekStart);
                 weekEnd.setDate(weekStart.getDate() + 6);
-                text = `${weekStart.toLocaleDateString('en-US', { day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', options.week)}`;
+                text = `${weekStart.toLocaleDateString('fr-FR', { day: 'numeric' })} - ${weekEnd.toLocaleDateString('fr-FR', options.week)}`;
             } else {
-                text = currentDate.toLocaleDateString('en-US', options.month);
+                text = currentDate.toLocaleDateString('fr-FR', options.month);
             }
             
             document.getElementById('currentPeriod').textContent = text;
