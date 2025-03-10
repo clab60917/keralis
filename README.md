@@ -1,11 +1,11 @@
 # Keralis
 
-![Keralis monitoring platform](screen_dashboard.png)
+![Keralis monitoring platform](/img/screen_dashboard.png)
 
 
 ## Distributed Log Integrity Monitoring System
 
-![Blockchain messages visualisation](screen_hashscan.png)
+![Blockchain messages visualisation](/img/screen_hashscan.png)
 
 Keralis is a distributed log integrity monitoring system that leverages Hedera blockchain technology to guarantee log file immutability. It provides real-time alerts for unauthorized modifications, ensuring the integrity and security of your critical log data.
 
