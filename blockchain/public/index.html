@@ -745,7 +745,7 @@ function updateRecentItems(items, containerId) {
 //         }
 //     });
 function processRecentFiles(files, type) {
-    // Initialiser un tableau temporaire pour stocker les comptages par heure
+    // Créer un tableau pour compter les fichiers par heure
     const hourlyCount = Array(24).fill(0);
     
     // Pour chaque fichier récent
@@ -754,7 +754,7 @@ function processRecentFiles(files, type) {
             const fileTime = new Date(file.timestamp);
             const now = new Date();
             
-            // Calculer il y a combien d'heures ce fichier a été créé
+            // Calculer combien d'heures se sont écoulées depuis la création du fichier
             const hoursDiff = Math.floor((now - fileTime) / (1000 * 60 * 60));
             
             // Si le fichier est dans les dernières 24 heures
@@ -767,10 +767,8 @@ function processRecentFiles(files, type) {
         }
     });
     
-    // Mettre à jour les valeurs dans l'historique
-    for (let i = 0; i < 24; i++) {
-        chartHistory[type][i] = hourlyCount[i];
-    }
+    // Mettre à jour les valeurs dans l'historique du graphique
+    chartHistory[type] = hourlyCount;
 }
     
     // // Mettre à jour l'historique du graphique avec les nouvelles données
@@ -800,7 +798,7 @@ function processRecentFiles(files, type) {
             element.innerHTML = html;
         }
 
-        function updateChart(stats) {
+      function updateChart(stats) {
     if (!activityChart) return;
 
     const now = new Date();
