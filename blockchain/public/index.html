@@ -769,8 +769,11 @@ function processRecentFiles(files, type) {
     
     // Mettre à jour les valeurs dans l'historique
     for (let i = 0; i < 24; i++) {
-        chartHistory[type][i] = hourlyCount[i];
-    }
+
+        if (hourlyCount[i] > chartHistory[type][i]) {
+                    chartHistory[type][i] = hourlyCount[i];
+                }    
+            }
 }
     
     // // Mettre à jour l'historique du graphique avec les nouvelles données
@@ -807,25 +810,25 @@ function processRecentFiles(files, type) {
     const currentHour = now.getHours();
     
     // Si on est passé à une nouvelle heure depuis la dernière mise à jour
-    if (currentHour !== chartHistory.lastUpdatedHour) {
+    if (currentHour !== chartHistory.lastUpdatedHour && chartHistory.lastUpdatedHour !== -1) {
         // Mettre à jour les étiquettes des heures pour refléter le temps actuel
         activityChart.data.labels = Array(24).fill('').map((_, i) => 
             moment().subtract(23-i, 'hours').format('HH:mm')
         );
         
-        // Si on a changé d'heure, décaler les données d'une position
-        if (chartHistory.lastUpdatedHour !== -1) {
-            // Décaler toutes les données d'une position vers la gauche
-            chartHistory.hash.shift();
-            chartHistory.hash.push(0);
-            
-            chartHistory.encrypted.shift();
-            chartHistory.encrypted.push(0);
-            
-            chartHistory.messages.shift();
-            chartHistory.messages.push(0);
-        }
+        // Décaler toutes les données d'une position vers la gauche
+        chartHistory.hash.shift();
+        chartHistory.hash.push(0);
         
+        chartHistory.encrypted.shift();
+        chartHistory.encrypted.push(0);
+        
+        chartHistory.messages.shift();
+        chartHistory.messages.push(0);
+        
+        chartHistory.lastUpdatedHour = currentHour;
+    } else if (chartHistory.lastUpdatedHour === -1) {
+        // Première initialisation
         chartHistory.lastUpdatedHour = currentHour;
     }
     
@@ -840,6 +843,20 @@ function processRecentFiles(files, type) {
     
     if (stats.recentMessages && stats.recentMessages.length > 0) {
         processRecentFiles(stats.recentMessages, 'messages');
+    }
+    
+    // Compter également les nouvelles entrées depuis la dernière mise à jour
+    // Ajouter les différences aux compteurs de l'heure actuelle
+    if (stats.hash > previousStats.hash) {
+        chartHistory.hash[23] += stats.hash - previousStats.hash;
+    }
+    
+    if (stats.encrypted > previousStats.encrypted) {
+        chartHistory.encrypted[23] += stats.encrypted - previousStats.encrypted;
+    }
+    
+    if (stats.messages > previousStats.messages) {
+        chartHistory.messages[23] += stats.messages - previousStats.messages;
     }
     
     // Mettre à jour le graphique avec les nouvelles données
