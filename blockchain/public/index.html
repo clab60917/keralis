@@ -335,17 +335,98 @@
             messages: Array(24).fill(0),
             lastUpdatedHour: -1
             };
-            function initChart() {
+//             function initChart() {
+//     const ctx = document.getElementById('activityChart').getContext('2d');
+//     const timeLabels = Array(24).fill('').map((_, i) => {
+//         // Ajouter 2 heures pour corriger le décalage
+//         const adjustedTime = moment().subtract(23-i, 'hours').add(0, 'hours');
+//         return adjustedTime.format('HH:mm');
+//     });
+//     activityChart = new Chart(ctx, {
+//         type: 'line',
+//         data: {
+//             labels: Array(24).fill('').map((_, i) => moment().subtract(23-i, 'hours').format('HH:mm')),
+//             datasets: [{
+//                 label: 'Hash',
+//                 data: [...chartHistory.hash],
+//                 borderColor: '#3B82F6',
+//                 tension: 0.4,
+//                 fill: false,
+//                 pointRadius: 0
+//             }, {
+//                 label: 'Encrypted',
+//                 data: [...chartHistory.encrypted],
+//                 borderColor: '#10B981',
+//                 tension: 0.4,
+//                 fill: false,
+//                 pointRadius: 0
+//             }, {
+//                 label: 'Messages',
+//                 data: [...chartHistory.messages],
+//                 borderColor: '#8B5CF6',
+//                 tension: 0.4,
+//                 fill: false,
+//                 pointRadius: 0
+//             }]
+//         },
+//         options: {
+//             responsive: true,
+//             maintainAspectRatio: false,
+//             animation: {
+//                 duration: 500
+//             },
+//             hover: {
+//                 animationDuration: 200
+//             },
+//             responsiveAnimationDuration: 0,
+//             elements: {
+//                 line: {
+//                     tension: 0.4
+//                 }
+//             },
+//             plugins: {
+//                 legend: {
+//                     position: 'top'
+//                 },
+//                 tooltip: {
+//                     mode: 'index',
+//                     intersect: false
+//                 }
+//             },
+//             scales: {
+//                 y: {
+//                     beginAtZero: true,
+//                     ticks: {
+//                         precision: 0,
+//                         maxTicksLimit: 5
+//                     }
+//                 },
+//                 x: {
+//                     ticks: {
+//                         maxRotation: 0,
+//                         autoSkip: true,
+//                         maxTicksLimit: 8
+//                     }
+//                 }
+//             }
+//         }
+//     });
+    
+//     // Charger les données stockées dans localStorage si disponibles
+//     loadChartHistoryFromStorage();
+// }
+function initChart() {
     const ctx = document.getElementById('activityChart').getContext('2d');
+    
+    // Générer les étiquettes d'heure pour les dernières 24 heures
     const timeLabels = Array(24).fill('').map((_, i) => {
-        // Ajouter 2 heures pour corriger le décalage
-        const adjustedTime = moment().subtract(23-i, 'hours').add(0, 'hours');
-        return adjustedTime.format('HH:mm');
+        return moment().subtract(23-i, 'hours').format('HH:mm');
     });
+    
     activityChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: Array(24).fill('').map((_, i) => moment().subtract(23-i, 'hours').format('HH:mm')),
+            labels: timeLabels,
             datasets: [{
                 label: 'Hash',
                 data: [...chartHistory.hash],
@@ -390,7 +471,22 @@
                 },
                 tooltip: {
                     mode: 'index',
-                    intersect: false
+                    intersect: false,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            return tooltipItems[0].label;
+                        },
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y;
+                            }
+                            return label;
+                        }
+                    }
                 }
             },
             scales: {
@@ -499,52 +595,166 @@ function resetChartHistory() {
     saveChartHistoryToStorage();
 }
 // Mettre à jour le graphique avec les nouvelles données
-function updateChart(stats) {
-    if (!activityChart) return;
+// function updateChart(stats) {
+//     if (!activityChart) return;
 
-    const now = new Date();
-    const adjustedNow = new Date(now);
-    adjustedNow.setHours(now.getHours() );
-    const currentHour = adjustedNow.getHours();
+//     const now = new Date();
+//     const currentHour = now.getHours();
     
-    // Si on est passé à une nouvelle heure depuis la dernière mise à jour
-    if (currentHour !== chartHistory.lastUpdatedHour) {
-        // Mettre à jour les étiquettes des heures pour refléter le temps actuel
-        activityChart.data.labels = Array(24).fill('').map((_, i) => 
-            moment().subtract(23-i, 'hours').format('HH:mm')
-        );
+//     // Réinitialiser les compteurs de l'heure actuelle si nécessaire
+//     if (currentHour !== chartHistory.lastUpdatedHour) {
+//         // Mettre à jour les étiquettes des heures pour refléter le temps actuel
+//         activityChart.data.labels = Array(24).fill('').map((_, i) => 
+//             moment().subtract(23-i, 'hours').format('HH:mm')
+//         );
         
-        // Si on a changé d'heure, décaler les données d'une position
-        if (chartHistory.lastUpdatedHour !== -1) {
-            // Décaler toutes les données d'une position vers la gauche
-            chartHistory.hash.shift();
-            chartHistory.hash.push(0);
+//         // Si on a changé d'heure, décaler les données d'une position
+//         if (chartHistory.lastUpdatedHour !== -1) {
+//             // Décaler toutes les données d'une position vers la gauche
+//             chartHistory.hash.shift();
+//             chartHistory.hash.push(0);
             
-            chartHistory.encrypted.shift();
-            chartHistory.encrypted.push(0);
+//             chartHistory.encrypted.shift();
+//             chartHistory.encrypted.push(0);
             
-            chartHistory.messages.shift();
-            chartHistory.messages.push(0);
-        }
+//             chartHistory.messages.shift();
+//             chartHistory.messages.push(0);
+//         }
         
-        chartHistory.lastUpdatedHour = currentHour;
+//         chartHistory.lastUpdatedHour = currentHour;
+//     }
+    
+//     // Traiter les fichiers récents pour mettre à jour le graphique par heure
+//     if (stats.recentHash && stats.recentHash.length > 0) {
+//         processRecentFiles(stats.recentHash, 'hash');
+//     }
+    
+//     if (stats.recentEncrypted && stats.recentEncrypted.length > 0) {
+//         processRecentFiles(stats.recentEncrypted, 'encrypted');
+//     }
+    
+//     if (stats.recentMessages && stats.recentMessages.length > 0) {
+//         processRecentFiles(stats.recentMessages, 'messages');
+//     }
+    
+//     // Mettre à jour le graphique avec les nouvelles données
+//     activityChart.data.datasets[0].data = [...chartHistory.hash];
+//     activityChart.data.datasets[1].data = [...chartHistory.encrypted];
+//     activityChart.data.datasets[2].data = [...chartHistory.messages];
+    
+//     activityChart.update();
+    
+//     // Sauvegarder l'historique dans localStorage
+//     saveChartHistoryToStorage();
+// }
+function updateRecentItems(items, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || !items) return;
+    
+    container.innerHTML = '';
+    
+    if (items.length === 0) {
+        container.innerHTML = '<div class="text-sm text-gray-500 text-center">Aucune donnée</div>';
+        return;
     }
-    
-    // Accumuler les nouvelles données plutôt que de les écraser
-    chartHistory.hash[23] += stats.hash - previousStats.hash > 0 ? stats.hash - previousStats.hash : 0;
-    chartHistory.encrypted[23] += stats.encrypted - previousStats.encrypted > 0 ? stats.encrypted - previousStats.encrypted : 0;
-    chartHistory.messages[23] += stats.messages - previousStats.messages > 0 ? stats.messages - previousStats.messages : 0;
-    
-    // Mettre à jour le graphique avec les nouvelles données
-    activityChart.data.datasets[0].data = [...chartHistory.hash];
-    activityChart.data.datasets[1].data = [...chartHistory.encrypted];
-    activityChart.data.datasets[2].data = [...chartHistory.messages];
-    
-    activityChart.update();
-    
-    // Sauvegarder l'historique dans localStorage
-    saveChartHistoryToStorage();
+
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'text-sm p-2 bg-gray-50 rounded';
+        
+        // Extraire le nom du fichier du chemin complet
+        const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
+        
+        // Formatage de l'horodatage
+        const time = new Date(item.timestamp).toLocaleString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+        
+        div.textContent = `${fileName} (${time})`;
+        container.appendChild(div);
+    });
 }
+// function updateChart(stats) {
+//     if (!activityChart) return;
+
+//     const now = new Date();
+//     const adjustedNow = new Date(now);
+//     adjustedNow.setHours(now.getHours() );
+//     const currentHour = adjustedNow.getHours();
+    
+//     // Si on est passé à une nouvelle heure depuis la dernière mise à jour
+//     if (currentHour !== chartHistory.lastUpdatedHour) {
+//         // Mettre à jour les étiquettes des heures pour refléter le temps actuel
+//         activityChart.data.labels = Array(24).fill('').map((_, i) => 
+//             moment().subtract(23-i, 'hours').format('HH:mm')
+//         );
+        
+//         // Si on a changé d'heure, décaler les données d'une position
+//         if (chartHistory.lastUpdatedHour !== -1) {
+//             // Décaler toutes les données d'une position vers la gauche
+//             chartHistory.hash.shift();
+//             chartHistory.hash.push(0);
+            
+//             chartHistory.encrypted.shift();
+//             chartHistory.encrypted.push(0);
+            
+//             chartHistory.messages.shift();
+//             chartHistory.messages.push(0);
+//         }
+        
+//         chartHistory.lastUpdatedHour = currentHour;
+//     }
+    
+//     // Accumuler les nouvelles données plutôt que de les écraser
+//     chartHistory.hash[23] += stats.hash - previousStats.hash > 0 ? stats.hash - previousStats.hash : 0;
+//     chartHistory.encrypted[23] += stats.encrypted - previousStats.encrypted > 0 ? stats.encrypted - previousStats.encrypted : 0;
+//     chartHistory.messages[23] += stats.messages - previousStats.messages > 0 ? stats.messages - previousStats.messages : 0;
+    
+//     // Mettre à jour le graphique avec les nouvelles données
+//     activityChart.data.datasets[0].data = [...chartHistory.hash];
+//     activityChart.data.datasets[1].data = [...chartHistory.encrypted];
+//     activityChart.data.datasets[2].data = [...chartHistory.messages];
+    
+//     activityChart.update();
+    
+//     // Sauvegarder l'historique dans localStorage
+//     saveChartHistoryToStorage();
+// }
+function processRecentFiles(files, type) {
+    // Réinitialiser les compteurs temporaires pour chaque heure
+    const hourlyCount = Array(24).fill(0);
+    
+    files.forEach(file => {
+        // Utiliser le timestamp du fichier s'il existe
+        if (file.timestamp) {
+            const fileTime = new Date(file.timestamp);
+            const now = new Date();
+            
+            // Vérifier si le fichier est dans les dernières 24 heures
+            const hoursDiff = Math.floor((now - fileTime) / (1000 * 60 * 60));
+            
+            if (hoursDiff < 24) {
+                const hourIndex = 23 - hoursDiff;
+                hourlyCount[hourIndex]++;
+            }
+        }
+    });
+    
+    // Mettre à jour l'historique du graphique avec les nouvelles données
+    // Pour chaque heure, ajouter les nouveaux fichiers qui n'ont pas encore été comptés
+    for (let i = 0; i < 24; i++) {
+        // Comparer avec les valeurs précédentes pour ne pas compter deux fois les mêmes fichiers
+        if (hourlyCount[i] > chartHistory[type][i]) {
+            chartHistory[type][i] = hourlyCount[i];
+        }
+    }
+}
+
         function updateTrend(currentValue, previousValue, elementId) {
             const element = document.getElementById(elementId);
             const diff = currentValue - previousValue;
