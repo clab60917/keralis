@@ -725,25 +725,53 @@ function updateRecentItems(items, containerId) {
 //     // Sauvegarder l'historique dans localStorage
 //     saveChartHistoryToStorage();
 // }
+// function processRecentFiles(files, type) {
+//     // Réinitialiser les compteurs temporaires pour chaque heure
+//     const hourlyCount = Array(24).fill(0);
+    
+//     files.forEach(file => {
+//         // Utiliser le timestamp du fichier s'il existe
+//         if (file.timestamp) {
+//             const fileTime = new Date(file.timestamp);
+//             const now = new Date();
+            
+//             // Vérifier si le fichier est dans les dernières 24 heures
+//             const hoursDiff = Math.floor((now - fileTime) / (1000 * 60 * 60));
+            
+//             if (hoursDiff < 24) {
+//                 const hourIndex = 23 - hoursDiff;
+//                 hourlyCount[hourIndex]++;
+//             }
+//         }
+//     });
 function processRecentFiles(files, type) {
-    // Réinitialiser les compteurs temporaires pour chaque heure
+    // Initialiser un tableau temporaire pour stocker les comptages par heure
     const hourlyCount = Array(24).fill(0);
     
+    // Pour chaque fichier récent
     files.forEach(file => {
-        // Utiliser le timestamp du fichier s'il existe
         if (file.timestamp) {
             const fileTime = new Date(file.timestamp);
             const now = new Date();
             
-            // Vérifier si le fichier est dans les dernières 24 heures
+            // Calculer il y a combien d'heures ce fichier a été créé
             const hoursDiff = Math.floor((now - fileTime) / (1000 * 60 * 60));
             
+            // Si le fichier est dans les dernières 24 heures
             if (hoursDiff < 24) {
+                // Calculer l'index dans notre tableau de 24 heures
+                // 0 = il y a 24h, 23 = heure actuelle
                 const hourIndex = 23 - hoursDiff;
                 hourlyCount[hourIndex]++;
             }
         }
     });
+    
+    // Mettre à jour les valeurs dans l'historique
+    for (let i = 0; i < 24; i++) {
+        chartHistory[type][i] = hourlyCount[i];
+    }
+}
     
     // Mettre à jour l'historique du graphique avec les nouvelles données
     // Pour chaque heure, ajouter les nouveaux fichiers qui n'ont pas encore été comptés
@@ -753,7 +781,7 @@ function processRecentFiles(files, type) {
             chartHistory[type][i] = hourlyCount[i];
         }
     }
-}
+
 
         function updateTrend(currentValue, previousValue, elementId) {
             const element = document.getElementById(elementId);
@@ -772,17 +800,57 @@ function processRecentFiles(files, type) {
         }
 
         function updateChart(stats) {
-            if (!activityChart) return;
+    if (!activityChart) return;
 
-            const now = new Date();
-            const currentHour = now.getHours();
-
-            activityChart.data.datasets[0].data[currentHour] = stats.hash;
-            activityChart.data.datasets[1].data[currentHour] = stats.encrypted;
-            activityChart.data.datasets[2].data[currentHour] = stats.messages;
-
-            activityChart.update('none');
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    // Si on est passé à une nouvelle heure depuis la dernière mise à jour
+    if (currentHour !== chartHistory.lastUpdatedHour) {
+        // Mettre à jour les étiquettes des heures pour refléter le temps actuel
+        activityChart.data.labels = Array(24).fill('').map((_, i) => 
+            moment().subtract(23-i, 'hours').format('HH:mm')
+        );
+        
+        // Si on a changé d'heure, décaler les données d'une position
+        if (chartHistory.lastUpdatedHour !== -1) {
+            // Décaler toutes les données d'une position vers la gauche
+            chartHistory.hash.shift();
+            chartHistory.hash.push(0);
+            
+            chartHistory.encrypted.shift();
+            chartHistory.encrypted.push(0);
+            
+            chartHistory.messages.shift();
+            chartHistory.messages.push(0);
         }
+        
+        chartHistory.lastUpdatedHour = currentHour;
+    }
+    
+    // Traiter les données récentes pour mettre à jour le graphique
+    if (stats.recentHash && stats.recentHash.length > 0) {
+        processRecentFiles(stats.recentHash, 'hash');
+    }
+    
+    if (stats.recentEncrypted && stats.recentEncrypted.length > 0) {
+        processRecentFiles(stats.recentEncrypted, 'encrypted');
+    }
+    
+    if (stats.recentMessages && stats.recentMessages.length > 0) {
+        processRecentFiles(stats.recentMessages, 'messages');
+    }
+    
+    // Mettre à jour le graphique avec les nouvelles données
+    activityChart.data.datasets[0].data = [...chartHistory.hash];
+    activityChart.data.datasets[1].data = [...chartHistory.encrypted];
+    activityChart.data.datasets[2].data = [...chartHistory.messages];
+    
+    activityChart.update();
+    
+    // Sauvegarder l'historique dans localStorage
+    saveChartHistoryToStorage();
+}
 
         function updateRecentItems(items, containerId) {
             const container = document.getElementById(containerId);
@@ -816,48 +884,40 @@ function processRecentFiles(files, type) {
         });
 
         socket.on('stats', (stats) => {
-            // Mise à jour des compteurs
-            document.getElementById('hashCount').textContent = stats.hash;
-            document.getElementById('encryptedCount').textContent = stats.encrypted;
-            document.getElementById('messagesCount').textContent = stats.messages;
-            document.getElementById('lastUpdated').textContent = stats.lastUpdated;
+    // Mise à jour des compteurs
+    document.getElementById('hashCount').textContent = stats.hash;
+    document.getElementById('encryptedCount').textContent = stats.encrypted;
+    document.getElementById('messagesCount').textContent = stats.messages;
+    document.getElementById('lastUpdated').textContent = stats.lastUpdated;
 
-            // Mise à jour des taux de traitement
-            // if (stats.rates) {
-            //     document.getElementById('hashRate').textContent = `${stats.rates.hash}/min`;
-            //     document.getElementById('encryptedRate').textContent = `${stats.rates.encrypted}/min`;
-            //     document.getElementById('messagesRate').textContent = `${stats.rates.messages}/min`;
-            // }
+    // Mise à jour des tendances
+    updateTrend(stats.hash, previousStats.hash, 'hashTrend');
+    updateTrend(stats.encrypted, previousStats.encrypted, 'encryptedTrend');
+    updateTrend(stats.messages, previousStats.messages, 'messagesTrend');
 
-            // Mise à jour des temps de traitement
-            // if (stats.processingTimes) {
-            //     document.getElementById('hashProcessingTime').textContent = `${stats.processingTimes.hash}ms`;
-            //     document.getElementById('encryptedProcessingTime').textContent = `${stats.processingTimes.encrypted}ms`;
-            // }
+    // Mise à jour du graphique avec les nouvelles données
+    updateChart(stats);
 
-            // Mise à jour des tendances
-            updateTrend(stats.hash, previousStats.hash, 'hashTrend');
-            updateTrend(stats.encrypted, previousStats.encrypted, 'encryptedTrend');
-            updateTrend(stats.messages, previousStats.messages, 'messagesTrend');
+    // Vider les conteneurs avant d'ajouter les nouveaux éléments
+    document.getElementById('recentHash').innerHTML = '';
+    document.getElementById('recentEncrypted').innerHTML = '';
+    document.getElementById('recentMessages').innerHTML = '';
 
-            // Mise à jour du graphique
-            updateChart(stats);
+    // Mise à jour des listes récentes
+    updateRecentItems(stats.recentHash, 'recentHash');
+    updateRecentItems(stats.recentEncrypted, 'recentEncrypted');
+    updateRecentItems(stats.recentMessages, 'recentMessages');
 
-            // Mise à jour des listes récentes
-            updateRecentItems(stats.recentHash, 'recentHash');
-            updateRecentItems(stats.recentEncrypted, 'recentEncrypted');
-            updateRecentItems(stats.recentMessages, 'recentMessages');
+    // Mise à jour des informations système
+    updateSystemInfo(stats);
 
-            // Mise à jour des informations système
-            updateSystemInfo(stats);
-
-            // Sauvegarder les stats actuelles
-            previousStats = {
-                hash: stats.hash,
-                encrypted: stats.encrypted,
-                messages: stats.messages
-            };
-        });
+    // Sauvegarder les stats actuelles
+    previousStats = {
+        hash: stats.hash,
+        encrypted: stats.encrypted,
+        messages: stats.messages
+    };
+});
 
         // Initialisation
         initChart();
