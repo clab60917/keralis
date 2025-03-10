@@ -676,8 +676,15 @@ function updateRecentItems(items, containerId) {
             year: 'numeric'
         });
         
-        div.textContent = `${fileName} (${time})`;
-        container.appendChild(div);
+        if (containerId === 'recentHash' && item.content) {
+            div.innerHTML = `
+                <div class="font-medium">${fileName}</div>
+                <div class="text-gray-500 text-xs">${time}</div>
+                <div class="mt-1 p-1 bg-gray-100 text-xs font-mono overflow-auto max-h-20">${item.content}</div>
+            `;
+        } else {
+            div.textContent = `${fileName} (${time})`;
+        }        container.appendChild(div);
     });
 }
 // function updateChart(stats) {
