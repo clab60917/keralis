@@ -18,6 +18,7 @@ Cette section couvre les bonnes pratiques de sécurité pour le système Keralis
 
 3. **Stockage Sécurisé**
    - Sauvegardez les fichiers `.env` dans un endroit sécurisé
+   - Ajoutez un .gitignore pour de pas push vos creds
    - Ne partagez jamais les clés privées Hedera
 
 ## Sécurité du Réseau
