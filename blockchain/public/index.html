@@ -675,8 +675,8 @@ function updateRecentItems(items, containerId) {
             month: '2-digit',
             year: 'numeric'
         });
-        
-        if (filename.includes("hash")) {
+        //containerId=='recentHash' && 
+        if (containerId==='recentHash' || filename.includes("hash")) {
             div.textContent = `${item.content} (${time})`;
 
         } else {
@@ -907,9 +907,10 @@ function processRecentFiles(files, type) {
     document.getElementById('recentHash').innerHTML = '';
     document.getElementById('recentEncrypted').innerHTML = '';
     document.getElementById('recentMessages').innerHTML = '';
+    const recentHashArray = Object.values(stats.recentHash);
 
     // Mise à jour des listes récentes
-    updateRecentItems(stats.recentHash, 'recentHash');
+    updateRecentItems(recentHashArray, 'recentHash');
     updateRecentItems(stats.recentEncrypted, 'recentEncrypted');
     updateRecentItems(stats.recentMessages, 'recentMessages');
 
