@@ -769,11 +769,8 @@ function processRecentFiles(files, type) {
     
     // Mettre à jour les valeurs dans l'historique
     for (let i = 0; i < 24; i++) {
-
-        if (hourlyCount[i] > chartHistory[type][i]) {
-                    chartHistory[type][i] = hourlyCount[i];
-                }    
-            }
+        chartHistory[type][i] = hourlyCount[i];
+    }
 }
     
     // // Mettre à jour l'historique du graphique avec les nouvelles données
@@ -803,7 +800,7 @@ function processRecentFiles(files, type) {
             element.innerHTML = html;
         }
 
-    function updateChart(stats) {
+        function updateChart(stats) {
     if (!activityChart) return;
 
     const now = new Date();
