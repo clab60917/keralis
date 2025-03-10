@@ -647,7 +647,12 @@ function resetChartHistory() {
     
 //     // Sauvegarder l'historique dans localStorage
 //     saveChartHistoryToStorage();
-// }
+// } const div = document.createElement('div');
+        //         div.className = 'text-sm p-2 bg-gray-50 rounded';
+        //         const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
+        //         const time = new Date(item.timestamp).toLocaleString();
+        //         div.textContent = `${fileName} (${time})`;
+        //         container.appendChild(div);
 function updateRecentItems(items, containerId) {
     const container = document.getElementById(containerId);
     if (!container || !items) return;
@@ -676,12 +681,20 @@ function updateRecentItems(items, containerId) {
             year: 'numeric'
         });
         //containerId=='recentHash' && 
-        if (containerId==='recentHash' || filename.includes("hash")) {
-            div.textContent = `${item.content} (${time})`;
-
-        } else {
-            div.textContent = `${fileName} (${time})`;
-        }        container.appendChild(div);
+       
+        if (containerId === 'recentHash' && item.content) { 
+            div.innerHTML = `
+                <div class="font-medium">${fileName}</div>
+                <div class="text-gray-500 text-xs">${time}</div>
+                <div class="mt-1 p-1 bg-gray-100 text-xs font-mono overflow-auto max-h-20">${item.content}</div>
+            `;
+        } else { 
+            div.innerHTML = `
+                <div class="font-medium">${fileName}</div>
+                <div class="text-gray-500 text-xs">${time}</div>
+            `;
+        }
+               container.appendChild(div);
     });
 }
 // function updateChart(stats) {
