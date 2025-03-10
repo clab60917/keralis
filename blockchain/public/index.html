@@ -773,14 +773,15 @@ function processRecentFiles(files, type) {
     }
 }
     
-    // Mettre à jour l'historique du graphique avec les nouvelles données
-    // Pour chaque heure, ajouter les nouveaux fichiers qui n'ont pas encore été comptés
-    for (let i = 0; i < 24; i++) {
-        // Comparer avec les valeurs précédentes pour ne pas compter deux fois les mêmes fichiers
-        if (hourlyCount[i] > chartHistory[type][i]) {
-            chartHistory[type][i] = hourlyCount[i];
-        }
-    }
+    // // Mettre à jour l'historique du graphique avec les nouvelles données
+    // // Pour chaque heure, ajouter les nouveaux fichiers qui n'ont pas encore été comptés
+    // for (let i = 0; i < 24; i++) {
+    //     // Comparer avec les valeurs précédentes pour ne pas compter deux fois les mêmes fichiers
+    //     if (hourlyCount[i] > chartHistory[type][i]) {
+    //         chartHistory[type][i] = hourlyCount[i];
+    //     }
+    // }
+}
 
 
         function updateTrend(currentValue, previousValue, elementId) {
