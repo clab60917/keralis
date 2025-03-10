@@ -9,7 +9,7 @@ const FeatureList = [
     description: (
       <>
         Keralis surveille en permanence l'intégrité de vos fichiers de logs
-        grâce à des algorithmes de hash sécurisés et à la technologie blockchain.
+        grâce à des calculs de hash et à la technologie blockchain.
       </>
     ),
   },
