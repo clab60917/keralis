@@ -274,6 +274,19 @@
                 <option value="-2">-2h</option>
             </select>
         </div>
+          <!-- Graphique en ligne -->
+          <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <canvas id="lineChart"></canvas>
+        </div>
+
+        <!-- Graphique en barres -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <canvas id="barChart"></canvas>
+        </div>
+
+        <!-- Graphique circulaire -->
+        <div class="bg-white p-4 rounded-lg shadow">
+            <canvas id="pieChart"></canvas>
 
         <!-- Dernières activités -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -318,6 +331,56 @@
             reconnectionDelayMax: 5000,
             reconnectionAttempts: 5
         });
+        const ctxLine = document.getElementById('lineChart').getContext('2d');
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        const lineChart = new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Hash', data: [], borderColor: 'blue', fill: false },
+                    { label: 'Encrypted', data: [], borderColor: 'green', fill: false },
+                    { label: 'Blockchain', data: [], borderColor: 'purple', fill: false }
+                ]
+            },
+            options: { responsive: true, scales: { x: { type: 'time' }, y: { beginAtZero: true } } }
+        });
+        
+        const barChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: ['Hash', 'Encrypted', 'Blockchain'],
+                datasets: [{ label: 'Fichiers traités', data: [0, 0, 0], backgroundColor: ['blue', 'green', 'purple'] }]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+        
+        const pieChart = new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: ['Hash', 'Encrypted', 'Blockchain'],
+                datasets: [{ data: [0, 0, 0], backgroundColor: ['blue', 'green', 'purple'] }]
+            }
+        });
+
+        function updateCharts(stats) {
+            const now = new Date();
+            lineChart.data.labels.push(now);
+            lineChart.data.datasets[0].data.push(stats.hash);
+            lineChart.data.datasets[1].data.push(stats.encrypted);
+            lineChart.data.datasets[2].data.push(stats.messages);
+            lineChart.update();
+
+            barChart.data.datasets[0].data = [stats.hash, stats.encrypted, stats.messages];
+            barChart.update();
+
+            pieChart.data.datasets[0].data = [stats.hash, stats.encrypted, stats.messages];
+            pieChart.update();
+        }
+
+     
+        socket.on('stats', updateCharts);
 
         function formatUptime(seconds) {
             const days = Math.floor(seconds / (24 * 60 * 60));
