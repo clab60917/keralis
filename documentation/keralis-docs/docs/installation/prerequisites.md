@@ -30,15 +30,19 @@ Les principales dépendances du projet sont:
     "cors": "^2.x"
   }
 }
-Configuration du Réseau
+```
+
+## Configuration du Réseau
+
 Assurez-vous que les ports suivants sont accessibles:
 
-Serveur Client: Port 3001 (API)
-Serveur Blockchain: Port 3000 (Dashboard)
+- Serveur Client: Port 3001 (API)
+- Serveur Blockchain: Port 3000 (Dashboard)
 
-Préparation des Serveurs
+## Préparation des Serveurs
+
 Nous recommandons d'utiliser deux serveurs distincts:
 
-Serveur Client: Pour la gestion des logs et le calcul des hashs
-Serveur Blockchain: Pour la vérification de l'intégrité et le dashboard
+- Serveur Client: Pour la gestion des logs et le calcul des hashs
+- Serveur Blockchain: Pour la vérification de l'intégrité et le dashboard
 
