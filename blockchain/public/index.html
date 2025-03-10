@@ -7,6 +7,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -263,6 +264,29 @@
                 <canvas id="activityChart"></canvas>
             </div>
         </div>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Activité historique</h2>
+                <div class="flex items-center space-x-4">
+                    <select id="chartType" onchange="changeChartType(this.value)" 
+                            class="px-2 py-1 border rounded text-sm">
+                        <option value="line">Ligne</option>
+                        <option value="bar">Barre</option>
+                    </select>
+                    <button onclick="toggleCumulative()" 
+                            class="px-2 py-1 border rounded text-sm bg-gray-100 hover:bg-gray-200">
+                        Vue cumulée
+                    </button>
+                    <button onclick="resetZoom()" 
+                            class="px-2 py-1 border rounded text-sm bg-gray-100 hover:bg-gray-200">
+                        <i class="fas fa-search-minus"></i> Réinitialiser zoom
+                    </button>
+                </div>
+            </div>
+            <div style="height: 400px;">
+                <canvas id="activityChart"></canvas>
+            </div>
         <!-- <div class="flex items-center ml-4">
             <label for="timeOffset" class="mr-2 text-sm text-gray-600">Ajustement horaire:</label>
             <select id="timeOffset" class="px-2 py-1 border rounded text-sm" onchange="updateTimeOffset(this.value)">
@@ -325,6 +349,8 @@
             const minutes = Math.floor((seconds % (60 * 60)) / 60);
             return `${days}j ${hours}h ${minutes}m`;
         }
+        let isCumulative = false;
+        let currentChartType = 'line';
 
         let activityChart;
         let previousStats = { hash: 0, encrypted: 0, messages: 0 };
@@ -338,9 +364,7 @@
             function initChart() {
     const ctx = document.getElementById('activityChart').getContext('2d');
     const timeLabels = Array(24).fill('').map((_, i) => {
-        // Ajouter 2 heures pour corriger le décalage
-        const adjustedTime = moment().subtract(23-i, 'hours').add(-2, 'hours');
-        return adjustedTime.format('HH:mm');
+        return moment().subtract(23 - i, 'hours').format('HH:mm');
     });
     activityChart = new Chart(ctx, {
         type: 'line',
@@ -385,6 +409,17 @@
                 }
             },
             plugins: {
+                zoom: {
+                    zoom: {
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
+                        mode: 'x',
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
+                    }
+                },
                 legend: {
                     position: 'top'
                 },
@@ -407,14 +442,56 @@
                         autoSkip: true,
                         maxTicksLimit: 8
                     }
+                    
                 }
+                
+                
             }
+            
         }
+        
     });
     
     // Charger les données stockées dans localStorage si disponibles
     loadChartHistoryFromStorage();
 }
+function resetZoom() {
+    activityChart.resetZoom();
+}
+
+function changeChartType(type) {
+    currentChartType = type;
+    if (activityChart) {
+        activityChart.destroy();
+    }
+    initChart();
+    updateChartData();
+}
+
+function toggleCumulative() {
+    isCumulative = !isCumulative;
+    updateChartData();
+}
+
+function calculateCumulative(data) {
+    return data.reduce((acc, val, i) => {
+        acc.push(val + (acc[i-1] || 0));
+        return acc;
+    }, []);
+}
+function updateChartData() {
+    if (!activityChart) return;
+    
+    activityChart.data.datasets.forEach((dataset, index) => {
+        const key = ['hash', 'encrypted', 'messages'][index];
+        dataset.data = isCumulative ? 
+            calculateCumulative(chartHistory[key]) : 
+            [...chartHistory[key]];
+    });
+    
+    activityChart.update();
+}
+
 function updateSystemInfo(stats) {
             if (stats.system) {
                 // CPU
@@ -541,9 +618,15 @@ function updateChart(stats) {
     activityChart.data.datasets[2].data = [...chartHistory.messages];
     
     activityChart.update();
-    
+    updateChartData();
     // Sauvegarder l'historique dans localStorage
     saveChartHistoryToStorage();
+}
+function toggleButton(buttonId, active) {
+    const button = document.getElementById(buttonId);
+    button.className = active ? 
+        'px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors' :
+        'px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors';
 }
         function updateTrend(currentValue, previousValue, elementId) {
             const element = document.getElementById(elementId);
