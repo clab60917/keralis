@@ -649,44 +649,45 @@ function resetChartHistory() {
 //     saveChartHistoryToStorage();
 // }
 function updateRecentItems(items, containerId) {
-        const container = document.getElementById(containerId);
-        if (!container || !items) return;
+    const container = document.getElementById(containerId);
+    if (!container || !items) return;
 
-        container.innerHTML = '';
+    container.innerHTML = '';
 
-        if (items.length === 0) {
-            container.innerHTML = '<div class="text-sm text-gray-500 text-center">Aucune donnée</div>';
-            return;
-        }
-
-        items.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'text-sm p-2 bg-gray-50 rounded';
-
-            const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
-            const time = new Date(item.timestamp).toLocaleString('fr-FR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
-
-            if (containerId === 'recentHash' && item.content) {
-                div.innerHTML = `
-                    <div class="font-medium">${fileName}</div>
-                    <div class="text-gray-500 text-xs">${time}</div>
-                    <div class="mt-1 p-1 bg-gray-100 text-xs font-mono overflow-auto max-h-20">${item.content}</div>
-                `;
-            } else {
-                div.innerHTML = `${fileName} (${time})`;
-            }
-            container.appendChild(div);
-        });
+    if (items.length === 0) {
+        container.innerHTML = '<div class="text-sm text-gray-500 text-center">Aucune donnée</div>';
+        return;
     }
 
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'text-sm p-2 bg-gray-50 rounded';
 
+        const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
+        const time = new Date(item.timestamp).toLocaleString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+
+        if (containerId === 'recentHash' && item.content) {
+            div.innerHTML = `
+                <div class="font-medium">${fileName}</div>
+                <div class="text-gray-500 text-xs">${time}</div>
+                <div class="mt-1 p-1 bg-gray-100 text-xs font-mono overflow-auto max-h-20">${item.content}</div>
+            `;
+        } else {
+            div.innerHTML = `
+                <div class="font-medium">${fileName}</div>
+                <div class="text-gray-500 text-xs">${time}</div>
+            `;
+        }
+        container.appendChild(div);
+    });
+}
 // function updateChart(stats) {
 //     if (!activityChart) return;
 
