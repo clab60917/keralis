@@ -173,48 +173,8 @@ async function getStats() {
                 .sort({ timestamp: -1 })
                 .limit(5)
                 .toArray();
-                
-            // Si aucun résultat, essayer de chercher dans d'autres collections liées aux hash
-            if (!recentHashList || recentHashList.length === 0) {
-                console.log('Aucun hash trouvé dans la collection hash, recherche dans blockchain...');
-                
-                // Essayer de récupérer depuis la collection blockchain
-                try {
-                    const blockchainHashes = await db.collection('blockchain')
-                        .find({})
-                        .sort({ timestamp: -1 })
-                        .limit(5)
-                        .toArray();
-                        
-                    if (blockchainHashes && blockchainHashes.length > 0) {
-                        console.log('Hash trouvés dans la collection blockchain:', blockchainHashes.length);
-                        recentHashList = blockchainHashes;
-                    }
-                } catch (blockchainError) {
-                    console.error('Erreur lors de la recherche dans blockchain:', blockchainError);
-                }
-            }
-            
-            // Ajouter des données de test temporaires pour les hash
-            if (!recentHashList || recentHashList.length === 0) {
-                console.log('Aucun hash trouvé, ajout de données de test temporaires');
-                recentHashList = [
-                    { fileName: 'document1.pdf', hash: 'a1b2c3d4e5f6g7h8i9j0', timestamp: new Date() },
-                    { fileName: 'image.jpg', hash: 'b2c3d4e5f6g7h8i9j0k1', timestamp: new Date(Date.now() - 60000) },
-                    { fileName: 'rapport.docx', hash: 'c3d4e5f6g7h8i9j0k1l2', timestamp: new Date(Date.now() - 120000) },
-                    { fileName: 'config.json', hash: 'd4e5f6g7h8i9j0k1l2m3', timestamp: new Date(Date.now() - 180000) },
-                    { fileName: 'backup.zip', hash: 'e5f6g7h8i9j0k1l2m3n4', timestamp: new Date(Date.now() - 240000) }
-                ];
-            }
         } catch (error) {
             console.error('Erreur lors de la récupération des hash récents:', error);
-            
-            // Ajouter des données de test en cas d'erreur
-            recentHashList = [
-                { fileName: 'document1.pdf', hash: 'a1b2c3d4e5f6g7h8i9j0', timestamp: new Date() },
-                { fileName: 'image.jpg', hash: 'b2c3d4e5f6g7h8i9j0k1', timestamp: new Date(Date.now() - 60000) },
-                { fileName: 'rapport.docx', hash: 'c3d4e5f6g7h8i9j0k1l2', timestamp: new Date(Date.now() - 120000) }
-            ];
         }
         
         try {
@@ -223,48 +183,8 @@ async function getStats() {
                 .sort({ timestamp: -1 })
                 .limit(5)
                 .toArray();
-                
-            // Si aucun résultat, essayer de chercher dans d'autres collections liées aux fichiers chiffrés
-            if (!recentEncryptedList || recentEncryptedList.length === 0) {
-                console.log('Aucun fichier chiffré trouvé dans la collection encrypted, recherche dans encryption...');
-                
-                // Essayer de récupérer depuis la collection encryption
-                try {
-                    const encryptionFiles = await db.collection('encryption')
-                        .find({})
-                        .sort({ timestamp: -1 })
-                        .limit(5)
-                        .toArray();
-                        
-                    if (encryptionFiles && encryptionFiles.length > 0) {
-                        console.log('Fichiers chiffrés trouvés dans la collection encryption:', encryptionFiles.length);
-                        recentEncryptedList = encryptionFiles;
-                    }
-                } catch (encryptionError) {
-                    console.error('Erreur lors de la recherche dans encryption:', encryptionError);
-                }
-            }
-            
-            // Ajouter des données de test temporaires pour les fichiers chiffrés
-            if (!recentEncryptedList || recentEncryptedList.length === 0) {
-                console.log('Aucun fichier chiffré trouvé, ajout de données de test temporaires');
-                recentEncryptedList = [
-                    { fileName: 'confidential.pdf', status: 'Encrypted', timestamp: new Date() },
-                    { fileName: 'credentials.txt', status: 'Encrypted', timestamp: new Date(Date.now() - 60000) },
-                    { fileName: 'private_key.pem', status: 'Encrypted', timestamp: new Date(Date.now() - 120000) },
-                    { fileName: 'user_data.json', status: 'Failed', timestamp: new Date(Date.now() - 180000) },
-                    { fileName: 'contract.docx', status: 'Encrypted', timestamp: new Date(Date.now() - 240000) }
-                ];
-            }
         } catch (error) {
             console.error('Erreur lors de la récupération des encrypted récents:', error);
-            
-            // Ajouter des données de test en cas d'erreur
-            recentEncryptedList = [
-                { fileName: 'confidential.pdf', status: 'Encrypted', timestamp: new Date() },
-                { fileName: 'credentials.txt', status: 'Encrypted', timestamp: new Date(Date.now() - 60000) },
-                { fileName: 'private_key.pem', status: 'Failed', timestamp: new Date(Date.now() - 120000) }
-            ];
         }
         
         try {
@@ -293,23 +213,12 @@ async function getStats() {
         console.log('recentEncryptedList (premier élément):', recentEncryptedList.length > 0 ? JSON.stringify(recentEncryptedList[0]) : 'aucun élément');
         console.log('recentMessages (premier élément):', recentMessages.length > 0 ? JSON.stringify(recentMessages[0]) : 'aucun élément');
 
-        // Supprimer les données de test et se concentrer sur les vraies données
-        
         // Normaliser les données pour s'assurer qu'elles ont la bonne structure
         let normalizedHashList = Array.isArray(recentHashList) ? recentHashList.map(item => {
             // Analyser la structure de l'élément pour extraire les bonnes informations
             console.log('Normalisation d\'un élément hash:', JSON.stringify(item));
             
-            // Utiliser directement les données de test si elles sont disponibles
-            if (item.fileName && item.hash) {
-                return {
-                    fileName: item.fileName,
-                    hash: item.hash,
-                    timestamp: item.timestamp || Date.now()
-                };
-            }
-            
-            // Sinon, rechercher les champs possibles
+            // Rechercher les champs possibles pour le nom de fichier
             let fileName = 'N/A';
             if (item.fileName) fileName = item.fileName;
             else if (item.file) fileName = item.file;
@@ -321,12 +230,14 @@ async function getStats() {
                 fileName = pathParts[pathParts.length - 1];
             }
             
+            // Rechercher les champs possibles pour le hash
             let hash = 'N/A';
             if (item.hash) hash = item.hash;
             else if (item.hashValue) hash = item.hashValue;
             else if (item.value) hash = item.value;
             else if (item.digest) hash = item.digest;
             
+            // Rechercher les champs possibles pour l'horodatage
             let timestamp = Date.now();
             if (item.timestamp) timestamp = item.timestamp;
             else if (item.date) timestamp = item.date;
@@ -344,16 +255,7 @@ async function getStats() {
             // Analyser la structure de l'élément pour extraire les bonnes informations
             console.log('Normalisation d\'un élément encrypted:', JSON.stringify(item));
             
-            // Utiliser directement les données de test si elles sont disponibles
-            if (item.fileName && item.status) {
-                return {
-                    fileName: item.fileName,
-                    status: item.status,
-                    timestamp: item.timestamp || Date.now()
-                };
-            }
-            
-            // Sinon, rechercher les champs possibles
+            // Rechercher les champs possibles pour le nom de fichier
             let fileName = 'N/A';
             if (item.fileName) fileName = item.fileName;
             else if (item.file) fileName = item.file;
@@ -365,11 +267,13 @@ async function getStats() {
                 fileName = pathParts[pathParts.length - 1];
             }
             
+            // Rechercher les champs possibles pour le statut
             let status = 'N/A';
             if (item.status) status = item.status;
             else if (item.state) status = item.state;
             else if (item.result) status = item.result;
             
+            // Rechercher les champs possibles pour l'horodatage
             let timestamp = Date.now();
             if (item.timestamp) timestamp = item.timestamp;
             else if (item.date) timestamp = item.date;
@@ -431,15 +335,6 @@ async function getStats() {
                 timestamp: timestamp
             };
         }) : [];
-
-        // Ajouter des alertes factices si nécessaire
-        if (!recentAlerts || recentAlerts.length === 0) {
-            recentAlerts = [
-                { date: new Date(Date.now() - 30000), file: 'system.log', status: 'Warning' },
-                { date: new Date(Date.now() - 120000), file: 'access.log', status: 'Error' },
-                { date: new Date(Date.now() - 240000), file: 'backup.log', status: 'Info' }
-            ];
-        }
 
         // Créer l'objet stats dans le format attendu par le client
         const stats = {
