@@ -133,9 +133,14 @@ function updateRecentTable(tableId, items) {
             const tr = document.createElement('tr');
             
             // Formater la date si elle existe
-            const formattedTime = item.timestamp 
-                ? new Date(item.timestamp).toLocaleTimeString() 
-                : 'N/A';
+            let formattedTime = 'N/A';
+            try {
+                if (item.timestamp) {
+                    formattedTime = new Date(item.timestamp).toLocaleTimeString();
+                }
+            } catch (error) {
+                console.error('Erreur lors du formatage de la date:', error);
+            }
             
             if (tableId === 'recentHashTableBody') {
                 tr.innerHTML = `
@@ -155,18 +160,16 @@ function updateRecentTable(tableId, items) {
                     <td>${item.message || 'N/A'}</td>
                     <td>${formattedTime}</td>
                 `;
+            } else {
+                console.warn(`Type de tableau non reconnu: ${tableId}`);
+                return;
             }
             
             tbody.appendChild(tr);
         });
-        
-        // Si aucun élément n'a été ajouté (tous étaient invalides), afficher un message
-        if (tbody.children.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center">Aucune donnée valide</td></tr>';
-        }
     } catch (error) {
         console.error(`Erreur lors de la mise à jour du tableau ${tableId}:`, error);
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center">Erreur lors du chargement des données</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center">Erreur lors de la mise à jour</td></tr>';
     }
 }
 
