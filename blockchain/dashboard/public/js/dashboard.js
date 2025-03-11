@@ -74,6 +74,11 @@ function updateStats(stats) {
             updateRecentTable('recentMessagesTableBody', stats.recentMessages);
         }
         
+        // Mise à jour des alertes
+        if (stats.alerts && Array.isArray(stats.alerts)) {
+            updateAlertsTable('alertsTableBody', stats.alerts);
+        }
+        
         // Extraire les valeurs système avec des valeurs par défaut
         const cpuUsage = typeof stats.cpuUsage === 'number' ? stats.cpuUsage : 0;
         const memoryUsage = typeof stats.memoryUsage === 'number' ? stats.memoryUsage : 0;
@@ -200,21 +205,64 @@ function updateRecentTable(tableId, items) {
 // Fonction pour mettre à jour le tableau des alertes
 function updateAlertsTable(tableId, alerts) {
     const tbody = document.getElementById(tableId);
-    if (!tbody || !alerts) return;
+    if (!tbody) {
+        console.warn(`Élément avec ID '${tableId}' non trouvé dans le DOM`);
+        return;
+    }
     
-    tbody.innerHTML = '';
-    alerts.slice(0, 5).forEach(alert => {
-        const tr = document.createElement('tr');
-        const statusClass = alert.status === 'restored' ? 'success' : 'danger';
+    if (!alerts || !Array.isArray(alerts) || alerts.length === 0) {
+        console.warn(`Aucune alerte disponible pour le tableau ${tableId}`);
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center">Aucune alerte disponible</td></tr>';
+        return;
+    }
+    
+    console.log(`Mise à jour du tableau d'alertes avec ${alerts.length} éléments:`, alerts);
+    
+    try {
+        tbody.innerHTML = '';
         
-        tr.innerHTML = `
-            <td>${new Date(alert.timestamp).toLocaleTimeString()}</td>
-            <td>${alert.fileName}</td>
-            <td><span class="badge bg-${statusClass}">${alert.status}</span></td>
-        `;
-        
-        tbody.appendChild(tr);
-    });
+        alerts.forEach(alert => {
+            if (!alert) return; // Ignorer les éléments null ou undefined
+            
+            const tr = document.createElement('tr');
+            
+            // Formater la date si elle existe
+            let formattedTime = 'N/A';
+            try {
+                if (alert.date || alert.timestamp) {
+                    const date = alert.date ? alert.date : alert.timestamp;
+                    formattedTime = new Date(date).toLocaleTimeString();
+                }
+            } catch (error) {
+                console.error('Erreur lors du formatage de la date d\'alerte:', error);
+            }
+            
+            // Déterminer la classe de statut
+            let statusClass = 'secondary';
+            const status = alert.status ? alert.status.toLowerCase() : '';
+            
+            if (status === 'error' || status === 'danger') {
+                statusClass = 'danger';
+            } else if (status === 'warning') {
+                statusClass = 'warning';
+            } else if (status === 'success' || status === 'restored') {
+                statusClass = 'success';
+            } else if (status === 'info') {
+                statusClass = 'info';
+            }
+            
+            tr.innerHTML = `
+                <td>${formattedTime}</td>
+                <td>${alert.file || alert.fileName || 'N/A'}</td>
+                <td><span class="badge bg-${statusClass}">${alert.status || 'N/A'}</span></td>
+            `;
+            
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error(`Erreur lors de la mise à jour du tableau d'alertes:`, error);
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center">Erreur lors de la mise à jour</td></tr>';
+    }
 }
 
 // Gestion des modals pour les détails d'alerte

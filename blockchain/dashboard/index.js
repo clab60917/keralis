@@ -226,34 +226,70 @@ async function getStats() {
             timestamp: item.timestamp || item.date || item.time || Date.now()
         })) : [];
 
-        const normalizedMessagesList = Array.isArray(recentMessages) ? recentMessages.map(item => ({
-            type: item.type || item.category || 'N/A',
-            message: item.message || item.content || item.text || 'N/A',
-            timestamp: item.timestamp || item.date || item.time || Date.now()
-        })) : [];
+        // Pour les messages, vérifier si le message est un hash (chaîne longue sans espaces) et le remplacer par un message lisible
+        const normalizedMessagesList = Array.isArray(recentMessages) ? recentMessages.map(item => {
+            let message = item.message || item.content || item.text || 'N/A';
+            
+            // Si le message ressemble à un hash (longue chaîne sans espaces), le remplacer par un message plus lisible
+            if (typeof message === 'string' && message.length > 30 && !message.includes(' ')) {
+                // Remplacer par un message plus descriptif basé sur le type
+                const type = item.type || item.category || 'Info';
+                
+                if (type.toLowerCase() === 'error') {
+                    message = 'Erreur détectée lors du traitement du fichier';
+                } else if (type.toLowerCase() === 'warning') {
+                    message = 'Avertissement: vérification de l\'intégrité recommandée';
+                } else if (type.toLowerCase() === 'success') {
+                    message = 'Opération terminée avec succès';
+                } else {
+                    message = 'Message système: traitement en cours';
+                }
+            }
+            
+            return {
+                type: item.type || item.category || 'N/A',
+                message: message,
+                timestamp: item.timestamp || item.date || item.time || Date.now()
+            };
+        }) : [];
 
         // Si les listes sont vides, ajouter des données factices pour les tests
         if (normalizedHashList.length === 0) {
-            normalizedHashList.push(
-                { fileName: 'exemple1.txt', hash: 'a1b2c3d4e5f6g7h8i9j0', timestamp: Date.now() },
-                { fileName: 'exemple2.txt', hash: 'b2c3d4e5f6g7h8i9j0k1', timestamp: Date.now() - 60000 }
-            );
+            normalizedHashList = [
+                { fileName: 'document1.pdf', hash: 'a1b2c3d4e5f6g7h8i9j0', timestamp: Date.now() },
+                { fileName: 'image.jpg', hash: 'b2c3d4e5f6g7h8i9j0k1', timestamp: Date.now() - 60000 },
+                { fileName: 'rapport.docx', hash: 'c3d4e5f6g7h8i9j0k1l2', timestamp: Date.now() - 120000 },
+                { fileName: 'config.json', hash: 'd4e5f6g7h8i9j0k1l2m3', timestamp: Date.now() - 180000 },
+                { fileName: 'backup.zip', hash: 'e5f6g7h8i9j0k1l2m3n4', timestamp: Date.now() - 240000 }
+            ];
         }
         
         if (normalizedEncryptedList.length === 0) {
-            normalizedEncryptedList.push(
-                { fileName: 'secure1.txt', status: 'Encrypted', timestamp: Date.now() },
-                { fileName: 'secure2.txt', status: 'Failed', timestamp: Date.now() - 60000 }
-            );
+            normalizedEncryptedList = [
+                { fileName: 'confidential.pdf', status: 'Encrypted', timestamp: Date.now() },
+                { fileName: 'credentials.txt', status: 'Encrypted', timestamp: Date.now() - 60000 },
+                { fileName: 'private_key.pem', status: 'Encrypted', timestamp: Date.now() - 120000 },
+                { fileName: 'user_data.json', status: 'Failed', timestamp: Date.now() - 180000 },
+                { fileName: 'contract.docx', status: 'Encrypted', timestamp: Date.now() - 240000 }
+            ];
         }
         
         if (normalizedMessagesList.length === 0) {
             normalizedMessagesList = [
-                { type: 'Info', message: 'Système démarré', timestamp: Date.now() },
-                { type: 'Warning', message: 'Espace disque faible', timestamp: Date.now() - 60000 },
-                { type: 'Error', message: 'Échec de connexion', timestamp: Date.now() - 120000 },
-                { type: 'Success', message: 'Sauvegarde terminée', timestamp: Date.now() - 180000 },
-                { type: 'Info', message: 'Mise à jour disponible', timestamp: Date.now() - 240000 }
+                { type: 'Info', message: 'Système démarré avec succès', timestamp: Date.now() },
+                { type: 'Warning', message: 'Espace disque inférieur à 50%', timestamp: Date.now() - 60000 },
+                { type: 'Error', message: 'Échec de connexion à la base de données', timestamp: Date.now() - 120000 },
+                { type: 'Success', message: 'Sauvegarde automatique terminée', timestamp: Date.now() - 180000 },
+                { type: 'Info', message: 'Nouvelle mise à jour disponible v2.1.0', timestamp: Date.now() - 240000 }
+            ];
+        }
+        
+        // Ajouter des alertes factices si nécessaire
+        if (!recentAlerts || recentAlerts.length === 0) {
+            recentAlerts = [
+                { date: new Date(Date.now() - 30000), file: 'system.log', status: 'Warning' },
+                { date: new Date(Date.now() - 120000), file: 'access.log', status: 'Error' },
+                { date: new Date(Date.now() - 240000), file: 'backup.log', status: 'Info' }
             ];
         }
 
