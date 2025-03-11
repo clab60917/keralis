@@ -53,27 +53,51 @@ function updateStats(stats) {
         updateElement('encryptedCount', stats.encrypted);
         updateElement('messagesCount', stats.messages);
         
-        // Mise à jour des taux
-        updateElement('hashRate', stats.rates.hash);
-        updateElement('encryptedRate', stats.rates.encrypted);
-        updateElement('messagesRate', stats.rates.messages);
+        // Mise à jour des taux (convertir de par minute à par heure)
+        const hashRateHourly = stats.rates && typeof stats.rates.hash === 'number' ? stats.rates.hash * 60 : 0;
+        const encryptedRateHourly = stats.rates && typeof stats.rates.encrypted === 'number' ? stats.rates.encrypted * 60 : 0;
+        const messagesRateHourly = stats.rates && typeof stats.rates.messages === 'number' ? stats.rates.messages * 60 : 0;
+        
+        updateElement('hashRate', hashRateHourly);
+        updateElement('encryptedRate', encryptedRateHourly);
+        updateElement('messagesRate', messagesRateHourly);
         
         // Mise à jour des temps de traitement
-        updateElement('hashProcessingTime', stats.processingTimes.hash);
-        updateElement('encryptedProcessingTime', stats.processingTimes.encrypted);
+        updateElement('hashProcessingTime', stats.processingTimes && stats.processingTimes.hash !== undefined ? stats.processingTimes.hash : 0);
+        updateElement('encryptedProcessingTime', stats.processingTimes && stats.processingTimes.encrypted !== undefined ? stats.processingTimes.encrypted : 0);
         
         // Mise à jour des stats système
         if (stats.system) {
-            // Vérifier que cpu et memory sont des nombres
-            const cpuValue = typeof stats.system.cpu === 'number' ? stats.system.cpu.toFixed(1) : stats.system.cpu;
-            const memoryValue = typeof stats.system.memory === 'number' ? stats.system.memory.toFixed(1) : stats.system.memory;
+            // Vérifier que cpu et memory sont des nombres ou les extraire s'ils sont des objets
+            let cpuValue = 0;
+            let memoryValue = 0;
+            
+            if (typeof stats.system.cpu === 'number') {
+                cpuValue = stats.system.cpu.toFixed(1);
+            } else if (typeof stats.system.cpu === 'object') {
+                // Essayer d'extraire une valeur numérique de l'objet
+                cpuValue = '0';
+                console.warn('CPU est un objet:', stats.system.cpu);
+            } else {
+                cpuValue = stats.system.cpu || '0';
+            }
+            
+            if (typeof stats.system.memory === 'number') {
+                memoryValue = stats.system.memory.toFixed(1);
+            } else if (typeof stats.system.memory === 'object') {
+                // Essayer d'extraire une valeur numérique de l'objet
+                memoryValue = '0';
+                console.warn('Memory est un objet:', stats.system.memory);
+            } else {
+                memoryValue = stats.system.memory || '0';
+            }
             
             updateElement('cpuUsage', cpuValue);
             updateElement('memoryUsage', memoryValue);
         }
         
         // Mise à jour de la dernière mise à jour
-        updateElement('lastUpdated', stats.lastUpdated);
+        updateElement('lastUpdated', stats.lastUpdated || new Date().toLocaleString());
         
         // Mise à jour des tableaux récents
         if (stats.recentHash) updateRecentTable('recentHashTableBody', stats.recentHash);
@@ -104,27 +128,29 @@ function updateRecentTable(tableId, items) {
     const tbody = document.getElementById(tableId);
     if (!tbody || !items) return;
     
+    console.log(`Mise à jour du tableau ${tableId} avec ${items.length} éléments:`, items);
+    
     tbody.innerHTML = '';
     items.forEach(item => {
         const tr = document.createElement('tr');
         
         if (tableId === 'recentHashTableBody') {
             tr.innerHTML = `
-                <td>${item.fileName}</td>
-                <td><small>${item.hash}</small></td>
-                <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
+                <td>${item.fileName || 'N/A'}</td>
+                <td><small>${item.hash || 'N/A'}</small></td>
+                <td>${item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : 'N/A'}</td>
             `;
         } else if (tableId === 'recentEncryptedTableBody') {
             tr.innerHTML = `
-                <td>${item.fileName}</td>
-                <td>${item.status}</td>
-                <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
+                <td>${item.fileName || 'N/A'}</td>
+                <td>${item.status || 'N/A'}</td>
+                <td>${item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : 'N/A'}</td>
             `;
         } else if (tableId === 'recentMessagesTableBody') {
             tr.innerHTML = `
-                <td>${item.type}</td>
-                <td>${item.message}</td>
-                <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
+                <td>${item.type || 'N/A'}</td>
+                <td>${item.message || 'N/A'}</td>
+                <td>${item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : 'N/A'}</td>
             `;
         }
         

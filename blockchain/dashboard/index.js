@@ -92,6 +92,27 @@ async function getStats() {
         // Récupérer les stats système
         const systemStats = await systemMonitor.getSystemStats();
         
+        // Extraire les valeurs CPU et mémoire
+        let cpuUsage = 0;
+        let memoryUsage = 0;
+        
+        if (systemStats) {
+            // Extraire la valeur CPU
+            if (systemStats.cpu && typeof systemStats.cpu === 'object') {
+                if (systemStats.cpu.loadAverage && Array.isArray(systemStats.cpu.loadAverage)) {
+                    // Utiliser la moyenne de charge sur 1 minute
+                    cpuUsage = systemStats.cpu.loadAverage[0];
+                }
+            }
+            
+            // Extraire la valeur mémoire
+            if (systemStats.memory && typeof systemStats.memory === 'object') {
+                if (systemStats.memory.usedPercentage) {
+                    memoryUsage = parseFloat(systemStats.memory.usedPercentage);
+                }
+            }
+        }
+        
         // Obtenir les compteurs actuels
         const currentCounts = {
             hash: await db.collection('hash').countDocuments(),
@@ -148,7 +169,10 @@ async function getStats() {
         const stats = {
             ...currentCounts,
             lastUpdated: new Date().toLocaleString(),
-            system: systemStats,
+            system: {
+                cpu: cpuUsage,
+                memory: memoryUsage
+            },
             rates,
             processingTimes,
             alerts
@@ -192,6 +216,8 @@ async function getStats() {
             recentMessagesCount: recentMessages.length,
             alertsCount: recentAlerts.length,
             systemStatus: systemStats ? 'OK' : 'Error',
+            cpuUsage,
+            memoryUsage,
             rates,
             processingTimes
         });
