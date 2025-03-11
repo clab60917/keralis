@@ -132,108 +132,50 @@
     </div>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
+<!-- Script de débogage -->
 <script>
-    const socket = io();
+    console.log('Page index.ejs chargée');
     
-    // Fonction pour mettre à jour les statistiques
-    function updateStats(stats) {
-        if (!stats) return;
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM chargé, initialisation de Socket.IO');
         
-        // Mise à jour des compteurs
-        document.getElementById('hashCount').textContent = stats.hash;
-        document.getElementById('encryptedCount').textContent = stats.encrypted;
-        document.getElementById('messagesCount').textContent = stats.messages;
-        
-        // Mise à jour des taux
-        document.getElementById('hashRate').textContent = stats.rates.hash;
-        document.getElementById('encryptedRate').textContent = stats.rates.encrypted;
-        document.getElementById('messagesRate').textContent = stats.rates.messages;
-        
-        // Mise à jour des temps de traitement
-        document.getElementById('hashProcessingTime').textContent = stats.processingTimes.hash;
-        document.getElementById('encryptedProcessingTime').textContent = stats.processingTimes.encrypted;
-        
-        // Mise à jour des stats système
-        if (stats.system) {
-            document.getElementById('cpuUsage').textContent = stats.system.cpu.toFixed(1);
-            document.getElementById('memoryUsage').textContent = stats.system.memory.toFixed(1);
+        // Vérifier que Socket.IO est disponible
+        if (typeof io === 'undefined') {
+            console.error('ERREUR: Socket.IO n\'est pas chargé');
+            document.body.innerHTML += '<div class="alert alert-danger">Erreur: Socket.IO n\'est pas chargé</div>';
+        } else {
+            console.log('Socket.IO est disponible');
+            
+            // Initialisation de Socket.IO
+            const socket = io();
+            
+            socket.on('connect', function() {
+                console.log('Connecté au serveur Socket.IO - ID:', socket.id);
+                document.getElementById('lastUpdated').textContent = 'Connecté';
+            });
+            
+            socket.on('connect_error', function(error) {
+                console.error('Erreur de connexion Socket.IO:', error);
+                document.getElementById('lastUpdated').textContent = 'Erreur de connexion';
+            });
+            
+            socket.on('stats', function(stats) {
+                console.log('Stats reçues:', stats);
+                updateStats(stats);
+            });
+            
+            socket.on('disconnect', function() {
+                console.log('Déconnecté du serveur Socket.IO');
+                document.getElementById('lastUpdated').textContent = 'Déconnecté';
+            });
+            
+            // Demande de mise à jour toutes les 5 secondes
+            setInterval(() => {
+                console.log('Demande de mise à jour des stats');
+                socket.emit('requestStats');
+            }, 5000);
         }
-        
-        // Mise à jour de la dernière mise à jour
-        document.getElementById('lastUpdated').textContent = stats.lastUpdated;
-        
-        // Mise à jour des tableaux récents
-        updateRecentTable('recentHashTableBody', stats.recentHash);
-        updateRecentTable('recentEncryptedTableBody', stats.recentEncrypted);
-        updateRecentTable('recentMessagesTableBody', stats.recentMessages);
-        
-        // Mise à jour des alertes
-        if (stats.alerts) {
-            updateAlertsTable(stats.alerts);
-        }
-    }
-    
-    // Fonction pour mettre à jour les tableaux récents
-    function updateRecentTable(tableId, items) {
-        const tbody = document.getElementById(tableId);
-        if (!tbody || !items) return;
-        
-        tbody.innerHTML = '';
-        items.forEach(item => {
-            const tr = document.createElement('tr');
-            
-            if (tableId === 'recentHashTableBody') {
-                tr.innerHTML = `
-                    <td>${item.fileName}</td>
-                    <td><small>${item.hash}</small></td>
-                    <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
-                `;
-            } else if (tableId === 'recentEncryptedTableBody') {
-                tr.innerHTML = `
-                    <td>${item.fileName}</td>
-                    <td>${item.status}</td>
-                    <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
-                `;
-            } else if (tableId === 'recentMessagesTableBody') {
-                tr.innerHTML = `
-                    <td>${item.type}</td>
-                    <td>${item.message}</td>
-                    <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
-                `;
-            }
-            
-            tbody.appendChild(tr);
-        });
-    }
-    
-    // Fonction pour mettre à jour le tableau des alertes
-    function updateAlertsTable(alerts) {
-        const tbody = document.getElementById('alertsTableBody');
-        if (!tbody || !alerts) return;
-        
-        tbody.innerHTML = '';
-        alerts.slice(0, 5).forEach(alert => {
-            const tr = document.createElement('tr');
-            const statusClass = alert.status === 'restored' ? 'success' : 'danger';
-            
-            tr.innerHTML = `
-                <td>${new Date(alert.timestamp).toLocaleTimeString()}</td>
-                <td>${alert.fileName}</td>
-                <td><span class="badge bg-${statusClass}">${alert.status}</span></td>
-            `;
-            
-            tbody.appendChild(tr);
-        });
-    }
-    
-    // Écoute des événements Socket.IO
-    socket.on('stats', updateStats);
-    
-    // Demande de mise à jour toutes les 5 secondes
-    setInterval(() => {
-        socket.emit('requestStats');
-    }, 5000);
+    });
 </script>
 
 <%- include('partials/footer') %> 

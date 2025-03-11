@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateStats(stats) {
         if (!stats) return;
         
+        console.log('Mise à jour des statistiques avec:', stats);
+        
         // Mise à jour des compteurs
         updateElement('hashCount', stats.hash);
         updateElement('encryptedCount', stats.encrypted);
@@ -32,13 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
         updateElement('lastUpdated', stats.lastUpdated);
         
         // Mise à jour des tableaux récents
-        updateRecentTable('recentHashTableBody', stats.recentHash);
-        updateRecentTable('recentEncryptedTableBody', stats.recentEncrypted);
-        updateRecentTable('recentMessagesTableBody', stats.recentMessages);
+        if (stats.recentHash) updateRecentTable('recentHashTableBody', stats.recentHash);
+        if (stats.recentEncrypted) updateRecentTable('recentEncryptedTableBody', stats.recentEncrypted);
+        if (stats.recentMessages) updateRecentTable('recentMessagesTableBody', stats.recentMessages);
         
         // Mise à jour des alertes
         if (stats.alerts) {
-            updateAlertsTable(stats.alerts);
+            updateAlertsTable('alertsTableBody', stats.alerts);
         }
     }
     
@@ -47,6 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const element = document.getElementById(id);
         if (element) {
             element.textContent = value;
+        } else {
+            console.warn(`Élément avec ID '${id}' non trouvé dans le DOM`);
         }
     }
     
@@ -84,8 +88,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Fonction pour mettre à jour le tableau des alertes
-    function updateAlertsTable(alerts) {
-        const tbody = document.getElementById('alertsTableBody');
+    function updateAlertsTable(tableId, alerts) {
+        const tbody = document.getElementById(tableId);
         if (!tbody || !alerts) return;
         
         tbody.innerHTML = '';

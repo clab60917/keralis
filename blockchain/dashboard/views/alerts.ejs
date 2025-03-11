@@ -5,7 +5,7 @@
     
     <div class="card">
         <div class="card-body">
-            <% if (error) { %>
+            <% if (typeof error !== 'undefined' && error) { %>
                 <div class="alert alert-danger">
                     <%= error %>
                 </div>
@@ -30,14 +30,14 @@
                                 <tr>
                                     <td><%= new Date(alert.timestamp).toLocaleString('fr-FR') %></td>
                                     <td><%= alert.fileName %></td>
-                                    <td><span class="badge bg-warning"><%= alert.type %></span></td>
+                                    <td><span class="badge bg-warning"><%= alert.type || 'modification' %></span></td>
                                     <td>
                                         <span class="badge bg-<%= alert.status === 'restored' ? 'success' : 'danger' %>">
                                             <%= alert.status %>
                                         </span>
                                     </td>
-                                    <td><small><%= alert.oldHash %></small></td>
-                                    <td><small><%= alert.newHash %></small></td>
+                                    <td><small><%= alert.oldHash || alert.originalHash %></small></td>
+                                    <td><small><%= alert.newHash || alert.currentHash %></small></td>
                                     <td>
                                         <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#alertModal<%= alert._id %>">
                                             Détails
@@ -55,8 +55,8 @@
                                                         <p><strong>Fichier:</strong> <%= alert.fileName %></p>
                                                         <p><strong>Date de détection:</strong> <%= new Date(alert.timestamp).toLocaleString('fr-FR') %></p>
                                                         <p><strong>Statut:</strong> <%= alert.status %></p>
-                                                        <p><strong>Hash Original:</strong> <%= alert.oldHash %></p>
-                                                        <p><strong>Nouveau Hash:</strong> <%= alert.newHash %></p>
+                                                        <p><strong>Hash Original:</strong> <%= alert.oldHash || alert.originalHash %></p>
+                                                        <p><strong>Nouveau Hash:</strong> <%= alert.newHash || alert.currentHash %></p>
                                                         <p><strong>Email envoyé:</strong> <%= alert.emailSent ? 'Oui' : 'Non' %></p>
                                                         <% if (alert.details) { %>
                                                             <p><strong>Serveur:</strong> <%= alert.details.serverUrl %></p>

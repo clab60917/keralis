@@ -12,7 +12,23 @@ const session = require('express-session');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Configuration de MongoDB
-const MONGODB_URI = `mongodb://${process.env.MONGODB_USER}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DB_NAME}?authSource=${process.env.MONGODB_AUTH_SOURCE}`;
+console.log('Variables d\'environnement MongoDB:');
+console.log('- MONGODB_USER:', process.env.MONGODB_USER ? 'défini' : 'non défini');
+console.log('- MONGODB_PASSWORD:', process.env.MONGODB_PASSWORD ? 'défini' : 'non défini');
+console.log('- MONGODB_HOST:', process.env.MONGODB_HOST);
+console.log('- MONGODB_PORT:', process.env.MONGODB_PORT);
+console.log('- MONGODB_DB_NAME:', process.env.MONGODB_DB_NAME);
+console.log('- MONGODB_AUTH_SOURCE:', process.env.MONGODB_AUTH_SOURCE);
+
+// Construire l'URI MongoDB
+let MONGODB_URI;
+if (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD) {
+    MONGODB_URI = `mongodb://${process.env.MONGODB_USER}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DB_NAME}?authSource=${process.env.MONGODB_AUTH_SOURCE}`;
+} else {
+    // Connexion sans authentification
+    MONGODB_URI = `mongodb://${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DB_NAME}`;
+    console.log('ATTENTION: Connexion MongoDB sans authentification');
+}
 
 // Configuration de l'authentification basique
 const users = {};
@@ -208,6 +224,7 @@ app.get('/', async (req, res) => {
 // Route des alertes
 app.get('/alerts', async (req, res) => {
     try {
+        console.log('Accès à la page des alertes');
         const db = mongoClient.db(process.env.MONGODB_DB_NAME);
         const alerts = await db.collection('alerts')
             .find({})
@@ -220,7 +237,8 @@ app.get('/alerts', async (req, res) => {
             title: 'Alertes',
             user: { username: req.auth.user },
             active: 'alerts',
-            alerts: alerts
+            alerts: alerts,
+            error: null // Définir error comme null par défaut
         });
     } catch (error) {
         console.error('Erreur lors de la récupération des alertes:', error);
@@ -229,19 +247,23 @@ app.get('/alerts', async (req, res) => {
             user: { username: req.auth.user },
             active: 'alerts',
             alerts: [],
-            error: 'Erreur lors de la récupération des alertes'
+            error: 'Erreur lors de la récupération des alertes: ' + error.message
         });
     }
 });
 
 // Configuration de Socket.IO
 io.on('connection', async (socket) => {
-    console.log('Nouvelle connexion Socket.IO tentée');
+    console.log('Nouvelle connexion Socket.IO établie - ID:', socket.id);
     
     try {
+        console.log('Tentative de récupération des stats initiales...');
         const initialStats = await getStats();
         if (initialStats) {
+            console.log('Stats initiales récupérées avec succès, envoi au client');
             socket.emit('stats', initialStats);
+        } else {
+            console.log('Aucune stat initiale récupérée');
         }
     } catch (error) {
         console.error('Erreur lors de l\'envoi des stats initiales:', error);
@@ -274,9 +296,13 @@ io.on('connection', async (socket) => {
 // Fonction pour diffuser les statistiques à tous les clients
 async function broadcastStats() {
     try {
+        console.log('Diffusion des stats à tous les clients...');
         const stats = await getStats();
         if (stats) {
+            console.log('Stats récupérées avec succès, diffusion à', io.engine.clientsCount, 'clients');
             io.emit('stats', stats);
+        } else {
+            console.log('Aucune stat à diffuser');
         }
     } catch (error) {
         console.error('Erreur lors de la diffusion des stats:', error);
@@ -292,17 +318,26 @@ app.use((err, req, res, next) => {
 // Fonction de démarrage du serveur
 async function startServer() {
     try {
-        console.log('Tentative de connexion à MongoDB...');
+        console.log('Tentative de connexion à MongoDB...', MONGODB_URI);
         mongoClient = new MongoClient(MONGODB_URI);
         await mongoClient.connect();
-        console.log('Connecté à MongoDB');
+        console.log('Connecté à MongoDB avec succès');
 
         const db = mongoClient.db(process.env.MONGODB_DB_NAME);
         const collections = await db.listCollections().toArray();
         const collectionNames = collections.map(c => c.name);
         console.log('Collections disponibles:', collectionNames);
 
+        // Vérifier que les collections nécessaires existent
+        const requiredCollections = ['hash', 'encrypted', 'messages', 'alerts'];
+        const missingCollections = requiredCollections.filter(c => !collectionNames.includes(c));
+        
+        if (missingCollections.length > 0) {
+            console.warn('ATTENTION: Collections manquantes:', missingCollections);
+        }
+
         // Démarrer la diffusion des stats
+        console.log('Démarrage de la diffusion des stats toutes les', UPDATE_INTERVAL, 'ms');
         statsInterval = setInterval(broadcastStats, UPDATE_INTERVAL);
 
         const PORT = process.env.DASHBOARD_PORT || 3000;
@@ -313,6 +348,7 @@ async function startServer() {
 
     } catch (error) {
         console.error('Erreur lors du démarrage du serveur:', error);
+        console.error('Détails de l\'erreur:', error.stack);
         process.exit(1);
     }
 }
