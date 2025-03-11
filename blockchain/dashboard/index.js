@@ -173,6 +173,27 @@ async function getStats() {
                 .sort({ timestamp: -1 })
                 .limit(5)
                 .toArray();
+                
+            // Si aucun résultat, essayer de chercher dans d'autres collections liées aux hash
+            if (!recentHashList || recentHashList.length === 0) {
+                console.log('Aucun hash trouvé dans la collection hash, recherche dans blockchain...');
+                
+                // Essayer de récupérer depuis la collection blockchain
+                try {
+                    const blockchainHashes = await db.collection('blockchain')
+                        .find({})
+                        .sort({ timestamp: -1 })
+                        .limit(5)
+                        .toArray();
+                        
+                    if (blockchainHashes && blockchainHashes.length > 0) {
+                        console.log('Hash trouvés dans la collection blockchain:', blockchainHashes.length);
+                        recentHashList = blockchainHashes;
+                    }
+                } catch (blockchainError) {
+                    console.error('Erreur lors de la recherche dans blockchain:', blockchainError);
+                }
+            }
         } catch (error) {
             console.error('Erreur lors de la récupération des hash récents:', error);
         }
@@ -183,6 +204,27 @@ async function getStats() {
                 .sort({ timestamp: -1 })
                 .limit(5)
                 .toArray();
+                
+            // Si aucun résultat, essayer de chercher dans d'autres collections liées aux fichiers chiffrés
+            if (!recentEncryptedList || recentEncryptedList.length === 0) {
+                console.log('Aucun fichier chiffré trouvé dans la collection encrypted, recherche dans encryption...');
+                
+                // Essayer de récupérer depuis la collection encryption
+                try {
+                    const encryptionFiles = await db.collection('encryption')
+                        .find({})
+                        .sort({ timestamp: -1 })
+                        .limit(5)
+                        .toArray();
+                        
+                    if (encryptionFiles && encryptionFiles.length > 0) {
+                        console.log('Fichiers chiffrés trouvés dans la collection encryption:', encryptionFiles.length);
+                        recentEncryptedList = encryptionFiles;
+                    }
+                } catch (encryptionError) {
+                    console.error('Erreur lors de la recherche dans encryption:', encryptionError);
+                }
+            }
         } catch (error) {
             console.error('Erreur lors de la récupération des encrypted récents:', error);
         }
@@ -226,7 +268,47 @@ async function getStats() {
             else if (item.file) fileName = item.file;
             else if (item.name) fileName = item.name;
             else if (item.filename) fileName = item.filename;
-            else if (item.path) fileName = item.path.split('/').pop();
+            else if (item.path) {
+                // Extraire le nom du fichier à partir du chemin
+                const pathParts = item.path.split(/[\/\\]/);
+                fileName = pathParts[pathParts.length - 1];
+            }
+            else if (item.filePath) {
+                // Extraire le nom du fichier à partir du chemin
+                const pathParts = item.filePath.split(/[\/\\]/);
+                fileName = pathParts[pathParts.length - 1];
+            }
+            else if (item.data && item.data.file) {
+                fileName = item.data.file;
+            }
+            else if (item.data && item.data.fileName) {
+                fileName = item.data.fileName;
+            }
+            else if (item.data && item.data.path) {
+                const pathParts = item.data.path.split(/[\/\\]/);
+                fileName = pathParts[pathParts.length - 1];
+            }
+            
+            // Si le nom de fichier est toujours N/A, essayer de chercher dans toutes les propriétés
+            if (fileName === 'N/A') {
+                for (const key in item) {
+                    if (typeof item[key] === 'string' && 
+                        (key.toLowerCase().includes('file') || key.toLowerCase().includes('path')) && 
+                        !key.toLowerCase().includes('hash')) {
+                        const value = item[key];
+                        if (value.includes('.')) {  // Probablement un nom de fichier s'il contient un point
+                            // Extraire le nom du fichier à partir du chemin si nécessaire
+                            if (value.includes('/') || value.includes('\\')) {
+                                const pathParts = value.split(/[\/\\]/);
+                                fileName = pathParts[pathParts.length - 1];
+                            } else {
+                                fileName = value;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
             
             // Rechercher les champs possibles pour le hash
             let hash = 'N/A';
@@ -234,6 +316,18 @@ async function getStats() {
             else if (item.hashValue) hash = item.hashValue;
             else if (item.value) hash = item.value;
             else if (item.digest) hash = item.digest;
+            else if (item.data && item.data.hash) hash = item.data.hash;
+            
+            // Si le hash est toujours N/A, essayer de chercher dans toutes les propriétés
+            if (hash === 'N/A') {
+                for (const key in item) {
+                    if (typeof item[key] === 'string' && 
+                        (key.toLowerCase().includes('hash') || key.toLowerCase().includes('digest'))) {
+                        hash = item[key];
+                        break;
+                    }
+                }
+            }
             
             // Rechercher les champs possibles pour l'horodatage
             let timestamp = Date.now();
@@ -241,6 +335,7 @@ async function getStats() {
             else if (item.date) timestamp = item.date;
             else if (item.time) timestamp = item.time;
             else if (item.createdAt) timestamp = item.createdAt;
+            else if (item.data && item.data.timestamp) timestamp = item.data.timestamp;
             
             return {
                 fileName: fileName,
@@ -259,13 +354,63 @@ async function getStats() {
             else if (item.file) fileName = item.file;
             else if (item.name) fileName = item.name;
             else if (item.filename) fileName = item.filename;
-            else if (item.path) fileName = item.path.split('/').pop();
+            else if (item.path) {
+                // Extraire le nom du fichier à partir du chemin
+                const pathParts = item.path.split(/[\/\\]/);
+                fileName = pathParts[pathParts.length - 1];
+            }
+            else if (item.filePath) {
+                // Extraire le nom du fichier à partir du chemin
+                const pathParts = item.filePath.split(/[\/\\]/);
+                fileName = pathParts[pathParts.length - 1];
+            }
+            else if (item.data && item.data.file) {
+                fileName = item.data.file;
+            }
+            else if (item.data && item.data.fileName) {
+                fileName = item.data.fileName;
+            }
+            else if (item.data && item.data.path) {
+                const pathParts = item.data.path.split(/[\/\\]/);
+                fileName = pathParts[pathParts.length - 1];
+            }
+            
+            // Si le nom de fichier est toujours N/A, essayer de chercher dans toutes les propriétés
+            if (fileName === 'N/A') {
+                for (const key in item) {
+                    if (typeof item[key] === 'string' && 
+                        (key.toLowerCase().includes('file') || key.toLowerCase().includes('path'))) {
+                        const value = item[key];
+                        if (value.includes('.')) {  // Probablement un nom de fichier s'il contient un point
+                            // Extraire le nom du fichier à partir du chemin si nécessaire
+                            if (value.includes('/') || value.includes('\\')) {
+                                const pathParts = value.split(/[\/\\]/);
+                                fileName = pathParts[pathParts.length - 1];
+                            } else {
+                                fileName = value;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Ajouter l'extension .enc si le nom de fichier ne se termine pas déjà par .enc
+            if (fileName !== 'N/A' && !fileName.toLowerCase().endsWith('.enc')) {
+                fileName += '.enc';
+            }
             
             // Rechercher les champs possibles pour le statut
             let status = 'N/A';
             if (item.status) status = item.status;
             else if (item.state) status = item.state;
             else if (item.result) status = item.result;
+            else if (item.data && item.data.status) status = item.data.status;
+            
+            // Si le statut est toujours N/A, définir une valeur par défaut
+            if (status === 'N/A') {
+                status = 'Encrypted';
+            }
             
             // Rechercher les champs possibles pour l'horodatage
             let timestamp = Date.now();
@@ -273,6 +418,7 @@ async function getStats() {
             else if (item.date) timestamp = item.date;
             else if (item.time) timestamp = item.time;
             else if (item.createdAt) timestamp = item.createdAt;
+            else if (item.data && item.data.timestamp) timestamp = item.data.timestamp;
             
             return {
                 fileName: fileName,

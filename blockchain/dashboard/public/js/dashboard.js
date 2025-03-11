@@ -166,15 +166,39 @@ function updateRecentTable(tableId, items) {
                 const hash = item.hash || 'N/A';
                 const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
                 
+                // Ajouter une infobulle pour afficher le hash complet au survol
+                const hashCell = `<td><small title="${hash}">${displayHash}</small></td>`;
+                
+                // Ajouter une infobulle pour afficher le nom de fichier complet au survol
+                const fileName = item.fileName || 'N/A';
+                const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
+                const fileNameCell = `<td title="${fileName}">${displayFileName}</td>`;
+                
                 tr.innerHTML = `
-                    <td>${item.fileName || 'N/A'}</td>
-                    <td><small>${displayHash}</small></td>
+                    ${fileNameCell}
+                    ${hashCell}
                     <td>${formattedTime}</td>
                 `;
             } else if (tableId === 'recentEncryptedTableBody') {
+                // Ajouter une infobulle pour afficher le nom de fichier complet au survol
+                const fileName = item.fileName || 'N/A';
+                const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
+                const fileNameCell = `<td title="${fileName}">${displayFileName}</td>`;
+                
+                // Ajouter une classe de couleur en fonction du statut
+                let statusClass = 'secondary';
+                const status = item.status || 'N/A';
+                if (status.toLowerCase() === 'encrypted' || status.toLowerCase() === 'success') {
+                    statusClass = 'success';
+                } else if (status.toLowerCase() === 'failed' || status.toLowerCase() === 'error') {
+                    statusClass = 'danger';
+                } else if (status.toLowerCase() === 'pending' || status.toLowerCase() === 'processing') {
+                    statusClass = 'warning';
+                }
+                
                 tr.innerHTML = `
-                    <td>${item.fileName || 'N/A'}</td>
-                    <td>${item.status || 'N/A'}</td>
+                    ${fileNameCell}
+                    <td><span class="badge bg-${statusClass}">${status}</span></td>
                     <td>${formattedTime}</td>
                 `;
             } else if (tableId === 'recentMessagesTableBody') {
