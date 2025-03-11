@@ -91,6 +91,7 @@ async function getStats() {
         
         // Récupérer les stats système
         const systemStats = await systemMonitor.getSystemStats();
+        console.log('Stats système récupérées:', JSON.stringify(systemStats, null, 2));
         
         // Extraire les valeurs CPU, mémoire et disque
         let cpuUsage = 0;
@@ -126,6 +127,13 @@ async function getStats() {
                 }
             }
         }
+        
+        // Forcer des valeurs par défaut si les valeurs sont NaN ou undefined
+        cpuUsage = isNaN(cpuUsage) ? 0 : cpuUsage;
+        memoryUsage = isNaN(memoryUsage) ? 0 : memoryUsage;
+        diskUsage = isNaN(diskUsage) ? 0 : diskUsage;
+        
+        console.log('Valeurs système extraites:', { cpuUsage, memoryUsage, diskUsage });
         
         // Obtenir les compteurs actuels
         const currentCounts = {

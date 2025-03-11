@@ -22,21 +22,49 @@ class SystemMonitor {
                 timestamp: new Date().toISOString()
             };
 
-            // Ajouter l'état du service SFTP
-            const sftpStatus = await this.checkSFTPStatus();
-            stats.sftp = sftpStatus;
+            console.log('Stats système de base:', JSON.stringify(stats, null, 2));
 
-            const blockchainStatus = await this.checkBlockchainStatus();
-            stats.blockchain = blockchainStatus;
+            try {
+                // Ajouter l'état du service SFTP
+                const sftpStatus = await this.checkSFTPStatus();
+                console.log('État SFTP:', JSON.stringify(sftpStatus, null, 2));
+                stats.sftp = sftpStatus;
+            } catch (sftpError) {
+                console.error('Erreur lors de la vérification du statut SFTP:', sftpError);
+                stats.sftp = { running: false, error: sftpError.message };
+            }
 
-            // Ajouter l'utilisation du disque
-            const diskUsage = await this.getDiskUsage();
-            stats.disk = diskUsage;
+            try {
+                // Ajouter l'état du service blockchain
+                const blockchainStatus = await this.checkBlockchainStatus();
+                console.log('État blockchain:', JSON.stringify(blockchainStatus, null, 2));
+                stats.blockchain = blockchainStatus;
+            } catch (blockchainError) {
+                console.error('Erreur lors de la vérification du statut blockchain:', blockchainError);
+                stats.blockchain = { running: false, error: blockchainError.message };
+            }
+
+            try {
+                // Ajouter l'utilisation du disque
+                const diskUsage = await this.getDiskUsage();
+                console.log('Utilisation du disque:', JSON.stringify(diskUsage, null, 2));
+                stats.disk = diskUsage;
+            } catch (diskError) {
+                console.error('Erreur lors de la récupération de l\'utilisation du disque:', diskError);
+                stats.disk = { usedPercentage: 0, error: diskError.message };
+            }
 
             return stats;
         } catch (error) {
             console.error('Erreur lors de la récupération des stats système:', error);
-            return null;
+            // Renvoyer un objet avec des valeurs par défaut en cas d'erreur
+            return {
+                cpu: { loadAverage: [0, 0, 0], cpuCount: 0, uptime: 0 },
+                memory: { total: 0, free: 0, usedPercentage: 0 },
+                disk: { usedPercentage: 0 },
+                error: error.message,
+                timestamp: new Date().toISOString()
+            };
         }
     }
 
@@ -111,12 +139,34 @@ class SystemMonitor {
         try {
             // Obtenir l'utilisation du disque (adapté pour macOS/Linux)
             const { stdout } = await execAsync('df -h /');
+            console.log('Résultat de df -h /:', stdout);
+            
             const lines = stdout.trim().split('\n');
+            if (lines.length < 2) {
+                console.error('Format de sortie df inattendu:', stdout);
+                return {
+                    error: 'Format de sortie df inattendu',
+                    usedPercentage: 0
+                };
+            }
+            
             const [, usage] = lines;
-            const [filesystem, size, used, available, percentage, mountpoint] = usage.split(/\s+/);
+            const parts = usage.split(/\s+/);
+            
+            if (parts.length < 5) {
+                console.error('Format de ligne df inattendu:', usage);
+                return {
+                    error: 'Format de ligne df inattendu',
+                    usedPercentage: 0
+                };
+            }
+            
+            const [filesystem, size, used, available, percentage, mountpoint] = parts;
             
             // Extraire la valeur numérique du pourcentage (enlever le %)
             const usedPercentage = percentage ? parseFloat(percentage.replace('%', '')) : 0;
+            
+            console.log('Pourcentage d\'utilisation du disque extrait:', usedPercentage);
             
             return {
                 filesystem,
@@ -125,7 +175,7 @@ class SystemMonitor {
                 available,
                 percentage,
                 mountpoint,
-                usedPercentage
+                usedPercentage: isNaN(usedPercentage) ? 0 : usedPercentage
             };
         } catch (error) {
             console.error('Erreur lors de la récupération de l\'utilisation du disque:', error);

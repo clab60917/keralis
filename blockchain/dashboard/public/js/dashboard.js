@@ -74,15 +74,25 @@ function updateStats(stats) {
             updateRecentTable('recentMessagesTableBody', stats.recentMessages);
         }
         
-        // Mise à jour des statuts système
-        updateSystemStatus('cpuStatus', stats.cpuUsage);
-        updateSystemStatus('memoryStatus', stats.memoryUsage);
-        updateSystemStatus('diskStatus', stats.diskUsage);
+        // Extraire les valeurs système avec des valeurs par défaut
+        const cpuUsage = typeof stats.cpuUsage === 'number' ? stats.cpuUsage : 0;
+        const memoryUsage = typeof stats.memoryUsage === 'number' ? stats.memoryUsage : 0;
+        const diskUsage = typeof stats.diskUsage === 'number' ? stats.diskUsage : 0;
+        
+        console.log("Valeurs système à afficher:", { cpuUsage, memoryUsage, diskUsage });
+        
+        // Mise à jour des barres de progression
+        updateSystemStatus('cpuStatus', cpuUsage);
+        updateSystemStatus('memoryStatus', memoryUsage);
+        updateSystemStatus('diskStatus', diskUsage);
         
         // Mise à jour des valeurs numériques
-        document.getElementById('cpuValue').textContent = stats.cpuUsage ? `${stats.cpuUsage.toFixed(2)}%` : 'N/A';
-        document.getElementById('memoryValue').textContent = stats.memoryUsage ? `${stats.memoryUsage.toFixed(2)}%` : 'N/A';
-        document.getElementById('diskValue').textContent = stats.diskUsage ? `${stats.diskUsage.toFixed(2)}%` : 'N/A';
+        document.getElementById('cpuValue').textContent = typeof cpuUsage === 'number' ? `${cpuUsage.toFixed(2)}%` : 'N/A';
+        document.getElementById('memoryValue').textContent = typeof memoryUsage === 'number' ? `${memoryUsage.toFixed(2)}%` : 'N/A';
+        document.getElementById('diskValue').textContent = typeof diskUsage === 'number' ? `${diskUsage.toFixed(2)}%` : 'N/A';
+        
+        // Mise à jour de l'horodatage
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
     } catch (error) {
         console.error("Erreur lors de la mise à jour des statistiques:", error);
     }
@@ -206,11 +216,17 @@ function updateSystemStatus(elementId, value) {
         return;
     }
     
+    // Valeur par défaut si non définie ou non numérique
+    const numericValue = typeof value === 'number' && !isNaN(value) ? value : 0;
+    
+    // Définir la largeur de la barre de progression
+    element.style.width = `${numericValue}%`;
+    
     // Supprimer les classes existantes
-    element.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+    element.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-secondary');
     
     // Ajouter la classe appropriée en fonction de la valeur
-    if (value === undefined || value === null) {
+    if (typeof value !== 'number' || isNaN(value)) {
         element.classList.add('bg-secondary');
     } else if (value < 70) {
         element.classList.add('bg-success');
@@ -219,4 +235,6 @@ function updateSystemStatus(elementId, value) {
     } else {
         element.classList.add('bg-danger');
     }
+    
+    console.log(`Mise à jour de ${elementId} avec la valeur ${numericValue}%, classe: ${element.className}`);
 } 
