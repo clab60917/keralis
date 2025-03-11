@@ -510,7 +510,7 @@ function initChart() {
     });
     
     // Charger les données stockées dans localStorage si disponibles
-    //loadChartHistoryFromStorage();
+    loadChartHistoryFromStorage();
 }
 function updateSystemInfo(stats) {
             if (stats.system) {
@@ -647,7 +647,12 @@ function resetChartHistory() {
     
 //     // Sauvegarder l'historique dans localStorage
 //     saveChartHistoryToStorage();
-// }
+// } const div = document.createElement('div');
+        //         div.className = 'text-sm p-2 bg-gray-50 rounded';
+        //         const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
+        //         const time = new Date(item.timestamp).toLocaleString();
+        //         div.textContent = `${fileName} (${time})`;
+        //         container.appendChild(div);
 function updateRecentItems(items, containerId) {
     const container = document.getElementById(containerId);
     if (!container || !items) return;
@@ -675,9 +680,21 @@ function updateRecentItems(items, containerId) {
             month: '2-digit',
             year: 'numeric'
         });
-        
-        div.textContent = `${fileName} (${time})`;
-        container.appendChild(div);
+        //containerId=='recentHash' && 
+       
+        if (containerId === 'recentHash' && item.content) { 
+            div.innerHTML = `
+                <div class="font-medium">${fileName}</div>
+                <div class="text-gray-500 text-xs">${time}</div>
+                <div class="mt-1 p-1 bg-gray-100 text-xs font-mono overflow-auto max-h-20">${item.content}</div>
+            `;
+        } else { 
+            div.innerHTML = `
+                <div class="font-medium">${fileName}</div>
+                <div class="text-gray-500 text-xs">${time}</div>
+            `;
+        }
+               container.appendChild(div);
     });
 }
 // function updateChart(stats) {
@@ -853,26 +870,26 @@ function processRecentFiles(files, type) {
     saveChartHistoryToStorage();
 }
 
-        function updateRecentItems(items, containerId) {
-            const container = document.getElementById(containerId);
-            if (!container || !items) return;
+        // function updateRecentItems(items, containerId) {
+        //     const container = document.getElementById(containerId);
+        //     if (!container || !items) return;
 
-          //  container.innerHTML = '';
+        //   //  container.innerHTML = '';
             
-            if (items.length === 0) {
-                container.innerHTML = '<div class="text-sm text-gray-500 text-center">Aucune donnée</div>';
-                return;
-            }
+        //     if (items.length === 0) {
+        //         container.innerHTML = '<div class="text-sm text-gray-500 text-center">Aucune donnée</div>';
+        //         return;
+        //     }
 
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'text-sm p-2 bg-gray-50 rounded';
-                const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
-                const time = new Date(item.timestamp).toLocaleString();
-                div.textContent = `${fileName} (${time})`;
-                container.appendChild(div);
-            });
-        }
+        //     items.forEach(item => {
+        //         const div = document.createElement('div');
+        //         div.className = 'text-sm p-2 bg-gray-50 rounded';
+        //         const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
+        //         const time = new Date(item.timestamp).toLocaleString();
+        //         div.textContent = `${fileName} (${time})`;
+        //         container.appendChild(div);
+        //     });
+        // }
 
         socket.on('connect', () => {
             document.getElementById('connectionStatus').className = 'status-dot active mr-2';
@@ -903,9 +920,10 @@ function processRecentFiles(files, type) {
     document.getElementById('recentHash').innerHTML = '';
     document.getElementById('recentEncrypted').innerHTML = '';
     document.getElementById('recentMessages').innerHTML = '';
+    const recentHashArray = Object.values(stats.recentHash);
 
     // Mise à jour des listes récentes
-    updateRecentItems(stats.recentHash, 'recentHash');
+    updateRecentItems(recentHashArray, 'recentHash');
     updateRecentItems(stats.recentEncrypted, 'recentEncrypted');
     updateRecentItems(stats.recentMessages, 'recentMessages');
 
