@@ -132,10 +132,6 @@ function updateRecentTable(tableId, items) {
     try {
         tbody.innerHTML = '';
         
-        // Utiliser des noms de fichiers réalistes pour les hash et encrypted si nécessaire
-        const fileNames = ['document.pdf', 'image.jpg', 'rapport.docx', 'config.json', 'backup.zip', 'data.csv'];
-        const statuses = ['Encrypted', 'Failed', 'Pending', 'Encrypted', 'Encrypted'];
-        
         items.forEach((item, index) => {
             if (!item) return; // Ignorer les éléments null ou undefined
             
@@ -166,34 +162,19 @@ function updateRecentTable(tableId, items) {
             }
             
             if (tableId === 'recentHashTableBody') {
-                // Utiliser un nom de fichier réaliste si celui fourni est N/A
-                const fileName = (item.fileName && item.fileName !== 'N/A') 
-                    ? item.fileName 
-                    : fileNames[index % fileNames.length];
-                
                 // Afficher le hash complet ou tronqué selon sa longueur
                 const hash = item.hash || 'N/A';
                 const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
                 
                 tr.innerHTML = `
-                    <td>${fileName}</td>
+                    <td>${item.fileName || 'N/A'}</td>
                     <td><small>${displayHash}</small></td>
                     <td>${formattedTime}</td>
                 `;
             } else if (tableId === 'recentEncryptedTableBody') {
-                // Utiliser un nom de fichier réaliste si celui fourni est N/A
-                const fileName = (item.fileName && item.fileName !== 'N/A') 
-                    ? item.fileName 
-                    : fileNames[index % fileNames.length];
-                
-                // Utiliser un statut réaliste si celui fourni est N/A
-                const status = (item.status && item.status !== 'N/A') 
-                    ? item.status 
-                    : statuses[index % statuses.length];
-                
                 tr.innerHTML = `
-                    <td>${fileName}</td>
-                    <td>${status}</td>
+                    <td>${item.fileName || 'N/A'}</td>
+                    <td>${item.status || 'N/A'}</td>
                     <td>${formattedTime}</td>
                 `;
             } else if (tableId === 'recentMessagesTableBody') {
@@ -207,25 +188,9 @@ function updateRecentTable(tableId, items) {
                     else if (type === 'info') typeClass = 'info';
                 }
                 
-                // Vérifier si le message est un hash et le remplacer si nécessaire
-                let message = item.message || 'N/A';
-                if (typeof message === 'string' && message.length > 30 && !message.includes(' ')) {
-                    // C'est probablement un hash, le remplacer par un message plus descriptif
-                    const type = item.type ? item.type.toLowerCase() : 'info';
-                    if (type === 'error') {
-                        message = 'Erreur détectée lors du traitement';
-                    } else if (type === 'warning') {
-                        message = 'Avertissement: vérification recommandée';
-                    } else if (type === 'success') {
-                        message = 'Opération terminée avec succès';
-                    } else {
-                        message = 'Message système: traitement en cours';
-                    }
-                }
-                
                 tr.innerHTML = `
                     <td><span class="badge bg-${typeClass}">${item.type || 'N/A'}</span></td>
-                    <td>${message}</td>
+                    <td>${item.message || 'N/A'}</td>
                     <td>${formattedTime}</td>
                 `;
             } else {

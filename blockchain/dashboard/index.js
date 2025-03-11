@@ -213,60 +213,98 @@ async function getStats() {
         console.log('recentEncryptedList (premier élément):', recentEncryptedList.length > 0 ? JSON.stringify(recentEncryptedList[0]) : 'aucun élément');
         console.log('recentMessages (premier élément):', recentMessages.length > 0 ? JSON.stringify(recentMessages[0]) : 'aucun élément');
 
-        // Ajouter des données de test pour les hash et les fichiers chiffrés
-        // Ces données seront utilisées si les collections sont vides ou si les données ne contiennent pas les champs attendus
-        const testHashList = [
-            { fileName: 'document1.pdf', hash: 'a1b2c3d4e5f6g7h8i9j0', timestamp: Date.now() },
-            { fileName: 'image.jpg', hash: 'b2c3d4e5f6g7h8i9j0k1', timestamp: Date.now() - 60000 },
-            { fileName: 'rapport.docx', hash: 'c3d4e5f6g7h8i9j0k1l2', timestamp: Date.now() - 120000 },
-            { fileName: 'config.json', hash: 'd4e5f6g7h8i9j0k1l2m3', timestamp: Date.now() - 180000 },
-            { fileName: 'backup.zip', hash: 'e5f6g7h8i9j0k1l2m3n4', timestamp: Date.now() - 240000 }
-        ];
+        // Supprimer les données de test et se concentrer sur les vraies données
         
-        const testEncryptedList = [
-            { fileName: 'confidential.pdf', status: 'Encrypted', timestamp: Date.now() },
-            { fileName: 'credentials.txt', status: 'Encrypted', timestamp: Date.now() - 60000 },
-            { fileName: 'private_key.pem', status: 'Encrypted', timestamp: Date.now() - 120000 },
-            { fileName: 'user_data.json', status: 'Failed', timestamp: Date.now() - 180000 },
-            { fileName: 'contract.docx', status: 'Encrypted', timestamp: Date.now() - 240000 }
-        ];
-
-        // Vérifier si les données récupérées sont valides, sinon utiliser les données de test
-        if (!recentHashList || recentHashList.length === 0 || !recentHashList[0].fileName || !recentHashList[0].hash) {
-            console.log('Utilisation des données de test pour les hash');
-            recentHashList = testHashList;
-        }
-        
-        if (!recentEncryptedList || recentEncryptedList.length === 0 || !recentEncryptedList[0].fileName || !recentEncryptedList[0].status) {
-            console.log('Utilisation des données de test pour les fichiers chiffrés');
-            recentEncryptedList = testEncryptedList;
-        }
-
-        // Ne pas forcer l'utilisation des données factices
-        const useFakeData = false;
-
         // Normaliser les données pour s'assurer qu'elles ont la bonne structure
-        let normalizedHashList = Array.isArray(recentHashList) ? recentHashList.map(item => ({
-            fileName: item.fileName || item.file || item.name || 'N/A',
-            hash: item.hash || item.hashValue || item.value || 'N/A',
-            timestamp: item.timestamp || item.date || item.time || Date.now()
-        })) : [];
+        let normalizedHashList = Array.isArray(recentHashList) ? recentHashList.map(item => {
+            // Analyser la structure de l'élément pour extraire les bonnes informations
+            console.log('Normalisation d\'un élément hash:', JSON.stringify(item));
+            
+            // Rechercher les champs possibles pour le nom de fichier
+            let fileName = 'N/A';
+            if (item.fileName) fileName = item.fileName;
+            else if (item.file) fileName = item.file;
+            else if (item.name) fileName = item.name;
+            else if (item.filename) fileName = item.filename;
+            else if (item.path) fileName = item.path.split('/').pop();
+            
+            // Rechercher les champs possibles pour le hash
+            let hash = 'N/A';
+            if (item.hash) hash = item.hash;
+            else if (item.hashValue) hash = item.hashValue;
+            else if (item.value) hash = item.value;
+            else if (item.digest) hash = item.digest;
+            
+            // Rechercher les champs possibles pour l'horodatage
+            let timestamp = Date.now();
+            if (item.timestamp) timestamp = item.timestamp;
+            else if (item.date) timestamp = item.date;
+            else if (item.time) timestamp = item.time;
+            else if (item.createdAt) timestamp = item.createdAt;
+            
+            return {
+                fileName: fileName,
+                hash: hash,
+                timestamp: timestamp
+            };
+        }) : [];
 
-        let normalizedEncryptedList = Array.isArray(recentEncryptedList) ? recentEncryptedList.map(item => ({
-            fileName: item.fileName || item.file || item.name || 'N/A',
-            status: item.status || item.state || 'N/A',
-            timestamp: item.timestamp || item.date || item.time || Date.now()
-        })) : [];
+        let normalizedEncryptedList = Array.isArray(recentEncryptedList) ? recentEncryptedList.map(item => {
+            // Analyser la structure de l'élément pour extraire les bonnes informations
+            console.log('Normalisation d\'un élément encrypted:', JSON.stringify(item));
+            
+            // Rechercher les champs possibles pour le nom de fichier
+            let fileName = 'N/A';
+            if (item.fileName) fileName = item.fileName;
+            else if (item.file) fileName = item.file;
+            else if (item.name) fileName = item.name;
+            else if (item.filename) fileName = item.filename;
+            else if (item.path) fileName = item.path.split('/').pop();
+            
+            // Rechercher les champs possibles pour le statut
+            let status = 'N/A';
+            if (item.status) status = item.status;
+            else if (item.state) status = item.state;
+            else if (item.result) status = item.result;
+            
+            // Rechercher les champs possibles pour l'horodatage
+            let timestamp = Date.now();
+            if (item.timestamp) timestamp = item.timestamp;
+            else if (item.date) timestamp = item.date;
+            else if (item.time) timestamp = item.time;
+            else if (item.createdAt) timestamp = item.createdAt;
+            
+            return {
+                fileName: fileName,
+                status: status,
+                timestamp: timestamp
+            };
+        }) : [];
 
         // Pour les messages, vérifier si le message est un hash (chaîne longue sans espaces) et le remplacer par un message lisible
         let normalizedMessagesList = Array.isArray(recentMessages) ? recentMessages.map(item => {
-            let message = item.message || item.content || item.text || 'N/A';
+            // Analyser la structure de l'élément pour extraire les bonnes informations
+            console.log('Normalisation d\'un élément message:', JSON.stringify(item));
+            
+            // Rechercher les champs possibles pour le type
+            let type = 'Info';
+            if (item.type) type = item.type;
+            else if (item.category) type = item.category;
+            else if (item.level) type = item.level;
+            
+            // Rechercher les champs possibles pour le message
+            let message = 'N/A';
+            if (item.message) message = item.message;
+            else if (item.content) message = item.content;
+            else if (item.text) message = item.text;
+            else if (item.data) {
+                if (typeof item.data === 'string') message = item.data;
+                else if (typeof item.data === 'object') message = JSON.stringify(item.data);
+            }
             
             // Si le message ressemble à un hash (longue chaîne sans espaces), le remplacer par un message lisible
             if (typeof message === 'string' && message.length > 30 && !message.includes(' ')) {
                 // Remplacer par un message plus descriptif basé sur le type
-                const type = item.type || item.category || 'Info';
-                
                 if (type.toLowerCase() === 'error') {
                     message = 'Erreur détectée lors du traitement du fichier';
                 } else if (type.toLowerCase() === 'warning') {
@@ -278,44 +316,20 @@ async function getStats() {
                 }
             }
             
+            // Rechercher les champs possibles pour l'horodatage
+            let timestamp = Date.now();
+            if (item.timestamp) timestamp = item.timestamp;
+            else if (item.date) timestamp = item.date;
+            else if (item.time) timestamp = item.time;
+            else if (item.createdAt) timestamp = item.createdAt;
+            
             return {
-                type: item.type || item.category || 'N/A',
+                type: type,
                 message: message,
-                timestamp: item.timestamp || item.date || item.time || Date.now()
+                timestamp: timestamp
             };
         }) : [];
 
-        // Si les listes sont vides, ajouter des données factices pour les tests
-        if (normalizedHashList.length === 0 && useFakeData) {
-            normalizedHashList = [
-                { fileName: 'document1.pdf', hash: 'a1b2c3d4e5f6g7h8i9j0', timestamp: Date.now() },
-                { fileName: 'image.jpg', hash: 'b2c3d4e5f6g7h8i9j0k1', timestamp: Date.now() - 60000 },
-                { fileName: 'rapport.docx', hash: 'c3d4e5f6g7h8i9j0k1l2', timestamp: Date.now() - 120000 },
-                { fileName: 'config.json', hash: 'd4e5f6g7h8i9j0k1l2m3', timestamp: Date.now() - 180000 },
-                { fileName: 'backup.zip', hash: 'e5f6g7h8i9j0k1l2m3n4', timestamp: Date.now() - 240000 }
-            ];
-        }
-        
-        if (normalizedEncryptedList.length === 0 && useFakeData) {
-            normalizedEncryptedList = [
-                { fileName: 'confidential.pdf', status: 'Encrypted', timestamp: Date.now() },
-                { fileName: 'credentials.txt', status: 'Encrypted', timestamp: Date.now() - 60000 },
-                { fileName: 'private_key.pem', status: 'Encrypted', timestamp: Date.now() - 120000 },
-                { fileName: 'user_data.json', status: 'Failed', timestamp: Date.now() - 180000 },
-                { fileName: 'contract.docx', status: 'Encrypted', timestamp: Date.now() - 240000 }
-            ];
-        }
-        
-        if (normalizedMessagesList.length === 0 && useFakeData) {
-            normalizedMessagesList = [
-                { type: 'Info', message: 'Système démarré avec succès', timestamp: Date.now() },
-                { type: 'Warning', message: 'Espace disque inférieur à 50%', timestamp: Date.now() - 60000 },
-                { type: 'Error', message: 'Échec de connexion à la base de données', timestamp: Date.now() - 120000 },
-                { type: 'Success', message: 'Sauvegarde automatique terminée', timestamp: Date.now() - 180000 },
-                { type: 'Info', message: 'Nouvelle mise à jour disponible v2.1.0', timestamp: Date.now() - 240000 }
-            ];
-        }
-        
         // Ajouter des alertes factices si nécessaire
         if (!recentAlerts || recentAlerts.length === 0) {
             recentAlerts = [
