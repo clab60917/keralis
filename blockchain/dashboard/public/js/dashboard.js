@@ -184,9 +184,25 @@ function updateRecentTable(tableId, items) {
                     else if (type === 'info') typeClass = 'info';
                 }
                 
+                // Vérifier si le message est un hash et le remplacer si nécessaire
+                let message = item.message || 'N/A';
+                if (typeof message === 'string' && message.length > 30 && !message.includes(' ')) {
+                    // C'est probablement un hash, le remplacer par un message plus descriptif
+                    const type = item.type ? item.type.toLowerCase() : 'info';
+                    if (type === 'error') {
+                        message = 'Erreur détectée lors du traitement';
+                    } else if (type === 'warning') {
+                        message = 'Avertissement: vérification recommandée';
+                    } else if (type === 'success') {
+                        message = 'Opération terminée avec succès';
+                    } else {
+                        message = 'Message système: traitement en cours';
+                    }
+                }
+                
                 tr.innerHTML = `
                     <td><span class="badge bg-${typeClass}">${item.type || 'N/A'}</span></td>
-                    <td>${item.message || 'N/A'}</td>
+                    <td>${message}</td>
                     <td>${formattedTime}</td>
                 `;
             } else {
@@ -243,12 +259,16 @@ function updateAlertsTable(tableId, alerts) {
             
             if (status === 'error' || status === 'danger') {
                 statusClass = 'danger';
+                tr.classList.add('table-danger');
             } else if (status === 'warning') {
                 statusClass = 'warning';
+                tr.classList.add('table-warning');
             } else if (status === 'success' || status === 'restored') {
                 statusClass = 'success';
+                tr.classList.add('table-success');
             } else if (status === 'info') {
                 statusClass = 'info';
+                tr.classList.add('table-info');
             }
             
             tr.innerHTML = `

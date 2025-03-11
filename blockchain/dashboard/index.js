@@ -213,24 +213,27 @@ async function getStats() {
         console.log('recentEncryptedList (premier élément):', recentEncryptedList.length > 0 ? JSON.stringify(recentEncryptedList[0]) : 'aucun élément');
         console.log('recentMessages (premier élément):', recentMessages.length > 0 ? JSON.stringify(recentMessages[0]) : 'aucun élément');
 
+        // Ne pas forcer l'utilisation des données factices
+        const useFakeData = false;
+
         // Normaliser les données pour s'assurer qu'elles ont la bonne structure
-        const normalizedHashList = Array.isArray(recentHashList) ? recentHashList.map(item => ({
+        let normalizedHashList = Array.isArray(recentHashList) ? recentHashList.map(item => ({
             fileName: item.fileName || item.file || item.name || 'N/A',
             hash: item.hash || item.hashValue || item.value || 'N/A',
             timestamp: item.timestamp || item.date || item.time || Date.now()
         })) : [];
 
-        const normalizedEncryptedList = Array.isArray(recentEncryptedList) ? recentEncryptedList.map(item => ({
+        let normalizedEncryptedList = Array.isArray(recentEncryptedList) ? recentEncryptedList.map(item => ({
             fileName: item.fileName || item.file || item.name || 'N/A',
             status: item.status || item.state || 'N/A',
             timestamp: item.timestamp || item.date || item.time || Date.now()
         })) : [];
 
         // Pour les messages, vérifier si le message est un hash (chaîne longue sans espaces) et le remplacer par un message lisible
-        const normalizedMessagesList = Array.isArray(recentMessages) ? recentMessages.map(item => {
+        let normalizedMessagesList = Array.isArray(recentMessages) ? recentMessages.map(item => {
             let message = item.message || item.content || item.text || 'N/A';
             
-            // Si le message ressemble à un hash (longue chaîne sans espaces), le remplacer par un message plus lisible
+            // Si le message ressemble à un hash (longue chaîne sans espaces), le remplacer par un message lisible
             if (typeof message === 'string' && message.length > 30 && !message.includes(' ')) {
                 // Remplacer par un message plus descriptif basé sur le type
                 const type = item.type || item.category || 'Info';
@@ -254,7 +257,7 @@ async function getStats() {
         }) : [];
 
         // Si les listes sont vides, ajouter des données factices pour les tests
-        if (normalizedHashList.length === 0) {
+        if (normalizedHashList.length === 0 && useFakeData) {
             normalizedHashList = [
                 { fileName: 'document1.pdf', hash: 'a1b2c3d4e5f6g7h8i9j0', timestamp: Date.now() },
                 { fileName: 'image.jpg', hash: 'b2c3d4e5f6g7h8i9j0k1', timestamp: Date.now() - 60000 },
@@ -264,7 +267,7 @@ async function getStats() {
             ];
         }
         
-        if (normalizedEncryptedList.length === 0) {
+        if (normalizedEncryptedList.length === 0 && useFakeData) {
             normalizedEncryptedList = [
                 { fileName: 'confidential.pdf', status: 'Encrypted', timestamp: Date.now() },
                 { fileName: 'credentials.txt', status: 'Encrypted', timestamp: Date.now() - 60000 },
@@ -274,7 +277,7 @@ async function getStats() {
             ];
         }
         
-        if (normalizedMessagesList.length === 0) {
+        if (normalizedMessagesList.length === 0 && useFakeData) {
             normalizedMessagesList = [
                 { type: 'Info', message: 'Système démarré avec succès', timestamp: Date.now() },
                 { type: 'Warning', message: 'Espace disque inférieur à 50%', timestamp: Date.now() - 60000 },
