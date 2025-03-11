@@ -43,73 +43,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Fonction pour mettre à jour les statistiques
 function updateStats(stats) {
-    if (!stats) return;
+    if (!stats) {
+        console.warn("Aucune statistique reçue");
+        return;
+    }
     
-    console.log('Mise à jour des statistiques avec:', stats);
+    console.log("Mise à jour des statistiques:", stats);
     
     try {
         // Mise à jour des compteurs
-        updateElement('hashCount', stats.hash);
-        updateElement('encryptedCount', stats.encrypted);
-        updateElement('messagesCount', stats.messages);
+        document.getElementById('totalHashesCount').textContent = stats.totalHashes || '0';
+        document.getElementById('totalEncryptedCount').textContent = stats.totalEncrypted || '0';
+        document.getElementById('totalMessagesCount').textContent = stats.totalMessages || '0';
         
-        // Mise à jour des taux (convertir de par minute à par heure)
-        const hashRateHourly = stats.rates && typeof stats.rates.hash === 'number' ? stats.rates.hash * 60 : 0;
-        const encryptedRateHourly = stats.rates && typeof stats.rates.encrypted === 'number' ? stats.rates.encrypted * 60 : 0;
-        const messagesRateHourly = stats.rates && typeof stats.rates.messages === 'number' ? stats.rates.messages * 60 : 0;
-        
-        updateElement('hashRate', hashRateHourly);
-        updateElement('encryptedRate', encryptedRateHourly);
-        updateElement('messagesRate', messagesRateHourly);
-        
-        // Mise à jour des temps de traitement
-        updateElement('hashProcessingTime', stats.processingTimes && stats.processingTimes.hash !== undefined ? stats.processingTimes.hash : 0);
-        updateElement('encryptedProcessingTime', stats.processingTimes && stats.processingTimes.encrypted !== undefined ? stats.processingTimes.encrypted : 0);
-        
-        // Mise à jour des stats système
-        if (stats.system) {
-            // Vérifier que cpu et memory sont des nombres ou les extraire s'ils sont des objets
-            let cpuValue = 0;
-            let memoryValue = 0;
-            
-            if (typeof stats.system.cpu === 'number') {
-                cpuValue = stats.system.cpu.toFixed(1);
-            } else if (typeof stats.system.cpu === 'object') {
-                // Essayer d'extraire une valeur numérique de l'objet
-                cpuValue = '0';
-                console.warn('CPU est un objet:', stats.system.cpu);
-            } else {
-                cpuValue = stats.system.cpu || '0';
-            }
-            
-            if (typeof stats.system.memory === 'number') {
-                memoryValue = stats.system.memory.toFixed(1);
-            } else if (typeof stats.system.memory === 'object') {
-                // Essayer d'extraire une valeur numérique de l'objet
-                memoryValue = '0';
-                console.warn('Memory est un objet:', stats.system.memory);
-            } else {
-                memoryValue = stats.system.memory || '0';
-            }
-            
-            updateElement('cpuUsage', cpuValue);
-            updateElement('memoryUsage', memoryValue);
-        }
-        
-        // Mise à jour de la dernière mise à jour
-        updateElement('lastUpdated', stats.lastUpdated || new Date().toLocaleString());
+        // Mise à jour des taux par heure (au lieu de par minute)
+        document.getElementById('hashesPerHour').textContent = stats.hashesPerMinute ? (stats.hashesPerMinute * 60).toFixed(2) : '0';
+        document.getElementById('encryptedPerHour').textContent = stats.encryptedPerMinute ? (stats.encryptedPerMinute * 60).toFixed(2) : '0';
+        document.getElementById('messagesPerHour').textContent = stats.messagesPerMinute ? (stats.messagesPerMinute * 60).toFixed(2) : '0';
         
         // Mise à jour des tableaux récents
-        if (stats.recentHash) updateRecentTable('recentHashTableBody', stats.recentHash);
-        if (stats.recentEncrypted) updateRecentTable('recentEncryptedTableBody', stats.recentEncrypted);
-        if (stats.recentMessages) updateRecentTable('recentMessagesTableBody', stats.recentMessages);
-        
-        // Mise à jour des alertes
-        if (stats.alerts) {
-            updateAlertsTable('alertsTableBody', stats.alerts);
+        if (stats.recentHashList && Array.isArray(stats.recentHashList)) {
+            updateRecentTable('recentHashTableBody', stats.recentHashList);
         }
+        
+        if (stats.recentEncryptedList && Array.isArray(stats.recentEncryptedList)) {
+            updateRecentTable('recentEncryptedTableBody', stats.recentEncryptedList);
+        }
+        
+        if (stats.recentMessages && Array.isArray(stats.recentMessages)) {
+            updateRecentTable('recentMessagesTableBody', stats.recentMessages);
+        }
+        
+        // Mise à jour des statuts système
+        updateSystemStatus('cpuStatus', stats.cpuUsage);
+        updateSystemStatus('memoryStatus', stats.memoryUsage);
+        updateSystemStatus('diskStatus', stats.diskUsage);
+        
+        // Mise à jour des valeurs numériques
+        document.getElementById('cpuValue').textContent = stats.cpuUsage ? `${stats.cpuUsage.toFixed(2)}%` : 'N/A';
+        document.getElementById('memoryValue').textContent = stats.memoryUsage ? `${stats.memoryUsage.toFixed(2)}%` : 'N/A';
+        document.getElementById('diskValue').textContent = stats.diskUsage ? `${stats.diskUsage.toFixed(2)}%` : 'N/A';
     } catch (error) {
-        console.error('Erreur lors de la mise à jour des statistiques:', error);
+        console.error("Erreur lors de la mise à jour des statistiques:", error);
     }
 }
 
@@ -126,36 +101,63 @@ function updateElement(id, value) {
 // Fonction pour mettre à jour les tableaux récents
 function updateRecentTable(tableId, items) {
     const tbody = document.getElementById(tableId);
-    if (!tbody || !items) return;
+    if (!tbody) {
+        console.warn(`Élément avec ID '${tableId}' non trouvé dans le DOM`);
+        return;
+    }
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+        console.warn(`Aucune donnée valide pour le tableau ${tableId}`);
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center">Aucune donnée disponible</td></tr>';
+        return;
+    }
     
     console.log(`Mise à jour du tableau ${tableId} avec ${items.length} éléments:`, items);
     
-    tbody.innerHTML = '';
-    items.forEach(item => {
-        const tr = document.createElement('tr');
+    try {
+        tbody.innerHTML = '';
         
-        if (tableId === 'recentHashTableBody') {
-            tr.innerHTML = `
-                <td>${item.fileName || 'N/A'}</td>
-                <td><small>${item.hash || 'N/A'}</small></td>
-                <td>${item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : 'N/A'}</td>
-            `;
-        } else if (tableId === 'recentEncryptedTableBody') {
-            tr.innerHTML = `
-                <td>${item.fileName || 'N/A'}</td>
-                <td>${item.status || 'N/A'}</td>
-                <td>${item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : 'N/A'}</td>
-            `;
-        } else if (tableId === 'recentMessagesTableBody') {
-            tr.innerHTML = `
-                <td>${item.type || 'N/A'}</td>
-                <td>${item.message || 'N/A'}</td>
-                <td>${item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : 'N/A'}</td>
-            `;
+        items.forEach(item => {
+            if (!item) return; // Ignorer les éléments null ou undefined
+            
+            const tr = document.createElement('tr');
+            
+            // Formater la date si elle existe
+            const formattedTime = item.timestamp 
+                ? new Date(item.timestamp).toLocaleTimeString() 
+                : 'N/A';
+            
+            if (tableId === 'recentHashTableBody') {
+                tr.innerHTML = `
+                    <td>${item.fileName || 'N/A'}</td>
+                    <td><small>${item.hash || 'N/A'}</small></td>
+                    <td>${formattedTime}</td>
+                `;
+            } else if (tableId === 'recentEncryptedTableBody') {
+                tr.innerHTML = `
+                    <td>${item.fileName || 'N/A'}</td>
+                    <td>${item.status || 'N/A'}</td>
+                    <td>${formattedTime}</td>
+                `;
+            } else if (tableId === 'recentMessagesTableBody') {
+                tr.innerHTML = `
+                    <td>${item.type || 'N/A'}</td>
+                    <td>${item.message || 'N/A'}</td>
+                    <td>${formattedTime}</td>
+                `;
+            }
+            
+            tbody.appendChild(tr);
+        });
+        
+        // Si aucun élément n'a été ajouté (tous étaient invalides), afficher un message
+        if (tbody.children.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center">Aucune donnée valide</td></tr>';
         }
-        
-        tbody.appendChild(tr);
-    });
+    } catch (error) {
+        console.error(`Erreur lors de la mise à jour du tableau ${tableId}:`, error);
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center">Erreur lors du chargement des données</td></tr>';
+    }
 }
 
 // Fonction pour mettre à jour le tableau des alertes
@@ -194,4 +196,27 @@ document.querySelectorAll('.view-alert-details').forEach(button => {
         const modal = new bootstrap.Modal(document.getElementById('alertDetailsModal'));
         modal.show();
     });
-}); 
+});
+
+// Fonction pour mettre à jour les indicateurs de statut système
+function updateSystemStatus(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        console.warn(`Élément avec ID '${elementId}' non trouvé`);
+        return;
+    }
+    
+    // Supprimer les classes existantes
+    element.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+    
+    // Ajouter la classe appropriée en fonction de la valeur
+    if (value === undefined || value === null) {
+        element.classList.add('bg-secondary');
+    } else if (value < 70) {
+        element.classList.add('bg-success');
+    } else if (value < 90) {
+        element.classList.add('bg-warning');
+    } else {
+        element.classList.add('bg-danger');
+    }
+} 

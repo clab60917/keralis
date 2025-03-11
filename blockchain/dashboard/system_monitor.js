@@ -115,17 +115,23 @@ class SystemMonitor {
             const [, usage] = lines;
             const [filesystem, size, used, available, percentage, mountpoint] = usage.split(/\s+/);
             
+            // Extraire la valeur numérique du pourcentage (enlever le %)
+            const usedPercentage = percentage ? parseFloat(percentage.replace('%', '')) : 0;
+            
             return {
                 filesystem,
                 size,
                 used,
                 available,
                 percentage,
-                mountpoint
+                mountpoint,
+                usedPercentage
             };
         } catch (error) {
+            console.error('Erreur lors de la récupération de l\'utilisation du disque:', error);
             return {
-                error: error.message
+                error: error.message,
+                usedPercentage: 0
             };
         }
     }

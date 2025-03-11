@@ -92,16 +92,19 @@ async function getStats() {
         // Récupérer les stats système
         const systemStats = await systemMonitor.getSystemStats();
         
-        // Extraire les valeurs CPU et mémoire
+        // Extraire les valeurs CPU, mémoire et disque
         let cpuUsage = 0;
         let memoryUsage = 0;
+        let diskUsage = 0;
         
         if (systemStats) {
             // Extraire la valeur CPU
             if (systemStats.cpu && typeof systemStats.cpu === 'object') {
                 if (systemStats.cpu.loadAverage && Array.isArray(systemStats.cpu.loadAverage)) {
                     // Utiliser la moyenne de charge sur 1 minute
-                    cpuUsage = systemStats.cpu.loadAverage[0];
+                    cpuUsage = systemStats.cpu.loadAverage[0] * 10; // Multiplier par 10 pour avoir un pourcentage approximatif
+                } else if (typeof systemStats.cpu.usage === 'number') {
+                    cpuUsage = systemStats.cpu.usage;
                 }
             }
             
@@ -109,6 +112,17 @@ async function getStats() {
             if (systemStats.memory && typeof systemStats.memory === 'object') {
                 if (systemStats.memory.usedPercentage) {
                     memoryUsage = parseFloat(systemStats.memory.usedPercentage);
+                } else if (systemStats.memory.used && systemStats.memory.total) {
+                    memoryUsage = (systemStats.memory.used / systemStats.memory.total) * 100;
+                }
+            }
+            
+            // Extraire la valeur disque
+            if (systemStats.disk && typeof systemStats.disk === 'object') {
+                if (systemStats.disk.usedPercentage) {
+                    diskUsage = parseFloat(systemStats.disk.usedPercentage);
+                } else if (systemStats.disk.used && systemStats.disk.total) {
+                    diskUsage = (systemStats.disk.used / systemStats.disk.total) * 100;
                 }
             }
         }
@@ -129,53 +143,14 @@ async function getStats() {
 
         // Calculer les taux de traitement (par minute)
         const timeDiffMinutes = (now - previousCounts.timestamp) / (1000 * 60);
-        const rates = {
-            hash: Math.round((currentCounts.hash - previousCounts.hash) / timeDiffMinutes),
-            encrypted: Math.round((currentCounts.encrypted - previousCounts.encrypted) / timeDiffMinutes),
-            messages: Math.round((currentCounts.messages - previousCounts.messages) / timeDiffMinutes)
-        };
-
-        // Obtenir les temps de traitement moyens des 5 dernières minutes
-        const fiveMinutesAgo = new Date(now - 5 * 60 * 1000);
-        const [recentHash, recentEncrypted] = await Promise.all([
-            db.collection('hash')
-                .find({ timestamp: { $gte: fiveMinutesAgo } })
-                .sort({ timestamp: -1 })
-                .limit(50)
-                .toArray(),
-            db.collection('encrypted')
-                .find({ timestamp: { $gte: fiveMinutesAgo } })
-                .sort({ timestamp: -1 })
-                .limit(50)
-                .toArray()
-        ]);
-
-        // Calculer les temps de traitement moyens
-        const processingTimes = {
-            hash: recentHash.length > 0 
-                ? Math.round(recentHash.reduce((acc, curr) => acc + (curr.processingTime || 0), 0) / recentHash.length)
-                : 0,
-            encrypted: recentEncrypted.length > 0
-                ? Math.round(recentEncrypted.reduce((acc, curr) => acc + (curr.processingTime || 0), 0) / recentEncrypted.length)
-                : 0
-        };
+        const hashesPerMinute = Math.round((currentCounts.hash - previousCounts.hash) / timeDiffMinutes);
+        const encryptedPerMinute = Math.round((currentCounts.encrypted - previousCounts.encrypted) / timeDiffMinutes);
+        const messagesPerMinute = Math.round((currentCounts.messages - previousCounts.messages) / timeDiffMinutes);
 
         // Mettre à jour les compteurs précédents
         previousCounts = {
             ...currentCounts,
             timestamp: now
-        };
-
-        const stats = {
-            ...currentCounts,
-            lastUpdated: new Date().toLocaleString(),
-            system: {
-                cpu: cpuUsage,
-                memory: memoryUsage
-            },
-            rates,
-            processingTimes,
-            alerts
         };
 
         // Obtenir les 5 derniers messages de chaque collection
@@ -202,24 +177,63 @@ async function getStats() {
                 .toArray()
         ]);
 
-        stats.recentHash = recentHashList;
-        stats.recentEncrypted = recentEncryptedList;
-        stats.recentMessages = recentMessages;
-        stats.alerts = recentAlerts;
+        // Logs détaillés pour comprendre la structure des données
+        console.log('Structure des données récupérées:');
+        console.log('recentHashList (premier élément):', recentHashList.length > 0 ? JSON.stringify(recentHashList[0]) : 'aucun élément');
+        console.log('recentEncryptedList (premier élément):', recentEncryptedList.length > 0 ? JSON.stringify(recentEncryptedList[0]) : 'aucun élément');
+        console.log('recentMessages (premier élément):', recentMessages.length > 0 ? JSON.stringify(recentMessages[0]) : 'aucun élément');
+
+        // Normaliser les données pour s'assurer qu'elles ont la bonne structure
+        const normalizedHashList = recentHashList.map(item => ({
+            fileName: item.fileName || item.file || item.name || 'N/A',
+            hash: item.hash || item.hashValue || item.value || 'N/A',
+            timestamp: item.timestamp || item.date || item.time || Date.now()
+        }));
+
+        const normalizedEncryptedList = recentEncryptedList.map(item => ({
+            fileName: item.fileName || item.file || item.name || 'N/A',
+            status: item.status || item.state || 'N/A',
+            timestamp: item.timestamp || item.date || item.time || Date.now()
+        }));
+
+        const normalizedMessagesList = recentMessages.map(item => ({
+            type: item.type || item.category || 'N/A',
+            message: item.message || item.content || item.text || 'N/A',
+            timestamp: item.timestamp || item.date || item.time || Date.now()
+        }));
+
+        // Créer l'objet stats dans le format attendu par le client
+        const stats = {
+            totalHashes: currentCounts.hash,
+            totalEncrypted: currentCounts.encrypted,
+            totalMessages: currentCounts.messages,
+            hashesPerMinute: hashesPerMinute,
+            encryptedPerMinute: encryptedPerMinute,
+            messagesPerMinute: messagesPerMinute,
+            cpuUsage: cpuUsage,
+            memoryUsage: memoryUsage,
+            diskUsage: diskUsage,
+            recentHashList: normalizedHashList,
+            recentEncryptedList: normalizedEncryptedList,
+            recentMessages: normalizedMessagesList,
+            alerts: recentAlerts
+        };
 
         console.log('Statistiques récupérées:', {
-            hash: stats.hash,
-            encrypted: stats.encrypted,
-            messages: stats.messages,
-            recentHashCount: recentHashList.length,
-            recentEncryptedCount: recentEncryptedList.length,
-            recentMessagesCount: recentMessages.length,
+            totalHashes: stats.totalHashes,
+            totalEncrypted: stats.totalEncrypted,
+            totalMessages: stats.totalMessages,
+            recentHashCount: normalizedHashList.length,
+            recentEncryptedCount: normalizedEncryptedList.length,
+            recentMessagesCount: normalizedMessagesList.length,
             alertsCount: recentAlerts.length,
             systemStatus: systemStats ? 'OK' : 'Error',
             cpuUsage,
             memoryUsage,
-            rates,
-            processingTimes
+            diskUsage,
+            hashesPerMinute,
+            encryptedPerMinute,
+            messagesPerMinute
         });
 
         lastStats = stats;
