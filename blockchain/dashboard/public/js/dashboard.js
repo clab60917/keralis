@@ -142,6 +142,20 @@ function updateRecentTable(tableId, items) {
                 console.error('Erreur lors du formatage de la date:', error);
             }
             
+            // Ajouter une classe en fonction du type de message (pour les messages uniquement)
+            if (tableId === 'recentMessagesTableBody' && item.type) {
+                const type = item.type.toLowerCase();
+                if (type === 'error') {
+                    tr.classList.add('table-danger');
+                } else if (type === 'warning') {
+                    tr.classList.add('table-warning');
+                } else if (type === 'success') {
+                    tr.classList.add('table-success');
+                } else if (type === 'info') {
+                    tr.classList.add('table-info');
+                }
+            }
+            
             if (tableId === 'recentHashTableBody') {
                 tr.innerHTML = `
                     <td>${item.fileName || 'N/A'}</td>
@@ -155,8 +169,18 @@ function updateRecentTable(tableId, items) {
                     <td>${formattedTime}</td>
                 `;
             } else if (tableId === 'recentMessagesTableBody') {
+                // Afficher le type de message avec un badge coloré
+                let typeClass = 'secondary';
+                if (item.type) {
+                    const type = item.type.toLowerCase();
+                    if (type === 'error') typeClass = 'danger';
+                    else if (type === 'warning') typeClass = 'warning';
+                    else if (type === 'success') typeClass = 'success';
+                    else if (type === 'info') typeClass = 'info';
+                }
+                
                 tr.innerHTML = `
-                    <td>${item.type || 'N/A'}</td>
+                    <td><span class="badge bg-${typeClass}">${item.type || 'N/A'}</span></td>
                     <td>${item.message || 'N/A'}</td>
                     <td>${formattedTime}</td>
                 `;
@@ -222,8 +246,9 @@ function updateSystemStatus(elementId, value) {
     // Valeur par défaut si non définie ou non numérique
     const numericValue = typeof value === 'number' && !isNaN(value) ? value : 0;
     
-    // Définir la largeur de la barre de progression
-    element.style.width = `${numericValue}%`;
+    // Définir la largeur de la barre de progression (minimum 5% pour la visibilité)
+    const displayWidth = Math.max(5, numericValue);
+    element.style.width = `${displayWidth}%`;
     
     // Supprimer les classes existantes
     element.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-secondary');
@@ -239,5 +264,5 @@ function updateSystemStatus(elementId, value) {
         element.classList.add('bg-danger');
     }
     
-    console.log(`Mise à jour de ${elementId} avec la valeur ${numericValue}%, classe: ${element.className}`);
+    console.log(`Mise à jour de ${elementId} avec la valeur ${numericValue}%, affichage: ${displayWidth}%, classe: ${element.className}`);
 } 

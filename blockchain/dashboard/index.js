@@ -248,10 +248,13 @@ async function getStats() {
         }
         
         if (normalizedMessagesList.length === 0) {
-            normalizedMessagesList.push(
+            normalizedMessagesList = [
                 { type: 'Info', message: 'Système démarré', timestamp: Date.now() },
-                { type: 'Warning', message: 'Espace disque faible', timestamp: Date.now() - 60000 }
-            );
+                { type: 'Warning', message: 'Espace disque faible', timestamp: Date.now() - 60000 },
+                { type: 'Error', message: 'Échec de connexion', timestamp: Date.now() - 120000 },
+                { type: 'Success', message: 'Sauvegarde terminée', timestamp: Date.now() - 180000 },
+                { type: 'Info', message: 'Mise à jour disponible', timestamp: Date.now() - 240000 }
+            ];
         }
 
         // Créer l'objet stats dans le format attendu par le client

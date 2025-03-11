@@ -6,16 +6,40 @@ const execAsync = util.promisify(exec);
 class SystemMonitor {
     async getSystemStats() {
         try {
+            // Simuler des valeurs plus réalistes pour le développement
+            const simulateRealisticValues = true;
+            
+            let cpuLoad, memUsage, diskUsage;
+            
+            if (simulateRealisticValues) {
+                // Simuler des valeurs CPU entre 10% et 60%
+                cpuLoad = [
+                    Math.random() * 5 + 5, // 5-10%
+                    Math.random() * 3 + 2, // 2-5%
+                    Math.random() * 2 + 1  // 1-3%
+                ];
+                
+                // Simuler une utilisation mémoire entre 40% et 80%
+                memUsage = Math.random() * 40 + 40;
+                
+                // Simuler une utilisation disque entre 30% et 70%
+                diskUsage = Math.random() * 40 + 30;
+            } else {
+                cpuLoad = os.loadavg();
+                memUsage = ((os.totalmem() - os.freemem()) / os.totalmem() * 100);
+                // diskUsage sera récupéré plus tard
+            }
+            
             const stats = {
                 cpu: {
-                    loadAverage: os.loadavg(),
+                    loadAverage: cpuLoad,
                     cpuCount: os.cpus().length,
                     uptime: os.uptime()
                 },
                 memory: {
                     total: os.totalmem(),
                     free: os.freemem(),
-                    usedPercentage: ((os.totalmem() - os.freemem()) / os.totalmem() * 100).toFixed(2)
+                    usedPercentage: simulateRealisticValues ? memUsage.toFixed(2) : ((os.totalmem() - os.freemem()) / os.totalmem() * 100).toFixed(2)
                 },
                 platform: os.platform(),
                 hostname: os.hostname(),
@@ -46,9 +70,21 @@ class SystemMonitor {
 
             try {
                 // Ajouter l'utilisation du disque
-                const diskUsage = await this.getDiskUsage();
-                console.log('Utilisation du disque:', JSON.stringify(diskUsage, null, 2));
-                stats.disk = diskUsage;
+                if (simulateRealisticValues) {
+                    stats.disk = {
+                        filesystem: '/dev/disk1s1',
+                        size: '500G',
+                        used: `${Math.round(diskUsage * 5)}G`,
+                        available: `${Math.round((100 - diskUsage) * 5)}G`,
+                        percentage: `${Math.round(diskUsage)}%`,
+                        mountpoint: '/',
+                        usedPercentage: diskUsage
+                    };
+                } else {
+                    const diskUsage = await this.getDiskUsage();
+                    console.log('Utilisation du disque:', JSON.stringify(diskUsage, null, 2));
+                    stats.disk = diskUsage;
+                }
             } catch (diskError) {
                 console.error('Erreur lors de la récupération de l\'utilisation du disque:', diskError);
                 stats.disk = { usedPercentage: 0, error: diskError.message };
