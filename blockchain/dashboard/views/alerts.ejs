@@ -58,7 +58,9 @@
                                                         <p><strong>Hash Original:</strong> <%= alert.oldHash %></p>
                                                         <p><strong>Nouveau Hash:</strong> <%= alert.newHash %></p>
                                                         <p><strong>Email envoyé:</strong> <%= alert.emailSent ? 'Oui' : 'Non' %></p>
-                                                        <p><strong>Serveur:</strong> <%= alert.details.serverUrl %></p>
+                                                        <% if (alert.details) { %>
+                                                            <p><strong>Serveur:</strong> <%= alert.details.serverUrl %></p>
+                                                        <% } %>
                                                     </div>
                                                 </div>
                                             </div>

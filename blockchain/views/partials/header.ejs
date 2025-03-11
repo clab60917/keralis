@@ -1,9 +1,0 @@
-<!-- Ajouter le lien des alertes dans la navigation -->
-<li class="nav-item">
-    <a class="nav-link <%= active === 'alerts' ? 'active' : '' %>" href="/alerts">
-        Alertes
-        <% if (typeof alerts !== 'undefined' && alerts.filter(a => a.status !== 'restored').length > 0) { %>
-            <span class="badge bg-danger"><%= alerts.filter(a => a.status !== 'restored').length %></span>
-        <% } %>
-    </a>
-</li> 

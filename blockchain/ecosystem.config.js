@@ -8,7 +8,7 @@ module.exports = {
     }
   }, {
     name: 'blockchain-dashboard',
-    script: 'dashboard.js',
+    script: 'dashboard/index.js',
     watch: true,
     env: {
       NODE_ENV: 'production'

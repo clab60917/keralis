@@ -6,8 +6,13 @@ const { MongoClient } = require('mongodb');
 const path = require('path');
 const basicAuth = require('express-basic-auth');
 const systemMonitor = require('./system_monitor');
+const session = require('express-session');
 
-const config = require('./auto3').config; 
+// Configuration
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+// Configuration de MongoDB
+const MONGODB_URI = `mongodb://${process.env.MONGODB_USER}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DB_NAME}?authSource=${process.env.MONGODB_AUTH_SOURCE}`;
 
 // Configuration de l'authentification basique
 const users = {};
@@ -19,8 +24,27 @@ app.use(basicAuth({
     realm: 'Keralis Dashboard'
 }));
 
+// Configuration de l'application
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware de logging
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
+
+// Session configuration
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'keralis_secret',
+    resave: false,
+    saveUninitialized: true
+}));
+
+// Variables globales
 let mongoClient;
 let statsInterval;
 let lastStats = null;
@@ -35,6 +59,7 @@ let previousCounts = {
     timestamp: Date.now()
 };
 
+// Fonction pour récupérer les statistiques
 async function getStats() {
     try {
         const now = Date.now();
@@ -44,7 +69,7 @@ async function getStats() {
             return lastStats;
         }
 
-        const db = mongoClient.db(config.mongodb.dbName);
+        const db = mongoClient.db(process.env.MONGODB_DB_NAME);
         
         console.log('Récupération des statistiques...');
         
@@ -165,7 +190,51 @@ async function getStats() {
     }
 }
 
-// Configuration de Socket.IO avec des options de performance
+// Routes
+app.get('/', async (req, res) => {
+    try {
+        const stats = await getStats();
+        res.render('index', {
+            title: 'Dashboard',
+            active: 'home',
+            user: { username: req.auth.user }
+        });
+    } catch (error) {
+        console.error('Erreur lors du rendu de la page d\'accueil:', error);
+        res.status(500).send('Erreur lors du chargement du dashboard');
+    }
+});
+
+// Route des alertes
+app.get('/alerts', async (req, res) => {
+    try {
+        const db = mongoClient.db(process.env.MONGODB_DB_NAME);
+        const alerts = await db.collection('alerts')
+            .find({})
+            .sort({ timestamp: -1 })
+            .toArray();
+        
+        console.log(`${alerts.length} alertes trouvées`);
+        
+        res.render('alerts', {
+            title: 'Alertes',
+            user: { username: req.auth.user },
+            active: 'alerts',
+            alerts: alerts
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des alertes:', error);
+        res.render('alerts', {
+            title: 'Alertes',
+            user: { username: req.auth.user },
+            active: 'alerts',
+            alerts: [],
+            error: 'Erreur lors de la récupération des alertes'
+        });
+    }
+});
+
+// Configuration de Socket.IO
 io.on('connection', async (socket) => {
     console.log('Nouvelle connexion Socket.IO tentée');
     
@@ -202,6 +271,7 @@ io.on('connection', async (socket) => {
     });
 });
 
+// Fonction pour diffuser les statistiques à tous les clients
 async function broadcastStats() {
     try {
         const stats = await getStats();
@@ -213,14 +283,21 @@ async function broadcastStats() {
     }
 }
 
+// Gestion des erreurs
+app.use((err, req, res, next) => {
+    console.error('Erreur:', err);
+    res.status(500).send('Erreur interne du serveur');
+});
+
+// Fonction de démarrage du serveur
 async function startServer() {
     try {
         console.log('Tentative de connexion à MongoDB...');
-        mongoClient = new MongoClient(config.mongodb.uri);
+        mongoClient = new MongoClient(MONGODB_URI);
         await mongoClient.connect();
         console.log('Connecté à MongoDB');
 
-        const db = mongoClient.db(config.mongodb.dbName);
+        const db = mongoClient.db(process.env.MONGODB_DB_NAME);
         const collections = await db.listCollections().toArray();
         const collectionNames = collections.map(c => c.name);
         console.log('Collections disponibles:', collectionNames);
@@ -240,6 +317,7 @@ async function startServer() {
     }
 }
 
+// Gestion de l'arrêt propre
 process.on('SIGINT', async () => {
     clearInterval(statsInterval);
     if (mongoClient) {
@@ -248,4 +326,5 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
+// Démarrer le serveur
 startServer(); 
