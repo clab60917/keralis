@@ -163,12 +163,7 @@ function updateRecentTable(tableId, items) {
             
             if (tableId === 'recentHashTableBody') {
                 // Afficher le hash complet ou tronqué selon sa longueur
-                let hash = 'N/A';
-                if (item.hash) hash = item.hash;
-                else if (item.hashValue) hash = item.hashValue;
-                else if (item.value) hash = item.value;
-                else if (item.digest) hash = item.digest;
-
+                const hash = item.hash || 'N/A';
                 const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
                 
                 // Ajouter une infobulle pour afficher le hash complet au survol
