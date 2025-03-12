@@ -55,14 +55,14 @@ function updateStats(stats) {
     
     try {
         // Mise à jour des compteurs
-        document.getElementById('totalHashesCount').textContent = stats.totalHashes || '0';
-        document.getElementById('totalEncryptedCount').textContent = stats.totalEncrypted || '0';
-        document.getElementById('totalMessagesCount').textContent = stats.totalMessages || '0';
+        updateElementSafely('totalHashesCount', stats.totalHashes || '0');
+        updateElementSafely('totalEncryptedCount', stats.totalEncrypted || '0');
+        updateElementSafely('totalMessagesCount', stats.totalMessages || '0');
         
         // Mise à jour des taux par heure (au lieu de par minute)
-        document.getElementById('hashesPerHour').textContent = stats.hashesPerMinute ? (stats.hashesPerMinute * 60).toFixed(0) : '0';
-        document.getElementById('encryptedPerHour').textContent = stats.encryptedPerMinute ? (stats.encryptedPerMinute * 60).toFixed(0) : '0';
-        document.getElementById('messagesPerHour').textContent = stats.messagesPerMinute ? (stats.messagesPerMinute * 60).toFixed(0) : '0';
+        updateElementSafely('hashesPerHour', stats.hashesPerMinute ? (stats.hashesPerMinute * 60).toFixed(0) : '0');
+        updateElementSafely('encryptedPerHour', stats.encryptedPerMinute ? (stats.encryptedPerMinute * 60).toFixed(0) : '0');
+        updateElementSafely('messagesPerHour', stats.messagesPerMinute ? (stats.messagesPerMinute * 60).toFixed(0) : '0');
         
         // Mise à jour des tableaux récents
         if (stats.recentHashList && Array.isArray(stats.recentHashList)) {
@@ -104,14 +104,24 @@ function updateStats(stats) {
         updateSystemStatus('diskStatus', diskUsage);
         
         // Mise à jour des valeurs numériques
-        document.getElementById('cpuValue').textContent = typeof cpuUsage === 'number' ? `${cpuUsage.toFixed(2)}%` : 'N/A';
-        document.getElementById('memoryValue').textContent = typeof memoryUsage === 'number' ? `${memoryUsage.toFixed(2)}%` : 'N/A';
-        document.getElementById('diskValue').textContent = typeof diskUsage === 'number' ? `${diskUsage.toFixed(2)}%` : 'N/A';
+        updateElementSafely('cpuValue', typeof cpuUsage === 'number' ? `${cpuUsage.toFixed(2)}%` : 'N/A');
+        updateElementSafely('memoryValue', typeof memoryUsage === 'number' ? `${memoryUsage.toFixed(2)}%` : 'N/A');
+        updateElementSafely('diskValue', typeof diskUsage === 'number' ? `${diskUsage.toFixed(2)}%` : 'N/A');
         
-        // Mise à jour de l'horodatage
-        document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+        // Mise à jour de l'horodatage (si l'élément existe)
+        updateElementSafely('lastUpdated', new Date().toLocaleTimeString());
     } catch (error) {
         console.error("Erreur lors de la mise à jour des statistiques:", error);
+    }
+}
+
+// Fonction pour mettre à jour un élément du DOM en toute sécurité
+function updateElementSafely(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = value;
+    } else {
+        console.warn(`Élément avec ID '${id}' non trouvé dans le DOM`);
     }
 }
 
@@ -162,47 +172,79 @@ function updateRecentTable(tableId, items) {
                 console.error('Erreur lors du formatage de la date:', error);
             }
             
-            // Ajouter une classe en fonction du type de message (pour les messages uniquement)
-            if (tableId === 'recentMessagesTableBody' && item.type) {
-                const type = item.type.toLowerCase();
-                if (type === 'error') {
-                    tr.classList.add('table-danger');
-                } else if (type === 'warning') {
-                    tr.classList.add('table-warning');
-                } else if (type === 'success') {
-                    tr.classList.add('table-success');
-                } else if (type === 'info') {
-                    tr.classList.add('table-info');
-                }
-            }
-            
             if (tableId === 'recentHashTableBody') {
+                // Extraire le nom du fichier à partir du chemin si disponible
+                let fileName = 'N/A';
+                if (item.fileName) fileName = item.fileName;
+                else if (item.file) fileName = item.file;
+                else if (item.name) fileName = item.name;
+                else if (item.filename) fileName = item.filename;
+                else if (item.filePath) {
+                    // Extraire le nom du fichier à partir du chemin
+                    const pathParts = item.filePath.split(/[\/\\]/);
+                    fileName = pathParts[pathParts.length - 1];
+                }
+                else if (item.path) {
+                    // Extraire le nom du fichier à partir du chemin
+                    const pathParts = item.path.split(/[\/\\]/);
+                    fileName = pathParts[pathParts.length - 1];
+                }
+                
+                // S'assurer que le nom du fichier a l'extension .hash si ce n'est pas déjà le cas
+                if (fileName !== 'N/A' && !fileName.toLowerCase().endsWith('.hash')) {
+                    fileName = fileName + '.hash';
+                }
+                
+                // Extraire le hash
+                let hash = 'N/A';
+                if (item.hash) hash = item.hash;
+                else if (item.hashValue) hash = item.hashValue;
+                else if (item.value) hash = item.value;
+                else if (item.digest) hash = item.digest;
+                else if (item.content) hash = item.content;
+                
                 // Afficher le hash complet ou tronqué selon sa longueur
-                const hash = item.hash || 'N/A';
                 const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
                 
-                // Ajouter une infobulle pour afficher le hash complet au survol
-                const hashCell = `<td><small title="${hash}">${displayHash}</small></td>`;
-                
-                // Ajouter une infobulle pour afficher le nom de fichier complet au survol
-                const fileName = item.fileName || 'N/A';
+                // Tronquer le nom du fichier s'il est trop long
                 const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
-                const fileNameCell = `<td title="${fileName}">${displayFileName}</td>`;
                 
                 tr.innerHTML = `
-                    ${fileNameCell}
-                    ${hashCell}
+                    <td title="${fileName}">${displayFileName}</td>
+                    <td><small title="${hash}">${displayHash}</small></td>
                     <td>${formattedTime}</td>
                 `;
             } else if (tableId === 'recentEncryptedTableBody') {
-                // Ajouter une infobulle pour afficher le nom de fichier complet au survol
-                const fileName = item.fileName || 'N/A';
-                const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
-                const fileNameCell = `<td title="${fileName}">${displayFileName}</td>`;
+                // Extraire le nom du fichier à partir du chemin si disponible
+                let fileName = 'N/A';
+                if (item.fileName) fileName = item.fileName;
+                else if (item.file) fileName = item.file;
+                else if (item.name) fileName = item.name;
+                else if (item.filename) fileName = item.filename;
+                else if (item.filePath) {
+                    // Extraire le nom du fichier à partir du chemin
+                    const pathParts = item.filePath.split(/[\/\\]/);
+                    fileName = pathParts[pathParts.length - 1];
+                }
+                else if (item.path) {
+                    // Extraire le nom du fichier à partir du chemin
+                    const pathParts = item.path.split(/[\/\\]/);
+                    fileName = pathParts[pathParts.length - 1];
+                }
+                
+                // S'assurer que le nom du fichier a l'extension .enc si ce n'est pas déjà le cas
+                if (fileName !== 'N/A' && !fileName.toLowerCase().endsWith('.enc')) {
+                    fileName = fileName + '.enc';
+                }
+                
+                // Extraire le statut
+                let status = 'N/A';
+                if (item.status) status = item.status;
+                else if (item.state) status = item.state;
+                else if (item.result) status = item.result;
                 
                 // Ajouter une classe de couleur en fonction du statut
                 let statusClass = 'secondary';
-                const status = item.status || 'N/A';
                 if (status.toLowerCase() === 'encrypted' || status.toLowerCase() === 'success') {
                     statusClass = 'success';
                 } else if (status.toLowerCase() === 'failed' || status.toLowerCase() === 'error') {
@@ -211,28 +253,63 @@ function updateRecentTable(tableId, items) {
                     statusClass = 'warning';
                 }
                 
+                // Tronquer le nom du fichier s'il est trop long
+                const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
+                
                 tr.innerHTML = `
-                    ${fileNameCell}
+                    <td title="${fileName}">${displayFileName}</td>
                     <td><span class="badge bg-${statusClass}">${status}</span></td>
                     <td>${formattedTime}</td>
                 `;
             } else if (tableId === 'recentMessagesTableBody') {
-                // Afficher le type de message avec un badge coloré
-                let typeClass = 'secondary';
-                if (item.type) {
-                    const type = item.type.toLowerCase();
-                    if (type === 'error') typeClass = 'danger';
-                    else if (type === 'warning') typeClass = 'warning';
-                    else if (type === 'success') typeClass = 'success';
-                    else if (type === 'info') typeClass = 'info';
+                // Extraire le type
+                let type = 'Info';
+                if (item.type) type = item.type;
+                else if (item.category) type = item.category;
+                else if (item.level) type = item.level;
+                else if (item.status) type = item.status;
+                
+                // Ajouter une classe en fonction du type de message
+                const typeClass = type.toLowerCase() === 'error' ? 'danger' :
+                                 type.toLowerCase() === 'warning' ? 'warning' :
+                                 type.toLowerCase() === 'success' ? 'success' :
+                                 'info';
+                
+                tr.classList.add(`table-${typeClass}`);
+                
+                // Extraire le message
+                let message = 'N/A';
+                if (item.message) message = item.message;
+                else if (item.content) message = item.content;
+                else if (item.text) message = item.text;
+                else if (item.data) {
+                    if (typeof item.data === 'string') message = item.data;
+                    else if (typeof item.data === 'object') message = JSON.stringify(item.data);
+                }
+                else if (item.filePath) {
+                    // Si nous avons un chemin de fichier, utiliser cela comme message
+                    message = `Fichier traité: ${item.filePath}`;
+                }
+                
+                // Si le message ressemble à un hash (longue chaîne sans espaces), le remplacer par un message lisible
+                if (typeof message === 'string' && message.length > 30 && !message.includes(' ')) {
+                    // Remplacer par un message plus descriptif basé sur le type
+                    if (type.toLowerCase() === 'error') {
+                        message = 'Erreur détectée lors du traitement du fichier';
+                    } else if (type.toLowerCase() === 'warning') {
+                        message = 'Avertissement: vérification de l\'intégrité recommandée';
+                    } else if (type.toLowerCase() === 'success') {
+                        message = 'Opération terminée avec succès';
+                    } else {
+                        message = 'Message système: traitement en cours';
+                    }
                 }
                 
                 // Tronquer le message s'il est trop long
-                const message = item.message || 'N/A';
                 const displayMessage = message.length > 30 ? message.substring(0, 27) + '...' : message;
                 
                 tr.innerHTML = `
-                    <td><span class="badge bg-${typeClass}">${item.type || 'N/A'}</span></td>
+                    <td><span class="badge bg-${typeClass}">${type}</span></td>
                     <td title="${message}">${displayMessage}</td>
                     <td>${formattedTime}</td>
                 `;
@@ -276,36 +353,63 @@ function updateAlertsTable(tableId, alerts) {
             // Formater la date si elle existe
             let formattedTime = 'N/A';
             try {
-                if (alert.date || alert.timestamp) {
-                    const date = alert.date ? alert.date : alert.timestamp;
-                    formattedTime = new Date(date).toLocaleTimeString();
+                const timestamp = alert.timestamp || alert.date || alert.time || alert.createdAt;
+                if (timestamp) {
+                    const date = new Date(timestamp);
+                    if (!isNaN(date.getTime())) {
+                        formattedTime = date.toLocaleTimeString();
+                    }
                 }
             } catch (error) {
                 console.error('Erreur lors du formatage de la date d\'alerte:', error);
             }
             
+            // Extraire le nom du fichier
+            let fileName = 'N/A';
+            if (alert.file) fileName = alert.file;
+            else if (alert.fileName) fileName = alert.fileName;
+            else if (alert.name) fileName = alert.name;
+            else if (alert.filename) fileName = alert.filename;
+            else if (alert.filePath) {
+                // Extraire le nom du fichier à partir du chemin
+                const pathParts = alert.filePath.split(/[\/\\]/);
+                fileName = pathParts[pathParts.length - 1];
+            }
+            else if (alert.path) {
+                // Extraire le nom du fichier à partir du chemin
+                const pathParts = alert.path.split(/[\/\\]/);
+                fileName = pathParts[pathParts.length - 1];
+            }
+            
+            // Extraire le statut
+            let status = 'N/A';
+            if (alert.status) status = alert.status;
+            else if (alert.state) status = alert.state;
+            else if (alert.result) status = alert.result;
+            else if (alert.type) status = alert.type;
+            
             // Déterminer la classe de statut
             let statusClass = 'secondary';
-            const status = alert.status ? alert.status.toLowerCase() : '';
+            const statusLower = status.toLowerCase();
             
-            if (status === 'error' || status === 'danger') {
+            if (statusLower === 'error' || statusLower === 'danger' || statusLower === 'failed') {
                 statusClass = 'danger';
                 tr.classList.add('table-danger');
-            } else if (status === 'warning') {
+            } else if (statusLower === 'warning') {
                 statusClass = 'warning';
                 tr.classList.add('table-warning');
-            } else if (status === 'success' || status === 'restored') {
+            } else if (statusLower === 'success' || statusLower === 'restored' || statusLower === 'encrypted') {
                 statusClass = 'success';
                 tr.classList.add('table-success');
-            } else if (status === 'info') {
+            } else if (statusLower === 'info') {
                 statusClass = 'info';
                 tr.classList.add('table-info');
             }
             
             tr.innerHTML = `
                 <td>${formattedTime}</td>
-                <td>${alert.file || alert.fileName || 'N/A'}</td>
-                <td><span class="badge bg-${statusClass}">${alert.status || 'N/A'}</span></td>
+                <td>${fileName}</td>
+                <td><span class="badge bg-${statusClass}">${status}</span></td>
             `;
             
             tbody.appendChild(tr);
