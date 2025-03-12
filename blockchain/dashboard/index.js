@@ -187,21 +187,21 @@ async function getStats() {
         const recentHashList = await db.collection('hash')
             .find({})
             .sort({ timestamp: -1 })
-            .limit(5)
+            .limit(20)
             .toArray();
             
         // Récupérer les 5 derniers encrypted
         const recentEncryptedList = await db.collection('encrypted')
             .find({})
             .sort({ timestamp: -1 })
-            .limit(5)
+            .limit(20)
             .toArray();
             
         // Récupérer les 5 derniers messages
         const recentMessages = await db.collection('messages')
             .find({})
             .sort({ timestamp: -1 })
-            .limit(5)
+            .limit(20)
             .toArray();
 
         // Logs détaillés pour comprendre la structure des données
@@ -280,21 +280,21 @@ app.get('/', async (req, res) => {
         const recentHashList = await db.collection('hash')
             .find({})
             .sort({ timestamp: -1 })
-            .limit(5)
+            .limit(20)
             .toArray();
             
         // Récupérer les 5 derniers encrypted
         const recentEncryptedList = await db.collection('encrypted')
             .find({})
             .sort({ timestamp: -1 })
-            .limit(5)
+            .limit(20)
             .toArray();
             
         // Récupérer les 5 derniers messages
         const recentMessages = await db.collection('messages')
             .find({})
             .sort({ timestamp: -1 })
-            .limit(5)
+            .limit(20)
             .toArray();
         
         console.log('Données récupérées pour la page d\'accueil:');

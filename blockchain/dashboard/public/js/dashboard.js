@@ -211,18 +211,31 @@ function updateStats(stats) {
     }
     
     try {
-        // Mise à jour des compteurs
+        // Update counts
         updateElementSafely('totalHashesCount', stats.totalHashes || '0');
         updateElementSafely('totalEncryptedCount', stats.totalEncrypted || '0');
         updateElementSafely('totalMessagesCount', stats.totalMessages || '0');
         
-        // Mise à jour du Topic ID
-        updateElementSafely('topicIdValue', stats.topicId || 'Non disponible');
-        
-        // Mise à jour des taux par heure (au lieu de par minute)
+        // Update rates
         updateElementSafely('hashesPerHour', stats.hashesPerMinute ? (stats.hashesPerMinute * 60).toFixed(0) : '0');
         updateElementSafely('encryptedPerHour', stats.encryptedPerMinute ? (stats.encryptedPerMinute * 60).toFixed(0) : '0');
         updateElementSafely('messagesPerHour', stats.messagesPerMinute ? (stats.messagesPerMinute * 60).toFixed(0) : '0');
+        
+        // Update Topic ID
+        const topicIdValue = document.getElementById('topicIdValue');
+        const topicIdLink = document.getElementById('topicIdLink');
+        
+        if (topicIdValue && topicIdLink) {
+            if (stats.topicId) {
+                topicIdValue.textContent = stats.topicId;
+                topicIdLink.href = `https://hashscan.io/testnet/topic/${stats.topicId}`;
+                topicIdLink.title = `Voir le topic ${stats.topicId} sur HashScan`;
+                topicIdLink.style.display = 'inline-block';
+            } else {
+                topicIdValue.textContent = 'Non disponible';
+                topicIdLink.style.display = 'none';
+            }
+        }
         
         // Mise à jour du badge d'alertes dans la barre de navigation
         const alertsBadge = document.querySelector('.nav-link[href="/alerts"] .badge');
