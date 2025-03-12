@@ -7,13 +7,39 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="/css/style.css" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Script de secours pour les icônes -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Vérifier si les icônes Bootstrap sont chargées correctement
+            setTimeout(function() {
+                const icons = document.querySelectorAll('.bi');
+                icons.forEach(function(icon) {
+                    // Vérifier si l'icône a une largeur/hauteur
+                    const style = window.getComputedStyle(icon);
+                    if (parseInt(style.width) === 0 || parseInt(style.height) === 0) {
+                        console.warn('Icône non chargée correctement:', icon.className);
+                        
+                        // Ajouter une classe pour le style de secours
+                        icon.classList.add('icon-fallback');
+                        
+                        // Ajouter un style inline pour s'assurer que l'icône est visible
+                        icon.style.display = 'inline-block';
+                        icon.style.width = '1em';
+                        icon.style.height = '1em';
+                        icon.style.backgroundColor = 'transparent';
+                    }
+                });
+            }, 1000); // Vérifier après 1 seconde pour laisser le temps aux icônes de se charger
+        });
+    </script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">

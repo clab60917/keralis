@@ -223,6 +223,41 @@ footer {
 /* Styles pour les icônes */
 .bi {
     vertical-align: -0.125em;
+    display: inline-block !important;
+    width: 1em;
+    height: 1em;
+    font-size: inherit;
+    overflow: visible;
+}
+
+/* Styles spécifiques pour certaines icônes */
+.bi-shield-lock-fill,
+.bi-graph-up,
+.bi-hash,
+.bi-lock,
+.bi-chat-dots,
+.bi-link-45deg,
+.bi-activity,
+.bi-cpu,
+.bi-hdd-stack,
+.bi-exclamation-triangle,
+.bi-box-arrow-up-right,
+.bi-speedometer2,
+.bi-person-circle,
+.bi-gear,
+.bi-box-arrow-right,
+.bi-arrow-right {
+    display: inline-block !important;
+}
+
+/* Correction pour les icônes dans les badges */
+.badge .bi {
+    margin-right: 0.25rem;
+}
+
+/* Correction pour les icônes dans les boutons */
+.btn .bi {
+    margin-right: 0.25rem;
 }
 
 /* Styles pour les alertes */
@@ -466,4 +501,44 @@ footer {
     border-radius: 50%;
     background-color: var(--danger-color);
     border: 2px solid #fff;
+}
+
+/* Styles pour les icônes de secours */
+.icon-fallback {
+    position: relative;
+    display: inline-block !important;
+    width: 1em !important;
+    height: 1em !important;
+    background-color: transparent !important;
+    vertical-align: middle;
+}
+
+.icon-fallback::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: currentColor;
+    opacity: 0.5;
+    mask-size: cover;
+    -webkit-mask-size: cover;
+}
+
+/* Masques spécifiques pour les icônes courantes */
+.bi-shield-lock-fill.icon-fallback::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-shield-lock-fill' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-shield-lock-fill' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5z'/%3E%3C/svg%3E");
+}
+
+.bi-graph-up.icon-fallback::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-graph-up' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M0 0h1v15h15v1H0V0Zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07Z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-graph-up' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M0 0h1v15h15v1H0V0Zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07Z'/%3E%3C/svg%3E");
+}
+
+/* Fallback générique pour toutes les autres icônes */
+.icon-fallback:not(.bi-shield-lock-fill):not(.bi-graph-up)::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7'/%3E%3C/svg%3E");
 } 
