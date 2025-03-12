@@ -64,30 +64,45 @@ body {
 }
 
 /* Style pour le lien du Topic ID */
-#topicIdLink {
-  display: inline-flex;
-  align-items: center;
-  transition: all 0.2s ease;
+#topicIdLink, .topic-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+  color: #0d6efd !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  border-bottom: 1px dashed #0d6efd !important;
+  padding-bottom: 1px !important;
+  cursor: pointer !important;
 }
 
-#topicIdLink:hover {
-  text-decoration: underline !important;
+#topicIdLink:hover, .topic-link:hover {
+  text-decoration: none !important;
+  border-bottom: 1px solid #0d6efd !important;
+  color: #0a58ca !important;
 }
 
-#topicIdLink .bi {
-  margin-left: 5px;
-  font-size: 0.8rem;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
+#topicIdLink .bi, .topic-link .bi {
+  margin-left: 5px !important;
+  font-size: 0.8rem !important;
+  opacity: 0.7 !important;
+  transition: opacity 0.2s ease !important;
 }
 
-#topicIdLink:hover .bi {
-  opacity: 1;
+#topicIdLink:hover .bi, .topic-link:hover .bi {
+  opacity: 1 !important;
 }
 
-#topicIdLink.disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+#topicIdLink.disabled, .topic-link.disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  border-bottom: 1px dashed #6c757d !important;
+  color: #6c757d !important;
+}
+
+/* Styles pour le graphique d'activité */
+#activityChart {
+  min-height: 250px;
 }
 
 /* Styles pour le modal */

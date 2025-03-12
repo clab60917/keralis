@@ -13,7 +13,7 @@
                         <p>Hash: <span id="totalHashesCount">0</span> (<span id="hashesPerHour">0</span>/h)</p>
                         <p>Encrypted: <span id="totalEncryptedCount">0</span> (<span id="encryptedPerHour">0</span>/h)</p>
                         <p>Messages: <span id="totalMessagesCount">0</span> (<span id="messagesPerHour">0</span>/h)</p>
-                        <p>Topic ID: <a id="topicIdLink" href="#" target="_blank" class="text-decoration-none"><span id="topicId" class="text-primary">Chargement...</span> <i class="bi bi-box-arrow-up-right text-muted small"></i></a></p>
+                        <p>Topic ID: <a id="topicIdLink" href="#" target="_blank" class="topic-link" rel="noopener noreferrer"><span id="topicIdValue">Chargement...</span><i class="bi bi-box-arrow-up-right ms-1"></i></a></p>
                     </div>
                 </div>
             </div>
@@ -394,4 +394,66 @@
     });
 </script>
 
-<%- include('partials/footer') %> 
+<%- include('partials/footer') %>
+
+<script>
+// Script d'initialisation immédiate pour le lien Topic ID
+(function() {
+    // Fonction pour initialiser le lien Topic ID
+    function initTopicIdLink() {
+        const topicIdLink = document.getElementById('topicIdLink');
+        if (!topicIdLink) {
+            console.warn('Topic ID link element not found');
+            return;
+        }
+        
+        // Appliquer les styles directement
+        topicIdLink.style.display = 'inline-flex';
+        topicIdLink.style.alignItems = 'center';
+        topicIdLink.style.color = '#0d6efd';
+        topicIdLink.style.textDecoration = 'none';
+        topicIdLink.style.fontWeight = '500';
+        topicIdLink.style.borderBottom = '1px dashed #0d6efd';
+        topicIdLink.style.paddingBottom = '1px';
+        topicIdLink.style.cursor = 'pointer';
+        
+        // S'assurer que l'icône est présente et correctement stylisée
+        let icon = topicIdLink.querySelector('.bi');
+        if (!icon) {
+            icon = document.createElement('i');
+            icon.className = 'bi bi-box-arrow-up-right ms-1';
+            topicIdLink.appendChild(icon);
+        }
+        
+        icon.style.fontSize = '0.8rem';
+        icon.style.opacity = '0.7';
+        icon.style.marginLeft = '5px';
+        
+        // Ajouter les événements
+        topicIdLink.addEventListener('mouseover', function() {
+            this.style.borderBottom = '1px solid #0d6efd';
+            this.style.color = '#0a58ca';
+            const icon = this.querySelector('.bi');
+            if (icon) icon.style.opacity = '1';
+        });
+        
+        topicIdLink.addEventListener('mouseout', function() {
+            this.style.borderBottom = '1px dashed #0d6efd';
+            this.style.color = '#0d6efd';
+            const icon = this.querySelector('.bi');
+            if (icon) icon.style.opacity = '0.7';
+        });
+    }
+    
+    // Exécuter immédiatement
+    initTopicIdLink();
+    
+    // Réexécuter après un court délai pour s'assurer que les styles sont appliqués
+    setTimeout(initTopicIdLink, 500);
+    
+    // Réexécuter lorsque le DOM est complètement chargé
+    document.addEventListener('DOMContentLoaded', initTopicIdLink);
+})();
+</script>
+</body>
+</html> 

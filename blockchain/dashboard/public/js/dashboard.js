@@ -6,7 +6,8 @@ let chartData = {
     labels: [],
     hashesData: [],
     encryptedData: [],
-    messagesData: []
+    messagesData: [],
+    timestamps: []  // Ajout d'un tableau pour stocker les timestamps
 };
 const MAX_DATA_POINTS = 20; // Nombre maximum de points de données à afficher
 
@@ -79,7 +80,9 @@ function initActivityChart() {
                     borderColor: 'rgba(75, 192, 192, 1)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                     tension: 0.4,
-                    fill: true
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'Encrypted',
@@ -87,7 +90,9 @@ function initActivityChart() {
                     borderColor: 'rgba(153, 102, 255, 1)',
                     backgroundColor: 'rgba(153, 102, 255, 0.2)',
                     tension: 0.4,
-                    fill: true
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'Messages',
@@ -95,7 +100,9 @@ function initActivityChart() {
                     borderColor: 'rgba(255, 159, 64, 1)',
                     backgroundColor: 'rgba(255, 159, 64, 0.2)',
                     tension: 0.4,
-                    fill: true
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
             ]
         },
@@ -113,23 +120,52 @@ function initActivityChart() {
                 x: {
                     title: {
                         display: true,
-                        text: 'Heure'
+                        text: 'Heure (20 derniers envois)'
                     }
                 }
             },
             plugins: {
+                title: {
+                    display: true,
+                    text: 'Activité des 20 derniers envois',
+                    font: {
+                        size: 16
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 20
+                    }
+                },
                 legend: {
                     position: 'top',
                 },
                 tooltip: {
                     mode: 'index',
-                    intersect: false
+                    intersect: false,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            return tooltipItems[0].label;
+                        },
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y;
+                            }
+                            return label;
+                        }
+                    }
                 }
             },
             interaction: {
                 mode: 'nearest',
                 axis: 'x',
                 intersect: false
+            },
+            animation: {
+                duration: 500
             }
         }
     });
@@ -144,32 +180,47 @@ function updateActivityChart(stats) {
         return;
     }
     
-    // Ajouter l'heure actuelle comme étiquette
+    // Obtenir le timestamp actuel
     const now = new Date();
     const timeLabel = now.toLocaleTimeString();
     
-    // Ajouter les nouvelles données
-    chartData.labels.push(timeLabel);
-    chartData.hashesData.push(stats.totalHashes || 0);
-    chartData.encryptedData.push(stats.totalEncrypted || 0);
-    chartData.messagesData.push(stats.totalMessages || 0);
+    // Vérifier si nous avons de nouvelles données à ajouter
+    const hasNewData = 
+        (stats.totalHashes !== chartData.hashesData[chartData.hashesData.length - 1]) ||
+        (stats.totalEncrypted !== chartData.encryptedData[chartData.encryptedData.length - 1]) ||
+        (stats.totalMessages !== chartData.messagesData[chartData.messagesData.length - 1]);
     
-    // Limiter le nombre de points de données
-    if (chartData.labels.length > MAX_DATA_POINTS) {
-        chartData.labels.shift();
-        chartData.hashesData.shift();
-        chartData.encryptedData.shift();
-        chartData.messagesData.shift();
+    // N'ajouter des données que si elles sont différentes des dernières données
+    if (hasNewData || chartData.labels.length === 0) {
+        // Ajouter les nouvelles données
+        chartData.labels.push(timeLabel);
+        chartData.timestamps.push(now.getTime());
+        chartData.hashesData.push(stats.totalHashes || 0);
+        chartData.encryptedData.push(stats.totalEncrypted || 0);
+        chartData.messagesData.push(stats.totalMessages || 0);
+        
+        // Limiter le nombre de points de données
+        if (chartData.labels.length > MAX_DATA_POINTS) {
+            chartData.labels.shift();
+            chartData.timestamps.shift();
+            chartData.hashesData.shift();
+            chartData.encryptedData.shift();
+            chartData.messagesData.shift();
+        }
+        
+        // Mettre à jour le graphique
+        activityChart.data.labels = chartData.labels;
+        activityChart.data.datasets[0].data = chartData.hashesData;
+        activityChart.data.datasets[1].data = chartData.encryptedData;
+        activityChart.data.datasets[2].data = chartData.messagesData;
+        
+        // Redessiner le graphique
+        activityChart.update();
+        
+        console.log('Graphique d\'activité mis à jour avec de nouvelles données');
+    } else {
+        console.log('Pas de nouvelles données pour le graphique d\'activité');
     }
-    
-    // Mettre à jour le graphique
-    activityChart.data.labels = chartData.labels;
-    activityChart.data.datasets[0].data = chartData.hashesData;
-    activityChart.data.datasets[1].data = chartData.encryptedData;
-    activityChart.data.datasets[2].data = chartData.messagesData;
-    
-    // Redessiner le graphique
-    activityChart.update();
 }
 
 // Fonction pour mettre à jour les statistiques
@@ -179,8 +230,6 @@ function updateStats(stats) {
         return;
     }
     
-    console.log("Mise à jour des statistiques:", stats);
-    
     try {
         // Mise à jour des compteurs
         updateElementSafely('totalHashesCount', stats.totalHashes || '0');
@@ -188,7 +237,7 @@ function updateStats(stats) {
         updateElementSafely('totalMessagesCount', stats.totalMessages || '0');
         
         // Mise à jour du Topic ID
-        updateElementSafely('topicId', stats.topicId || 'Non disponible');
+        updateElementSafely('topicIdValue', stats.topicId || 'Non disponible');
         
         // Mise à jour des taux par heure (au lieu de par minute)
         updateElementSafely('hashesPerHour', stats.hashesPerMinute ? (stats.hashesPerMinute * 60).toFixed(0) : '0');
@@ -209,24 +258,15 @@ function updateStats(stats) {
         
         // Mise à jour des tableaux récents
         if (stats.recentHashList && Array.isArray(stats.recentHashList)) {
-            console.log('Mise à jour du tableau des hash récents:', stats.recentHashList);
             updateRecentTable('recentHashTableBody', stats.recentHashList);
-        } else {
-            console.warn('Aucune donnée de hash récente disponible');
         }
         
         if (stats.recentEncryptedList && Array.isArray(stats.recentEncryptedList)) {
-            console.log('Mise à jour du tableau des encrypted récents:', stats.recentEncryptedList);
             updateRecentTable('recentEncryptedTableBody', stats.recentEncryptedList);
-        } else {
-            console.warn('Aucune donnée encrypted récente disponible');
         }
         
         if (stats.recentMessages && Array.isArray(stats.recentMessages)) {
-            console.log('Mise à jour du tableau des messages récents:', stats.recentMessages);
             updateRecentTable('recentMessagesTableBody', stats.recentMessages);
-        } else {
-            console.warn('Aucun message récent disponible');
         }
         
         // Mise à jour des alertes
@@ -238,8 +278,6 @@ function updateStats(stats) {
         const cpuUsage = typeof stats.cpuUsage === 'number' ? stats.cpuUsage : 0;
         const memoryUsage = typeof stats.memoryUsage === 'number' ? stats.memoryUsage : 0;
         const diskUsage = typeof stats.diskUsage === 'number' ? stats.diskUsage : 0;
-        
-        console.log("Valeurs système à afficher:", { cpuUsage, memoryUsage, diskUsage });
         
         // Mise à jour des barres de progression
         updateSystemStatus('cpuStatus', cpuUsage);
@@ -258,39 +296,55 @@ function updateStats(stats) {
     }
 }
 
-// Fonction pour mettre à jour un élément du DOM en toute sécurité
+// Fonction pour mettre à jour un élément en toute sécurité
 function updateElementSafely(id, value) {
-    const element = document.getElementById(id);
-    if (element) {
-        // Si l'élément est un lien ou est à l'intérieur d'un lien, mettre à jour le texte
-        if (element.tagName === 'A' || element.closest('a')) {
-            element.textContent = value;
+    try {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.warn(`Élément avec ID '${id}' non trouvé dans le DOM`);
+            return;
+        }
+
+        // Si l'élément est le Topic ID, traitement spécial
+        if (id === 'topicId' || id === 'topicIdValue') {
+            // Mettre à jour le texte de l'élément
+            element.textContent = value || 'N/A';
             
-            // Si l'élément est le Topic ID, mettre à jour également le lien
-            if (id === 'topicId') {
-                const link = element.tagName === 'A' ? element : element.closest('a');
-                if (link && value && value !== 'Non disponible') {
-                    // Vérifier si le Topic ID est au format valide (0.0.XXXXXXX)
-                    if (/^0\.0\.\d+$/.test(value)) {
-                        link.href = `https://hashscan.io/testnet/topic/${value}`;
-                        link.title = `Voir les transactions sur HashScan pour le topic ${value}`;
-                        link.classList.remove('disabled');
-                    } else {
-                        link.href = '#';
-                        link.title = 'Format de Topic ID non valide pour HashScan';
-                        link.classList.add('disabled');
-                    }
-                } else if (link) {
-                    link.href = '#';
+            // Mettre à jour le lien parent
+            const link = document.getElementById('topicIdLink');
+            if (link) {
+                // Vérifier si le Topic ID est au format valide (0.0.XXXXXXX)
+                if (value && /^0\.0\.\d+$/.test(value)) {
+                    link.href = `https://hashscan.io/testnet/topic/${value}`;
+                    link.title = `Voir le Topic ${value} sur HashScan`;
+                    link.classList.remove('disabled');
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    console.log(`Topic ID link updated: ${value}`);
+                } else {
+                    link.removeAttribute('href');
                     link.title = 'Topic ID non disponible';
                     link.classList.add('disabled');
+                    console.log(`Invalid Topic ID format or value not available: ${value}`);
                 }
+                
+                // S'assurer que l'icône est présente
+                if (!link.querySelector('.bi')) {
+                    const icon = document.createElement('i');
+                    icon.className = 'bi bi-box-arrow-up-right ms-1';
+                    icon.style.fontSize = '0.8rem';
+                    icon.style.opacity = '0.7';
+                    link.appendChild(icon);
+                }
+            } else {
+                console.warn('Topic ID link element not found');
             }
         } else {
-            element.textContent = value;
+            // Pour tous les autres éléments, mise à jour simple du texte
+            element.textContent = value || 'N/A';
         }
-    } else {
-        console.warn(`Élément avec ID '${id}' non trouvé dans le DOM`);
+    } catch (error) {
+        console.error(`Error updating element ${id}:`, error);
     }
 }
 
@@ -309,6 +363,7 @@ function updateRecentTable(tableId, items) {
     const tbody = document.getElementById(tableId);
     if (!tbody) {
         console.warn(`Élément avec ID '${tableId}' non trouvé dans le DOM`);
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center">Aucune donnée disponible</td></tr>';
         return;
     }
     
