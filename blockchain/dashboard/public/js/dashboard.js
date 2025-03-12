@@ -60,11 +60,10 @@ function updateStats(stats) {
         document.getElementById('hashesPerHour').textContent = stats.hashesPerMinute ? (stats.hashesPerMinute * 60).toFixed(2) : '0';
         document.getElementById('encryptedPerHour').textContent = stats.encryptedPerMinute ? (stats.encryptedPerMinute * 60).toFixed(2) : '0';
         document.getElementById('messagesPerHour').textContent = stats.messagesPerMinute ? (stats.messagesPerMinute * 60).toFixed(2) : '0';
-        const recentHashArray = Object.values(stats.recentHash);
-
+        
         // Mise à jour des tableaux récents
         if (stats.recentHashList && Array.isArray(stats.recentHashList)) {
-            updateRecentTable('recentHashTableBody', recentHashArray);
+            updateRecentTable('recentHashTableBody', Object.values(stats.recentHashList));
         }
         
         if (stats.recentEncryptedList && Array.isArray(stats.recentEncryptedList)) {
