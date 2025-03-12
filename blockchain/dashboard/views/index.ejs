@@ -68,7 +68,29 @@
                                     </tr>
                                 </thead>
                                 <tbody id="alertsTableBody">
-                                    <!-- Les alertes seront injectées ici via JavaScript -->
+                                    <% if (alerts && alerts.length > 0) { %>
+                                        <% alerts.forEach(function(alert) { %>
+                                            <tr class="<%= alert.status && alert.status.toLowerCase() === 'error' ? 'table-danger' : 
+                                                        alert.status && alert.status.toLowerCase() === 'warning' ? 'table-warning' : 
+                                                        alert.status && (alert.status.toLowerCase() === 'success' || alert.status.toLowerCase() === 'restored') ? 'table-success' : 
+                                                        alert.status && alert.status.toLowerCase() === 'info' ? 'table-info' : '' %>">
+                                                <td><%= new Date(alert.timestamp || alert.date || Date.now()).toLocaleTimeString() %></td>
+                                                <td><%= alert.file || alert.fileName || 'N/A' %></td>
+                                                <td>
+                                                    <span class="badge bg-<%= alert.status && alert.status.toLowerCase() === 'error' ? 'danger' : 
+                                                                            alert.status && alert.status.toLowerCase() === 'warning' ? 'warning' : 
+                                                                            alert.status && (alert.status.toLowerCase() === 'success' || alert.status.toLowerCase() === 'restored') ? 'success' : 
+                                                                            alert.status && alert.status.toLowerCase() === 'info' ? 'info' : 'secondary' %>">
+                                                        <%= alert.status || 'N/A' %>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="3" class="text-center">Aucune alerte disponible</td>
+                                        </tr>
+                                    <% } %>
                                 </tbody>
                             </table>
                         </div>
@@ -95,7 +117,49 @@
                                     <th>Temps</th>
                                 </tr>
                             </thead>
-                            <tbody id="recentHashTableBody"></tbody>
+                            <tbody id="recentHashTableBody">
+                                <% if (recentHashList && recentHashList.length > 0) { %>
+                                    <% recentHashList.forEach(function(item) { %>
+                                        <tr>
+                                            <% 
+                                            // Déterminer le nom du fichier
+                                            let fileName = 'N/A';
+                                            if (item.fileName) fileName = item.fileName;
+                                            else if (item.file) fileName = item.file;
+                                            else if (item.name) fileName = item.name;
+                                            else if (item.filename) fileName = item.filename;
+                                            else if (item.path) {
+                                                const pathParts = item.path.split(/[\/\\]/);
+                                                fileName = pathParts[pathParts.length - 1];
+                                            }
+                                            
+                                            // S'assurer que le nom du fichier a l'extension .hash si ce n'est pas déjà le cas
+                                            if (fileName !== 'N/A' && !fileName.toLowerCase().endsWith('.hash')) {
+                                                fileName = fileName + '.hash';
+                                            }
+                                            
+                                            // Déterminer le hash
+                                            let hash = 'N/A';
+                                            if (item.hash) hash = item.hash;
+                                            else if (item.hashValue) hash = item.hashValue;
+                                            else if (item.value) hash = item.value;
+                                            else if (item.digest) hash = item.digest;
+                                            
+                                            // Tronquer le nom du fichier et le hash s'ils sont trop longs
+                                            const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
+                                            const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
+                                            %>
+                                            <td title="<%= fileName %>"><%= displayFileName %></td>
+                                            <td><small title="<%= hash %>"><%= displayHash %></small></td>
+                                            <td><%= new Date(item.timestamp || item.date || item.time || item.createdAt || Date.now()).toLocaleTimeString() %></td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="3" class="text-center">Aucun hash disponible</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -117,7 +181,57 @@
                                     <th>Temps</th>
                                 </tr>
                             </thead>
-                            <tbody id="recentEncryptedTableBody"></tbody>
+                            <tbody id="recentEncryptedTableBody">
+                                <% if (recentEncryptedList && recentEncryptedList.length > 0) { %>
+                                    <% recentEncryptedList.forEach(function(item) { %>
+                                        <tr>
+                                            <% 
+                                            // Déterminer le nom du fichier
+                                            let fileName = 'N/A';
+                                            if (item.fileName) fileName = item.fileName;
+                                            else if (item.file) fileName = item.file;
+                                            else if (item.name) fileName = item.name;
+                                            else if (item.filename) fileName = item.filename;
+                                            else if (item.path) {
+                                                const pathParts = item.path.split(/[\/\\]/);
+                                                fileName = pathParts[pathParts.length - 1];
+                                            }
+                                            
+                                            // S'assurer que le nom du fichier a l'extension .enc si ce n'est pas déjà le cas
+                                            if (fileName !== 'N/A' && !fileName.toLowerCase().endsWith('.enc')) {
+                                                fileName = fileName + '.enc';
+                                            }
+                                            
+                                            // Déterminer le statut
+                                            let status = 'N/A';
+                                            if (item.status) status = item.status;
+                                            else if (item.state) status = item.state;
+                                            else if (item.result) status = item.result;
+                                            
+                                            // Déterminer la classe de couleur en fonction du statut
+                                            let statusClass = 'secondary';
+                                            if (status.toLowerCase() === 'encrypted' || status.toLowerCase() === 'success') {
+                                                statusClass = 'success';
+                                            } else if (status.toLowerCase() === 'failed' || status.toLowerCase() === 'error') {
+                                                statusClass = 'danger';
+                                            } else if (status.toLowerCase() === 'pending' || status.toLowerCase() === 'processing') {
+                                                statusClass = 'warning';
+                                            }
+                                            
+                                            // Tronquer le nom du fichier s'il est trop long
+                                            const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
+                                            %>
+                                            <td title="<%= fileName %>"><%= displayFileName %></td>
+                                            <td><span class="badge bg-<%= statusClass %>"><%= status %></span></td>
+                                            <td><%= new Date(item.timestamp || item.date || item.time || item.createdAt || Date.now()).toLocaleTimeString() %></td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="3" class="text-center">Aucune donnée encrypted disponible</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -139,7 +253,62 @@
                                     <th>Temps</th>
                                 </tr>
                             </thead>
-                            <tbody id="recentMessagesTableBody"></tbody>
+                            <tbody id="recentMessagesTableBody">
+                                <% if (recentMessages && recentMessages.length > 0) { %>
+                                    <% recentMessages.forEach(function(item) { %>
+                                        <% 
+                                        // Déterminer le type
+                                        let type = 'Info';
+                                        if (item.type) type = item.type;
+                                        else if (item.category) type = item.category;
+                                        else if (item.level) type = item.level;
+                                        
+                                        // Déterminer la classe de couleur en fonction du type
+                                        let typeClass = 'secondary';
+                                        if (type.toLowerCase() === 'error') typeClass = 'danger';
+                                        else if (type.toLowerCase() === 'warning') typeClass = 'warning';
+                                        else if (type.toLowerCase() === 'success') typeClass = 'success';
+                                        else if (type.toLowerCase() === 'info') typeClass = 'info';
+                                        
+                                        // Déterminer le message
+                                        let message = 'N/A';
+                                        if (item.message) message = item.message;
+                                        else if (item.content) message = item.content;
+                                        else if (item.text) message = item.text;
+                                        else if (item.data) {
+                                            if (typeof item.data === 'string') message = item.data;
+                                            else if (typeof item.data === 'object') message = JSON.stringify(item.data);
+                                        }
+                                        
+                                        // Si le message ressemble à un hash (longue chaîne sans espaces), le remplacer par un message lisible
+                                        if (typeof message === 'string' && message.length > 30 && !message.includes(' ')) {
+                                            // Remplacer par un message plus descriptif basé sur le type
+                                            if (type.toLowerCase() === 'error') {
+                                                message = 'Erreur détectée lors du traitement du fichier';
+                                            } else if (type.toLowerCase() === 'warning') {
+                                                message = 'Avertissement: vérification de l\'intégrité recommandée';
+                                            } else if (type.toLowerCase() === 'success') {
+                                                message = 'Opération terminée avec succès';
+                                            } else {
+                                                message = 'Message système: traitement en cours';
+                                            }
+                                        }
+                                        
+                                        // Tronquer le message s'il est trop long
+                                        const displayMessage = message.length > 30 ? message.substring(0, 27) + '...' : message;
+                                        %>
+                                        <tr class="table-<%= typeClass === 'danger' ? 'danger' : typeClass === 'warning' ? 'warning' : typeClass === 'success' ? 'success' : typeClass === 'info' ? 'info' : '' %>">
+                                            <td><span class="badge bg-<%= typeClass %>"><%= type %></span></td>
+                                            <td title="<%= message %>"><%= displayMessage %></td>
+                                            <td><%= new Date(item.timestamp || item.date || item.time || item.createdAt || Date.now()).toLocaleTimeString() %></td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="3" class="text-center">Aucun message disponible</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -147,5 +316,40 @@
         </div>
     </div>
 </div>
+
+<!-- Script d'initialisation pour les performances système -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser les barres de progression du système
+        const initSystemStatus = function(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            // Valeur par défaut si non définie ou non numérique
+            const numericValue = typeof value === 'number' && !isNaN(value) ? value : 0;
+            
+            // Définir la largeur de la barre de progression (minimum 5% pour la visibilité)
+            const displayWidth = Math.max(5, numericValue);
+            element.style.width = `${displayWidth}%`;
+            
+            // Ajouter la classe appropriée en fonction de la valeur
+            if (typeof value !== 'number' || isNaN(value)) {
+                element.classList.add('bg-secondary');
+            } else if (value < 70) {
+                element.classList.add('bg-success');
+            } else if (value < 90) {
+                element.classList.add('bg-warning');
+            } else {
+                element.classList.add('bg-danger');
+            }
+        };
+        
+        // Initialiser les barres de progression avec des valeurs par défaut
+        // Ces valeurs seront remplacées par les vraies valeurs via Socket.IO
+        initSystemStatus('cpuStatus', 0);
+        initSystemStatus('memoryStatus', 0);
+        initSystemStatus('diskStatus', 0);
+    });
+</script>
 
 <%- include('partials/footer') %> 

@@ -162,201 +162,32 @@ async function getStats() {
         };
 
         // Obtenir les 5 derniers messages de chaque collection
-        let recentHashList = [];
-        let recentEncryptedList = [];
-        let recentMessages = [];
-        let recentAlerts = [];
-        
-        try {
-            // Récupérer les hash récents avec une projection pour limiter les champs
-            recentHashList = await db.collection('hash')
-                .find({})
-                .sort({ timestamp: -1 })
-                .limit(5)
-                .project({ fileName: 1, hash: 1, timestamp: 1, file: 1, name: 1, filename: 1, path: 1, _id: 0 })
-                .toArray();
-                
-            console.log('Hash récents récupérés:', recentHashList);
-        } catch (error) {
-            console.error('Erreur lors de la récupération des hash récents:', error);
-        }
-        
-        try {
-            // Récupérer les encrypted récents avec une projection pour limiter les champs
-            recentEncryptedList = await db.collection('encrypted')
-                .find({})
-                .sort({ timestamp: -1 })
-                .limit(5)
-                .project({ fileName: 1, status: 1, timestamp: 1, file: 1, name: 1, filename: 1, path: 1, _id: 0 })
-                .toArray();
-                
-            console.log('Encrypted récents récupérés:', recentEncryptedList);
-        } catch (error) {
-            console.error('Erreur lors de la récupération des encrypted récents:', error);
-        }
-        
-        try {
-            // Récupérer les messages récents avec une projection pour limiter les champs
-            recentMessages = await db.collection('messages')
-                .find({})
-                .sort({ timestamp: -1 })
-                .limit(5)
-                .project({ type: 1, message: 1, timestamp: 1, content: 1, text: 1, data: 1, _id: 0 })
-                .toArray();
-                
-            console.log('Messages récents récupérés:', recentMessages);
-        } catch (error) {
-            console.error('Erreur lors de la récupération des messages récents:', error);
-        }
-        
-        try {
-            recentAlerts = await db.collection('alerts')
-                .find({})
-                .sort({ timestamp: -1 })
-                .limit(5)
-                .toArray();
-        } catch (error) {
-            console.error('Erreur lors de la récupération des alertes récentes:', error);
-        }
+        // Récupérer les 5 derniers hash
+        const recentHashList = await db.collection('hash')
+            .find({})
+            .sort({ timestamp: -1 })
+            .limit(5)
+            .toArray();
+            
+        // Récupérer les 5 derniers encrypted
+        const recentEncryptedList = await db.collection('encrypted')
+            .find({})
+            .sort({ timestamp: -1 })
+            .limit(5)
+            .toArray();
+            
+        // Récupérer les 5 derniers messages
+        const recentMessages = await db.collection('messages')
+            .find({})
+            .sort({ timestamp: -1 })
+            .limit(5)
+            .toArray();
 
         // Logs détaillés pour comprendre la structure des données
         console.log('Structure des données récupérées:');
         console.log('recentHashList (premier élément):', recentHashList.length > 0 ? JSON.stringify(recentHashList[0]) : 'aucun élément');
         console.log('recentEncryptedList (premier élément):', recentEncryptedList.length > 0 ? JSON.stringify(recentEncryptedList[0]) : 'aucun élément');
         console.log('recentMessages (premier élément):', recentMessages.length > 0 ? JSON.stringify(recentMessages[0]) : 'aucun élément');
-
-        // Normaliser les données pour s'assurer qu'elles ont la bonne structure
-        let normalizedHashList = Array.isArray(recentHashList) ? recentHashList.map(item => {
-            // Analyser la structure de l'élément pour extraire les bonnes informations
-            console.log('Normalisation d\'un élément hash:', JSON.stringify(item));
-            
-            // Rechercher les champs possibles pour le nom de fichier
-            let fileName = 'N/A';
-            if (item.fileName) fileName = item.fileName;
-            else if (item.file) fileName = item.file;
-            else if (item.name) fileName = item.name;
-            else if (item.filename) fileName = item.filename;
-            else if (item.path) {
-                // Extraire le nom du fichier à partir du chemin
-                const pathParts = item.path.split(/[\/\\]/);
-                fileName = pathParts[pathParts.length - 1];
-            }
-            
-            // S'assurer que le nom du fichier a l'extension .hash si ce n'est pas déjà le cas
-            if (fileName !== 'N/A' && !fileName.toLowerCase().endsWith('.hash')) {
-                fileName = fileName + '.hash';
-            }
-            
-            // Rechercher les champs possibles pour le hash
-            let hash = 'N/A';
-            if (item.hash) hash = item.hash;
-            else if (item.hashValue) hash = item.hashValue;
-            else if (item.value) hash = item.value;
-            else if (item.digest) hash = item.digest;
-            
-            // Rechercher les champs possibles pour l'horodatage
-            let timestamp = Date.now();
-            if (item.timestamp) timestamp = item.timestamp;
-            else if (item.date) timestamp = item.date;
-            else if (item.time) timestamp = item.time;
-            else if (item.createdAt) timestamp = item.createdAt;
-            
-            return {
-                fileName: fileName,
-                hash: hash,
-                timestamp: timestamp
-            };
-        }) : [];
-
-        let normalizedEncryptedList = Array.isArray(recentEncryptedList) ? recentEncryptedList.map(item => {
-            // Analyser la structure de l'élément pour extraire les bonnes informations
-            console.log('Normalisation d\'un élément encrypted:', JSON.stringify(item));
-            
-            // Rechercher les champs possibles pour le nom de fichier
-            let fileName = 'N/A';
-            if (item.fileName) fileName = item.fileName;
-            else if (item.file) fileName = item.file;
-            else if (item.name) fileName = item.name;
-            else if (item.filename) fileName = item.filename;
-            else if (item.path) {
-                // Extraire le nom du fichier à partir du chemin
-                const pathParts = item.path.split(/[\/\\]/);
-                fileName = pathParts[pathParts.length - 1];
-            }
-            
-            // S'assurer que le nom du fichier a l'extension .enc si ce n'est pas déjà le cas
-            if (fileName !== 'N/A' && !fileName.toLowerCase().endsWith('.enc')) {
-                fileName = fileName + '.enc';
-            }
-            
-            // Rechercher les champs possibles pour le statut
-            let status = 'N/A';
-            if (item.status) status = item.status;
-            else if (item.state) status = item.state;
-            else if (item.result) status = item.result;
-            
-            // Rechercher les champs possibles pour l'horodatage
-            let timestamp = Date.now();
-            if (item.timestamp) timestamp = item.timestamp;
-            else if (item.date) timestamp = item.date;
-            else if (item.time) timestamp = item.time;
-            else if (item.createdAt) timestamp = item.createdAt;
-            
-            return {
-                fileName: fileName,
-                status: status,
-                timestamp: timestamp
-            };
-        }) : [];
-
-        // Pour les messages, vérifier si le message est un hash (chaîne longue sans espaces) et le remplacer par un message lisible
-        let normalizedMessagesList = Array.isArray(recentMessages) ? recentMessages.map(item => {
-            // Analyser la structure de l'élément pour extraire les bonnes informations
-            console.log('Normalisation d\'un élément message:', JSON.stringify(item));
-            
-            // Rechercher les champs possibles pour le type
-            let type = 'Info';
-            if (item.type) type = item.type;
-            else if (item.category) type = item.category;
-            else if (item.level) type = item.level;
-            
-            // Rechercher les champs possibles pour le message
-            let message = 'N/A';
-            if (item.message) message = item.message;
-            else if (item.content) message = item.content;
-            else if (item.text) message = item.text;
-            else if (item.data) {
-                if (typeof item.data === 'string') message = item.data;
-                else if (typeof item.data === 'object') message = JSON.stringify(item.data);
-            }
-            
-            // Si le message ressemble à un hash (longue chaîne sans espaces), le remplacer par un message lisible
-            if (typeof message === 'string' && message.length > 30 && !message.includes(' ')) {
-                // Remplacer par un message plus descriptif basé sur le type
-                if (type.toLowerCase() === 'error') {
-                    message = 'Erreur détectée lors du traitement du fichier';
-                } else if (type.toLowerCase() === 'warning') {
-                    message = 'Avertissement: vérification de l\'intégrité recommandée';
-                } else if (type.toLowerCase() === 'success') {
-                    message = 'Opération terminée avec succès';
-                } else {
-                    message = 'Message système: traitement en cours';
-                }
-            }
-            
-            // Rechercher les champs possibles pour l'horodatage
-            let timestamp = Date.now();
-            if (item.timestamp) timestamp = item.timestamp;
-            else if (item.date) timestamp = item.date;
-            else if (item.time) timestamp = item.time;
-            else if (item.createdAt) timestamp = item.createdAt;
-            
-            return {
-                type: type,
-                message: message,
-                timestamp: timestamp
-            };
-        }) : [];
 
         // Créer l'objet stats dans le format attendu par le client
         const stats = {
@@ -369,20 +200,20 @@ async function getStats() {
             cpuUsage: cpuUsage,
             memoryUsage: memoryUsage,
             diskUsage: diskUsage,
-            recentHashList: normalizedHashList,
-            recentEncryptedList: normalizedEncryptedList,
-            recentMessages: normalizedMessagesList,
-            alerts: recentAlerts
+            recentHashList: recentHashList,
+            recentEncryptedList: recentEncryptedList,
+            recentMessages: recentMessages,
+            alerts: alerts
         };
 
         console.log('Statistiques récupérées:', {
             totalHashes: stats.totalHashes,
             totalEncrypted: stats.totalEncrypted,
             totalMessages: stats.totalMessages,
-            recentHashCount: normalizedHashList.length,
-            recentEncryptedCount: normalizedEncryptedList.length,
-            recentMessagesCount: normalizedMessagesList.length,
-            alertsCount: recentAlerts.length,
+            recentHashCount: recentHashList.length,
+            recentEncryptedCount: recentEncryptedList.length,
+            recentMessagesCount: recentMessages.length,
+            alertsCount: alerts.length,
             systemStatus: systemStats ? 'OK' : 'Error',
             cpuUsage,
             memoryUsage,
@@ -405,11 +236,52 @@ async function getStats() {
 // Routes
 app.get('/', async (req, res) => {
     try {
-        const stats = await getStats();
+        // Récupérer les données directement ici plutôt que de s'appuyer sur getStats
+        const db = mongoClient.db(process.env.MONGODB_DB_NAME);
+        
+        // Récupérer les 5 dernières alertes
+        const alerts = await db.collection('alerts')
+            .find({})
+            .sort({ timestamp: -1 })
+            .limit(5)
+            .toArray();
+            
+        // Récupérer les 5 derniers hash
+        const recentHashList = await db.collection('hash')
+            .find({})
+            .sort({ timestamp: -1 })
+            .limit(5)
+            .toArray();
+            
+        // Récupérer les 5 derniers encrypted
+        const recentEncryptedList = await db.collection('encrypted')
+            .find({})
+            .sort({ timestamp: -1 })
+            .limit(5)
+            .toArray();
+            
+        // Récupérer les 5 derniers messages
+        const recentMessages = await db.collection('messages')
+            .find({})
+            .sort({ timestamp: -1 })
+            .limit(5)
+            .toArray();
+        
+        console.log('Données récupérées pour la page d\'accueil:');
+        console.log('- Alertes:', alerts.length);
+        console.log('- Hash:', recentHashList.length);
+        console.log('- Encrypted:', recentEncryptedList.length);
+        console.log('- Messages:', recentMessages.length);
+        
+        // Passer les données directement au template
         res.render('index', {
             title: 'Dashboard',
             active: 'home',
-            user: { username: req.auth.user }
+            user: { username: req.auth.user },
+            alerts: alerts,
+            recentHashList: recentHashList,
+            recentEncryptedList: recentEncryptedList,
+            recentMessages: recentMessages
         });
     } catch (error) {
         console.error('Erreur lors du rendu de la page d\'accueil:', error);
