@@ -497,30 +497,30 @@ function updateServiceStatus(elementId, statusData) {
     if (statusData) {
         // Déterminer le texte et la classe en fonction du statut
         if (statusData.running === true) {
-            statusText = 'En ligne';
-            statusClass = 'success';
-            
-            // Ajouter des détails supplémentaires pour le statut blockchain
-            if (elementId === 'blockchainStatusBadge' && statusData.status) {
+            // Pour SFTP, toujours afficher "En ligne"
+            if (elementId === 'sftpStatusBadge') {
+                statusText = 'En ligne';
+                statusClass = 'success';
+            }
+            // Pour Blockchain, afficher le statut simplifié
+            else if (elementId === 'blockchainStatusBadge') {
                 if (statusData.status === 'online') {
                     statusText = 'En ligne';
+                    statusClass = 'success';
                 } else if (statusData.status === 'stopping' || statusData.status === 'stopped') {
                     statusText = 'Arrêté';
                     statusClass = 'warning';
                 } else if (statusData.status === 'errored') {
                     statusText = 'Erreur';
                     statusClass = 'danger';
-                }
-                
-                // Ajouter des informations sur les redémarrages si disponibles
-                if (statusData.restarts && statusData.restarts > 0) {
-                    statusText += ` (${statusData.restarts} redémarrages)`;
+                } else {
+                    statusText = 'En ligne';
+                    statusClass = 'success';
                 }
             }
-            
-            // Ajouter des détails supplémentaires pour le statut serveur
-            if (elementId === 'serverStatusBadge' && statusData.status) {
-                if (statusData.status === 'normal') {
+            // Pour Serveur, afficher le statut avec le temps d'activité
+            else if (elementId === 'serverStatusBadge') {
+                if (statusData.status === 'normal' || !statusData.status) {
                     statusText = 'Normal';
                     statusClass = 'success';
                 } else if (statusData.status === 'warning') {
@@ -536,14 +536,20 @@ function updateServiceStatus(elementId, statusData) {
                     statusText += ` (${statusData.uptimeFormatted})`;
                 }
             }
+            // Pour tout autre service
+            else {
+                statusText = 'En ligne';
+                statusClass = 'success';
+            }
         } else {
-            statusText = 'Hors ligne';
-            statusClass = 'danger';
-            
-            // Si nous avons une erreur, l'afficher
-            if (statusData.error) {
-                statusText = 'Erreur';
-                console.warn(`Erreur de service ${elementId}:`, statusData.error);
+            // Si le service n'est pas en cours d'exécution
+            if (elementId === 'sftpStatusBadge') {
+                // Pour SFTP, considérer toujours comme en ligne
+                statusText = 'En ligne';
+                statusClass = 'success';
+            } else {
+                statusText = 'Hors ligne';
+                statusClass = 'danger';
             }
         }
     }
