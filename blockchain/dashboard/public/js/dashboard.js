@@ -262,7 +262,33 @@ function updateStats(stats) {
 function updateElementSafely(id, value) {
     const element = document.getElementById(id);
     if (element) {
-        element.textContent = value;
+        // Si l'élément est un lien ou est à l'intérieur d'un lien, mettre à jour le texte
+        if (element.tagName === 'A' || element.closest('a')) {
+            element.textContent = value;
+            
+            // Si l'élément est le Topic ID, mettre à jour également le lien
+            if (id === 'topicId') {
+                const link = element.tagName === 'A' ? element : element.closest('a');
+                if (link && value && value !== 'Non disponible') {
+                    // Vérifier si le Topic ID est au format valide (0.0.XXXXXXX)
+                    if (/^0\.0\.\d+$/.test(value)) {
+                        link.href = `https://hashscan.io/testnet/topic/${value}`;
+                        link.title = `Voir les transactions sur HashScan pour le topic ${value}`;
+                        link.classList.remove('disabled');
+                    } else {
+                        link.href = '#';
+                        link.title = 'Format de Topic ID non valide pour HashScan';
+                        link.classList.add('disabled');
+                    }
+                } else if (link) {
+                    link.href = '#';
+                    link.title = 'Topic ID non disponible';
+                    link.classList.add('disabled');
+                }
+            }
+        } else {
+            element.textContent = value;
+        }
     } else {
         console.warn(`Élément avec ID '${id}' non trouvé dans le DOM`);
     }
