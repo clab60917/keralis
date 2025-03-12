@@ -62,6 +62,11 @@ function initActivityChart() {
         return;
     }
     
+    // Définir un dégradé pour le fond du graphique
+    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(67, 97, 238, 0.3)');
+    gradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
+    
     activityChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -70,13 +75,19 @@ function initActivityChart() {
                 {
                     label: 'Nombre de messages',
                     data: [],
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    borderColor: 'rgba(67, 97, 238, 1)',
+                    backgroundColor: gradient,
                     tension: 0.4,
                     fill: true,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    borderWidth: 2
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: 'rgba(67, 97, 238, 1)',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#ffffff',
+                    pointHoverBorderColor: 'rgba(67, 97, 238, 1)',
+                    pointHoverBorderWidth: 3,
+                    borderWidth: 3
                 }
             ]
         },
@@ -86,21 +97,51 @@ function initActivityChart() {
             scales: {
                 y: {
                     beginAtZero: true,
+                    grid: {
+                        drawBorder: false,
+                        color: 'rgba(200, 200, 200, 0.15)'
+                    },
+                    ticks: {
+                        font: {
+                            family: "'Poppins', sans-serif",
+                            size: 11
+                        },
+                        color: '#6c757d'
+                    },
                     title: {
                         display: true,
                         text: 'Nombre cumulatif',
                         font: {
+                            family: "'Poppins', sans-serif",
+                            size: 12,
                             weight: 'bold'
-                        }
+                        },
+                        color: '#495057'
                     }
                 },
                 x: {
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: {
+                            family: "'Poppins', sans-serif",
+                            size: 11
+                        },
+                        color: '#6c757d',
+                        maxRotation: 45,
+                        minRotation: 45
+                    },
                     title: {
                         display: true,
                         text: 'Heure d\'arrivée',
                         font: {
+                            family: "'Poppins', sans-serif",
+                            size: 12,
                             weight: 'bold'
-                        }
+                        },
+                        color: '#495057'
                     }
                 }
             },
@@ -109,9 +150,11 @@ function initActivityChart() {
                     display: true,
                     text: 'Activité des 20 derniers messages',
                     font: {
+                        family: "'Poppins', sans-serif",
                         size: 16,
                         weight: 'bold'
                     },
+                    color: '#343a40',
                     padding: {
                         top: 10,
                         bottom: 20
@@ -119,10 +162,29 @@ function initActivityChart() {
                 },
                 legend: {
                     position: 'top',
+                    labels: {
+                        font: {
+                            family: "'Poppins', sans-serif",
+                            size: 12
+                        },
+                        color: '#495057',
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
                 },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
+                    backgroundColor: 'rgba(33, 37, 41, 0.8)',
+                    titleFont: {
+                        family: "'Poppins', sans-serif",
+                        size: 13,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        family: "'Poppins', sans-serif",
+                        size: 12
+                    },
                     callbacks: {
                         title: function(tooltipItems) {
                             return tooltipItems[0].label;
@@ -131,9 +193,10 @@ function initActivityChart() {
                             return `Message #${context.parsed.y}`;
                         }
                     },
-                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
                     padding: 10,
-                    cornerRadius: 6
+                    cornerRadius: 6,
+                    caretSize: 6,
+                    caretPadding: 8
                 }
             },
             interaction: {
@@ -142,11 +205,13 @@ function initActivityChart() {
                 intersect: false
             },
             animation: {
-                duration: 500
+                duration: 800,
+                easing: 'easeOutQuart'
             },
             elements: {
                 line: {
-                    borderWidth: 2
+                    borderWidth: 3,
+                    tension: 0.4
                 }
             }
         }
@@ -689,6 +754,11 @@ function updateServiceStatus(elementId, statusData) {
     // Valeurs par défaut
     let statusText = 'Inconnu';
     let statusClass = 'secondary';
+    let indicatorClass = '';
+    
+    // Déterminer l'ID de l'indicateur correspondant
+    const indicatorId = elementId.replace('StatusBadge', 'StatusIndicator');
+    const indicator = document.getElementById(indicatorId);
     
     if (statusData) {
         // Déterminer le texte et la classe en fonction du statut
@@ -697,21 +767,26 @@ function updateServiceStatus(elementId, statusData) {
             if (elementId === 'sftpStatusBadge') {
                 statusText = 'En ligne';
                 statusClass = 'success';
+                indicatorClass = 'status-online';
             }
             // Pour Blockchain, afficher le statut simplifié
             else if (elementId === 'blockchainStatusBadge') {
                 if (statusData.status === 'online') {
                     statusText = 'En ligne';
                     statusClass = 'success';
+                    indicatorClass = 'status-online';
                 } else if (statusData.status === 'stopping' || statusData.status === 'stopped') {
                     statusText = 'Arrêté';
                     statusClass = 'warning';
+                    indicatorClass = 'status-warning';
                 } else if (statusData.status === 'errored') {
                     statusText = 'Erreur';
                     statusClass = 'danger';
+                    indicatorClass = 'status-offline';
                 } else {
                     statusText = 'En ligne';
                     statusClass = 'success';
+                    indicatorClass = 'status-online';
                 }
             }
             // Pour Serveur, afficher le statut avec le temps d'activité
@@ -719,12 +794,15 @@ function updateServiceStatus(elementId, statusData) {
                 if (statusData.status === 'normal' || !statusData.status) {
                     statusText = 'Normal';
                     statusClass = 'success';
+                    indicatorClass = 'status-online';
                 } else if (statusData.status === 'warning') {
                     statusText = 'Attention';
                     statusClass = 'warning';
+                    indicatorClass = 'status-warning';
                 } else if (statusData.status === 'critical') {
                     statusText = 'Critique';
                     statusClass = 'danger';
+                    indicatorClass = 'status-offline';
                 }
                 
                 // Ajouter le temps d'activité si disponible
@@ -736,6 +814,7 @@ function updateServiceStatus(elementId, statusData) {
             else {
                 statusText = 'En ligne';
                 statusClass = 'success';
+                indicatorClass = 'status-online';
             }
         } else {
             // Si le service n'est pas en cours d'exécution
@@ -743,14 +822,16 @@ function updateServiceStatus(elementId, statusData) {
                 // Pour SFTP, considérer toujours comme en ligne
                 statusText = 'En ligne';
                 statusClass = 'success';
+                indicatorClass = 'status-online';
             } else {
                 statusText = 'Hors ligne';
                 statusClass = 'danger';
+                indicatorClass = 'status-offline';
             }
         }
     }
     
-    // Mettre à jour le texte et la classe
+    // Mettre à jour le texte et la classe du badge
     element.textContent = statusText;
     
     // Supprimer toutes les classes bg-*
@@ -760,6 +841,17 @@ function updateServiceStatus(elementId, statusData) {
         }
     });
     
-    // Ajouter la nouvelle classe
+    // Ajouter la nouvelle classe au badge
     element.classList.add(`bg-${statusClass}`);
+    
+    // Mettre à jour l'indicateur visuel si disponible
+    if (indicator) {
+        // Supprimer toutes les classes de statut
+        indicator.classList.remove('status-online', 'status-warning', 'status-offline');
+        
+        // Ajouter la nouvelle classe
+        if (indicatorClass) {
+            indicator.classList.add(indicatorClass);
+        }
+    }
 } 

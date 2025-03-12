@@ -6,14 +6,14 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    Statistiques Générales
+                    <i class="bi bi-graph-up me-2"></i> Statistiques Générales
                 </div>
                 <div class="card-body">
                     <div id="stats">
-                        <p>Hash: <span id="totalHashesCount">0</span> (<span id="hashesPerHour">0</span>/h)</p>
-                        <p>Encrypted: <span id="totalEncryptedCount">0</span> (<span id="encryptedPerHour">0</span>/h)</p>
-                        <p>Messages: <span id="totalMessagesCount">0</span> (<span id="messagesPerHour">0</span>/h)</p>
-                        <p>Topic ID: <span id="topicIdValue" style="margin-right: 5px;">Chargement...</span><a id="topicIdLink" href="#" target="_blank" rel="noopener noreferrer" style="color: #0d6efd; text-decoration: none;"><i class="bi bi-box-arrow-up-right" style="font-size: 0.8rem;"></i></a></p>
+                        <p><i class="bi bi-hash text-primary"></i> Hash: <span id="totalHashesCount" class="stat-value">0</span> (<span id="hashesPerHour" class="stat-value">0</span>/h)</p>
+                        <p><i class="bi bi-lock text-primary"></i> Encrypted: <span id="totalEncryptedCount" class="stat-value">0</span> (<span id="encryptedPerHour" class="stat-value">0</span>/h)</p>
+                        <p><i class="bi bi-chat-dots text-primary"></i> Messages: <span id="totalMessagesCount" class="stat-value">0</span> (<span id="messagesPerHour" class="stat-value">0</span>/h)</p>
+                        <p><i class="bi bi-link-45deg text-primary"></i> Topic ID: <span id="topicIdValue" style="margin-right: 5px;">Chargement...</span><a id="topicIdLink" href="#" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i></a></p>
                     </div>
                 </div>
             </div>
@@ -21,7 +21,7 @@
             <!-- Graphique d'activité -->
             <div class="card mt-3">
                 <div class="card-header">
-                    Activité en Temps Réel
+                    <i class="bi bi-activity me-2"></i> Activité en Temps Réel
                 </div>
                 <div class="card-body">
                     <canvas id="activityChart" height="200"></canvas>
@@ -32,50 +32,53 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    Performances Système
+                    <i class="bi bi-cpu me-2"></i> Performances Système
                 </div>
                 <div class="card-body">
                     <div id="systemStats">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="me-2">CPU:</div>
+                        <div class="system-status-item">
+                            <div class="system-status-label">CPU:</div>
                             <div class="progress flex-grow-1">
                                 <div id="cpuStatus" class="progress-bar" role="progressbar" style="width: 0%"></div>
                             </div>
-                            <div class="ms-2"><span id="cpuValue">0%</span></div>
+                            <div class="system-status-value"><span id="cpuValue">0%</span></div>
                         </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="me-2">Mémoire:</div>
+                        <div class="system-status-item">
+                            <div class="system-status-label">Mémoire:</div>
                             <div class="progress flex-grow-1">
                                 <div id="memoryStatus" class="progress-bar" role="progressbar" style="width: 0%"></div>
                             </div>
-                            <div class="ms-2"><span id="memoryValue">0%</span></div>
+                            <div class="system-status-value"><span id="memoryValue">0%</span></div>
                         </div>
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="me-2">Disque:</div>
+                        <div class="system-status-item">
+                            <div class="system-status-label">Disque:</div>
                             <div class="progress flex-grow-1">
                                 <div id="diskStatus" class="progress-bar" role="progressbar" style="width: 0%"></div>
                             </div>
-                            <div class="ms-2"><span id="diskValue">0%</span></div>
+                            <div class="system-status-value"><span id="diskValue">0%</span></div>
                         </div>
                         
                         <hr>
                         
-                        <h6 class="mt-3 mb-2">Statut des Services</h6>
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="me-2 w-25">SFTP:</div>
-                            <div class="ms-2">
+                        <h6 class="mt-3 mb-3 fw-bold"><i class="bi bi-hdd-stack me-2"></i> Statut des Services</h6>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="status-indicator" id="sftpStatusIndicator"></div>
+                            <div class="me-2 fw-medium">SFTP:</div>
+                            <div class="ms-auto">
                                 <span id="sftpStatusBadge" class="badge bg-secondary">Inconnu</span>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="me-2 w-25">Blockchain:</div>
-                            <div class="ms-2">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="status-indicator" id="blockchainStatusIndicator"></div>
+                            <div class="me-2 fw-medium">Blockchain:</div>
+                            <div class="ms-auto">
                                 <span id="blockchainStatusBadge" class="badge bg-secondary">Inconnu</span>
                             </div>
                         </div>
                         <div class="d-flex align-items-center">
-                            <div class="me-2 w-25">Serveur:</div>
-                            <div class="ms-2">
+                            <div class="status-indicator" id="serverStatusIndicator"></div>
+                            <div class="me-2 fw-medium">Serveur:</div>
+                            <div class="ms-auto">
                                 <span id="serverStatusBadge" class="badge bg-secondary">Inconnu</span>
                             </div>
                         </div>
@@ -87,7 +90,7 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    Alertes
+                    <i class="bi bi-exclamation-triangle me-2"></i> Alertes
                 </div>
                 <div class="card-body">
                     <div id="alerts">
@@ -107,7 +110,7 @@
                                                         alert.status && alert.status.toLowerCase() === 'warning' ? 'table-warning' : 
                                                         alert.status && (alert.status.toLowerCase() === 'success' || alert.status.toLowerCase() === 'restored') ? 'table-success' : 
                                                         alert.status && alert.status.toLowerCase() === 'info' ? 'table-info' : '' %>">
-                                                <td><%= new Date(alert.timestamp || alert.date || Date.now()).toLocaleTimeString() %></td>
+                                                <td class="timestamp"><%= new Date(alert.timestamp || alert.date || Date.now()).toLocaleTimeString() %></td>
                                                 <td><%= alert.file || alert.fileName || 'N/A' %></td>
                                                 <td>
                                                     <span class="badge bg-<%= alert.status && alert.status.toLowerCase() === 'error' ? 'danger' : 
@@ -127,6 +130,9 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div class="text-end mt-2">
+                            <a href="/alerts" class="btn btn-sm btn-primary">Voir toutes les alertes <i class="bi bi-arrow-right"></i></a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -138,7 +144,7 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    Derniers Hash
+                    <i class="bi bi-hash me-2"></i> Derniers Hash
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -202,7 +208,7 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    Derniers Encrypted
+                    <i class="bi bi-lock me-2"></i> Derniers Encrypted
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -274,7 +280,7 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    Derniers Messages
+                    <i class="bi bi-chat-dots me-2"></i> Derniers Messages
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
