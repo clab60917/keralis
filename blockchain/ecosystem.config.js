@@ -7,7 +7,7 @@ module.exports = {
       NODE_ENV: 'production'
     }
   }, {
-    name: 'blockchain-dashboard',
+    name: 'blockchain-new',
     script: 'dashboard/index.js',
     watch: true,
     env: {
