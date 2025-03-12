@@ -164,7 +164,7 @@ function updateRecentTable(tableId, items) {
             if (tableId === 'recentHashTableBody') {
                 // Afficher le hash complet ou tronqué selon sa longueur
                 const hash = item.content;// || 'N/A';
-                const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
+               // const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
                 
                 // Ajouter une infobulle pour afficher le hash complet au survol
                 const hashCell = `<td><small title="${hash}">${displayHash}</small></td>`;
@@ -176,7 +176,7 @@ function updateRecentTable(tableId, items) {
                 
                 tr.innerHTML = `
                     ${fileNameCell}
-                    ${hashCell}
+                <div class="mt-1 p-1 bg-gray-100 text-xs font-mono overflow-auto max-h-20">${item.content}</div>
                     <td>${formattedTime}</td>
                  `;
               
