@@ -2,11 +2,6 @@
 
 // Variables globales pour le graphique
 let activityChart = null;
-let chartData = {
-    labels: [],
-    messagesData: [],
-    timestamps: []
-};
 const MAX_DATA_POINTS = 20; // Nombre maximum de points de données à afficher
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -73,7 +68,7 @@ function initActivityChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'Messages',
+                    label: 'Nombre de messages',
                     data: [],
                     borderColor: 'rgba(255, 159, 64, 1)',
                     backgroundColor: 'rgba(255, 159, 64, 0.2)',
@@ -93,7 +88,7 @@ function initActivityChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Nombre de messages',
+                        text: 'Nombre cumulatif',
                         font: {
                             weight: 'bold'
                         }
@@ -102,7 +97,7 @@ function initActivityChart() {
                 x: {
                     title: {
                         display: true,
-                        text: 'Heure (20 derniers envois)',
+                        text: 'Heure d\'arrivée',
                         font: {
                             weight: 'bold'
                         }
@@ -133,7 +128,7 @@ function initActivityChart() {
                             return tooltipItems[0].label;
                         },
                         label: function(context) {
-                            return `Messages: ${context.parsed.y}`;
+                            return `Message #${context.parsed.y}`;
                         }
                     },
                     backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -167,38 +162,44 @@ function updateActivityChart(stats) {
         return;
     }
     
-    // Obtenir le timestamp actuel
-    const now = new Date();
-    const timeLabel = now.toLocaleTimeString();
-    
-    // Vérifier si nous avons de nouvelles données à ajouter
-    const hasNewData = 
-        (stats.totalMessages !== chartData.messagesData[chartData.messagesData.length - 1]);
-    
-    // N'ajouter des données que si elles sont différentes des dernières données
-    if (hasNewData || chartData.labels.length === 0) {
-        // Ajouter les nouvelles données
-        chartData.labels.push(timeLabel);
-        chartData.timestamps.push(now.getTime());
-        chartData.messagesData.push(stats.totalMessages || 0);
+    // Vérifier si nous avons des données de messages récents
+    if (stats.recentMessages && Array.isArray(stats.recentMessages) && stats.recentMessages.length > 0) {
+        // Préparer les données pour le graphique
+        const messageData = [];
+        const labels = [];
         
-        // Limiter le nombre de points de données
-        if (chartData.labels.length > MAX_DATA_POINTS) {
-            chartData.labels.shift();
-            chartData.timestamps.shift();
-            chartData.messagesData.shift();
-        }
+        // Trier les messages par date (du plus ancien au plus récent)
+        const sortedMessages = [...stats.recentMessages].sort((a, b) => {
+            const dateA = new Date(a.timestamp || a.date || a.time || a.createdAt || 0);
+            const dateB = new Date(b.timestamp || b.date || b.time || b.createdAt || 0);
+            return dateA - dateB;
+        });
+        
+        // Limiter aux 20 derniers messages
+        const recentMessages = sortedMessages.slice(-MAX_DATA_POINTS);
+        
+        // Extraire les labels (heures) et les données (compteur cumulatif)
+        recentMessages.forEach((message, index) => {
+            const date = new Date(message.timestamp || message.date || message.time || message.createdAt || Date.now());
+            labels.push(date.toLocaleTimeString());
+            
+            // Utiliser l'index + 1 comme valeur pour montrer la progression
+            messageData.push(index + 1);
+        });
         
         // Mettre à jour le graphique
-        activityChart.data.labels = chartData.labels;
-        activityChart.data.datasets[0].data = chartData.messagesData;
+        activityChart.data.labels = labels;
+        activityChart.data.datasets[0].data = messageData;
+        
+        // Mettre à jour le titre du graphique
+        activityChart.options.plugins.title.text = `Activité des ${recentMessages.length} derniers messages`;
         
         // Redessiner le graphique
         activityChart.update();
         
-        console.log('Graphique d\'activité mis à jour avec de nouvelles données de messages');
+        console.log(`Graphique d'activité mis à jour avec ${recentMessages.length} messages récents`);
     } else {
-        console.log('Pas de nouvelles données de messages pour le graphique d\'activité');
+        console.log('Pas de messages récents disponibles pour le graphique d\'activité');
     }
 }
 
@@ -289,31 +290,22 @@ function updateElementSafely(id, value) {
             // Mettre à jour le texte de l'élément
             element.textContent = value || 'N/A';
             
-            // Mettre à jour le lien parent
+            // Mettre à jour le lien
             const link = document.getElementById('topicIdLink');
             if (link) {
                 // Vérifier si le Topic ID est au format valide (0.0.XXXXXXX)
                 if (value && /^0\.0\.\d+$/.test(value)) {
                     link.href = `https://hashscan.io/testnet/topic/${value}`;
                     link.title = `Voir le Topic ${value} sur HashScan`;
-                    link.classList.remove('disabled');
-                    link.target = '_blank';
-                    link.rel = 'noopener noreferrer';
+                    link.style.opacity = '1';
+                    link.style.cursor = 'pointer';
                     console.log(`Topic ID link updated: ${value}`);
                 } else {
                     link.removeAttribute('href');
                     link.title = 'Topic ID non disponible';
-                    link.classList.add('disabled');
+                    link.style.opacity = '0.5';
+                    link.style.cursor = 'not-allowed';
                     console.log(`Invalid Topic ID format or value not available: ${value}`);
-                }
-                
-                // S'assurer que l'icône est présente
-                if (!link.querySelector('.bi')) {
-                    const icon = document.createElement('i');
-                    icon.className = 'bi bi-box-arrow-up-right ms-1';
-                    icon.style.fontSize = '0.8rem';
-                    icon.style.opacity = '0.7';
-                    link.appendChild(icon);
                 }
             } else {
                 console.warn('Topic ID link element not found');
