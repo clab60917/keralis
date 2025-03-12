@@ -4,10 +4,8 @@
 let activityChart = null;
 let chartData = {
     labels: [],
-    hashesData: [],
-    encryptedData: [],
     messagesData: [],
-    timestamps: []  // Ajout d'un tableau pour stocker les timestamps
+    timestamps: []
 };
 const MAX_DATA_POINTS = 20; // Nombre maximum de points de données à afficher
 
@@ -75,34 +73,15 @@ function initActivityChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'Hash',
-                    data: [],
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                },
-                {
-                    label: 'Encrypted',
-                    data: [],
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                },
-                {
                     label: 'Messages',
                     data: [],
                     borderColor: 'rgba(255, 159, 64, 1)',
                     backgroundColor: 'rgba(255, 159, 64, 0.2)',
                     tension: 0.4,
                     fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    borderWidth: 2
                 }
             ]
         },
@@ -114,22 +93,29 @@ function initActivityChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Nombre de fichiers'
+                        text: 'Nombre de messages',
+                        font: {
+                            weight: 'bold'
+                        }
                     }
                 },
                 x: {
                     title: {
                         display: true,
-                        text: 'Heure (20 derniers envois)'
+                        text: 'Heure (20 derniers envois)',
+                        font: {
+                            weight: 'bold'
+                        }
                     }
                 }
             },
             plugins: {
                 title: {
                     display: true,
-                    text: 'Activité des 20 derniers envois',
+                    text: 'Activité des 20 derniers messages',
                     font: {
-                        size: 16
+                        size: 16,
+                        weight: 'bold'
                     },
                     padding: {
                         top: 10,
@@ -147,16 +133,12 @@ function initActivityChart() {
                             return tooltipItems[0].label;
                         },
                         label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed.y !== null) {
-                                label += context.parsed.y;
-                            }
-                            return label;
+                            return `Messages: ${context.parsed.y}`;
                         }
-                    }
+                    },
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    padding: 10,
+                    cornerRadius: 6
                 }
             },
             interaction: {
@@ -166,6 +148,11 @@ function initActivityChart() {
             },
             animation: {
                 duration: 500
+            },
+            elements: {
+                line: {
+                    borderWidth: 2
+                }
             }
         }
     });
@@ -186,8 +173,6 @@ function updateActivityChart(stats) {
     
     // Vérifier si nous avons de nouvelles données à ajouter
     const hasNewData = 
-        (stats.totalHashes !== chartData.hashesData[chartData.hashesData.length - 1]) ||
-        (stats.totalEncrypted !== chartData.encryptedData[chartData.encryptedData.length - 1]) ||
         (stats.totalMessages !== chartData.messagesData[chartData.messagesData.length - 1]);
     
     // N'ajouter des données que si elles sont différentes des dernières données
@@ -195,31 +180,25 @@ function updateActivityChart(stats) {
         // Ajouter les nouvelles données
         chartData.labels.push(timeLabel);
         chartData.timestamps.push(now.getTime());
-        chartData.hashesData.push(stats.totalHashes || 0);
-        chartData.encryptedData.push(stats.totalEncrypted || 0);
         chartData.messagesData.push(stats.totalMessages || 0);
         
         // Limiter le nombre de points de données
         if (chartData.labels.length > MAX_DATA_POINTS) {
             chartData.labels.shift();
             chartData.timestamps.shift();
-            chartData.hashesData.shift();
-            chartData.encryptedData.shift();
             chartData.messagesData.shift();
         }
         
         // Mettre à jour le graphique
         activityChart.data.labels = chartData.labels;
-        activityChart.data.datasets[0].data = chartData.hashesData;
-        activityChart.data.datasets[1].data = chartData.encryptedData;
-        activityChart.data.datasets[2].data = chartData.messagesData;
+        activityChart.data.datasets[0].data = chartData.messagesData;
         
         // Redessiner le graphique
         activityChart.update();
         
-        console.log('Graphique d\'activité mis à jour avec de nouvelles données');
+        console.log('Graphique d\'activité mis à jour avec de nouvelles données de messages');
     } else {
-        console.log('Pas de nouvelles données pour le graphique d\'activité');
+        console.log('Pas de nouvelles données de messages pour le graphique d\'activité');
     }
 }
 
