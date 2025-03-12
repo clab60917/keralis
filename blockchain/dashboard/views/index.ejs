@@ -13,7 +13,18 @@
                         <p>Hash: <span id="totalHashesCount">0</span> (<span id="hashesPerHour">0</span>/h)</p>
                         <p>Encrypted: <span id="totalEncryptedCount">0</span> (<span id="encryptedPerHour">0</span>/h)</p>
                         <p>Messages: <span id="totalMessagesCount">0</span> (<span id="messagesPerHour">0</span>/h)</p>
+                        <p>Topic ID: <span id="topicId" class="text-primary">Chargement...</span></p>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Graphique d'activité -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    Activité en Temps Réel
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" height="200"></canvas>
                 </div>
             </div>
         </div>

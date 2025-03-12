@@ -8,6 +8,7 @@ const basicAuth = require('express-basic-auth');
 const systemMonitor = require('./system_monitor');
 const session = require('express-session');
 const os = require('os');
+const fs = require('fs').promises;
 
 // Configuration
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
@@ -86,6 +87,20 @@ let previousCounts = {
     timestamp: Date.now()
 };
 
+// Chemin vers le fichier topicId.txt
+const topicIdPath = path.join(__dirname, '../topicId.txt');
+
+// Fonction pour lire le topicId
+async function getTopicId() {
+    try {
+        const topicId = await fs.readFile(topicIdPath, 'utf8');
+        return topicId.trim();
+    } catch (error) {
+        console.error('Erreur lors de la lecture du topicId:', error);
+        return 'Non disponible';
+    }
+}
+
 // Fonction pour récupérer les statistiques
 async function getStats() {
     try {
@@ -105,6 +120,9 @@ async function getStats() {
         }
         
         const db = mongoClient.db(process.env.MONGODB_DB_NAME);
+        
+        // Récupérer le topicId
+        const topicId = await getTopicId();
         
         // Récupérer les statistiques système
         let systemStats = null;
@@ -210,7 +228,8 @@ async function getStats() {
             totalAlerts: totalAlertsCount,
             sftpStatus: sftpStatus || { running: false },
             blockchainStatus: blockchainStatus || { running: false, status: 'unknown' },
-            serverStatus: serverStatus || { running: true }
+            serverStatus: serverStatus || { running: true },
+            topicId: topicId
         };
 
         console.log('Statistiques récupérées:', {

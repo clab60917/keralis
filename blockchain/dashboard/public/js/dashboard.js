@@ -1,7 +1,20 @@
 // Script principal du dashboard Keralis
 
+// Variables globales pour le graphique
+let activityChart = null;
+let chartData = {
+    labels: [],
+    hashesData: [],
+    encryptedData: [],
+    messagesData: []
+};
+const MAX_DATA_POINTS = 20; // Nombre maximum de points de données à afficher
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM chargé, initialisation de Socket.IO');
+    
+    // Initialiser le graphique d'activité
+    initActivityChart();
     
     // Vérifier que Socket.IO est disponible
     if (typeof io === 'undefined') {
@@ -29,6 +42,9 @@ document.addEventListener('DOMContentLoaded', function() {
         socket.on('stats', function(stats) {
             console.log('Stats reçues:', stats);
             updateStats(stats);
+            
+            // Mettre à jour le graphique avec les nouvelles données
+            updateActivityChart(stats);
         });
         
         socket.on('disconnect', function() {
@@ -44,6 +60,118 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Fonction pour initialiser le graphique d'activité
+function initActivityChart() {
+    const ctx = document.getElementById('activityChart');
+    if (!ctx) {
+        console.warn('Élément canvas pour le graphique non trouvé');
+        return;
+    }
+    
+    activityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Hash',
+                    data: [],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Encrypted',
+                    data: [],
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Messages',
+                    data: [],
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Nombre de fichiers'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Heure'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+    
+    console.log('Graphique d\'activité initialisé');
+}
+
+// Fonction pour mettre à jour le graphique d'activité
+function updateActivityChart(stats) {
+    if (!activityChart) {
+        console.warn('Graphique d\'activité non initialisé');
+        return;
+    }
+    
+    // Ajouter l'heure actuelle comme étiquette
+    const now = new Date();
+    const timeLabel = now.toLocaleTimeString();
+    
+    // Ajouter les nouvelles données
+    chartData.labels.push(timeLabel);
+    chartData.hashesData.push(stats.totalHashes || 0);
+    chartData.encryptedData.push(stats.totalEncrypted || 0);
+    chartData.messagesData.push(stats.totalMessages || 0);
+    
+    // Limiter le nombre de points de données
+    if (chartData.labels.length > MAX_DATA_POINTS) {
+        chartData.labels.shift();
+        chartData.hashesData.shift();
+        chartData.encryptedData.shift();
+        chartData.messagesData.shift();
+    }
+    
+    // Mettre à jour le graphique
+    activityChart.data.labels = chartData.labels;
+    activityChart.data.datasets[0].data = chartData.hashesData;
+    activityChart.data.datasets[1].data = chartData.encryptedData;
+    activityChart.data.datasets[2].data = chartData.messagesData;
+    
+    // Redessiner le graphique
+    activityChart.update();
+}
+
 // Fonction pour mettre à jour les statistiques
 function updateStats(stats) {
     if (!stats) {
@@ -58,6 +186,9 @@ function updateStats(stats) {
         updateElementSafely('totalHashesCount', stats.totalHashes || '0');
         updateElementSafely('totalEncryptedCount', stats.totalEncrypted || '0');
         updateElementSafely('totalMessagesCount', stats.totalMessages || '0');
+        
+        // Mise à jour du Topic ID
+        updateElementSafely('topicId', stats.topicId || 'Non disponible');
         
         // Mise à jour des taux par heure (au lieu de par minute)
         updateElementSafely('hashesPerHour', stats.hashesPerMinute ? (stats.hashesPerMinute * 60).toFixed(0) : '0');
