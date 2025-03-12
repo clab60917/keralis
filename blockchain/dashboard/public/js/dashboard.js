@@ -164,10 +164,10 @@ function updateRecentTable(tableId, items) {
             if (tableId === 'recentHashTableBody') {
                 // Afficher le hash complet ou tronqué selon sa longueur
                 const hash = item.content;// || 'N/A';
-                const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
+                //const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
                 
                 // Ajouter une infobulle pour afficher le hash complet au survol
-                const hashCell = `<td><small title="${hash}">${displayHash}</small></td>`;
+               // const hashCell = `<td><small title="${hash}">${displayHash}</small></td>`;
                 
                 // Ajouter une infobulle pour afficher le nom de fichier complet au survol
                 const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
