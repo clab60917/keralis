@@ -163,14 +163,14 @@ function updateRecentTable(tableId, items) {
             
             if (tableId === 'recentHashTableBody') {
                 // Afficher le hash complet ou tronqué selon sa longueur
-                const hash = item.hash || 'N/A';
+                const hash = item.content || 'N/A';
                 const displayHash = hash.length > 20 ? hash.substring(0, 20) + '...' : hash;
                 
                 // Ajouter une infobulle pour afficher le hash complet au survol
                 const hashCell = `<td><small title="${hash}">${displayHash}</small></td>`;
                 
                 // Ajouter une infobulle pour afficher le nom de fichier complet au survol
-                const fileName = item.fileName || 'N/A';
+                const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
                 const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
                 const fileNameCell = `<td title="${fileName}">${displayFileName}</td>`;
                 
@@ -181,7 +181,7 @@ function updateRecentTable(tableId, items) {
                 `;
             } else if (tableId === 'recentEncryptedTableBody') {
                 // Ajouter une infobulle pour afficher le nom de fichier complet au survol
-                const fileName = item.fileName || 'N/A';
+                const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
                 const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
                 const fileNameCell = `<td title="${fileName}">${displayFileName}</td>`;
                 
