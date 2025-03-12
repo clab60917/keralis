@@ -71,6 +71,11 @@ function updateStats(stats) {
             alertsBadge.style.display = stats.totalAlerts > 0 ? 'inline' : 'none';
         }
         
+        // Mise à jour des statuts des services
+        updateServiceStatus('sftpStatusBadge', stats.sftpStatus);
+        updateServiceStatus('blockchainStatusBadge', stats.blockchainStatus);
+        updateServiceStatus('serverStatusBadge', stats.serverStatus || stats.server);
+        
         // Mise à jour des tableaux récents
         if (stats.recentHashList && Array.isArray(stats.recentHashList)) {
             console.log('Mise à jour du tableau des hash récents:', stats.recentHashList);
@@ -475,4 +480,84 @@ function updateSystemStatus(elementId, value) {
     }
     
     console.log(`Mise à jour de ${elementId} avec la valeur ${numericValue}%, affichage: ${displayWidth}%, classe: ${element.className}`);
+}
+
+// Fonction pour mettre à jour le statut d'un service
+function updateServiceStatus(elementId, statusData) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        console.warn(`Élément avec ID '${elementId}' non trouvé dans le DOM`);
+        return;
+    }
+    
+    // Valeurs par défaut
+    let statusText = 'Inconnu';
+    let statusClass = 'secondary';
+    
+    if (statusData) {
+        // Déterminer le texte et la classe en fonction du statut
+        if (statusData.running === true) {
+            statusText = 'En ligne';
+            statusClass = 'success';
+            
+            // Ajouter des détails supplémentaires pour le statut blockchain
+            if (elementId === 'blockchainStatusBadge' && statusData.status) {
+                if (statusData.status === 'online') {
+                    statusText = 'En ligne';
+                } else if (statusData.status === 'stopping' || statusData.status === 'stopped') {
+                    statusText = 'Arrêté';
+                    statusClass = 'warning';
+                } else if (statusData.status === 'errored') {
+                    statusText = 'Erreur';
+                    statusClass = 'danger';
+                }
+                
+                // Ajouter des informations sur les redémarrages si disponibles
+                if (statusData.restarts && statusData.restarts > 0) {
+                    statusText += ` (${statusData.restarts} redémarrages)`;
+                }
+            }
+            
+            // Ajouter des détails supplémentaires pour le statut serveur
+            if (elementId === 'serverStatusBadge' && statusData.status) {
+                if (statusData.status === 'normal') {
+                    statusText = 'Normal';
+                    statusClass = 'success';
+                } else if (statusData.status === 'warning') {
+                    statusText = 'Attention';
+                    statusClass = 'warning';
+                } else if (statusData.status === 'critical') {
+                    statusText = 'Critique';
+                    statusClass = 'danger';
+                }
+                
+                // Ajouter le temps d'activité si disponible
+                if (statusData.uptimeFormatted) {
+                    statusText += ` (${statusData.uptimeFormatted})`;
+                }
+            }
+        } else {
+            statusText = 'Hors ligne';
+            statusClass = 'danger';
+            
+            // Si nous avons une erreur, l'afficher
+            if (statusData.error) {
+                statusText = 'Erreur';
+                console.warn(`Erreur de service ${elementId}:`, statusData.error);
+            }
+        }
+    }
+    
+    // Mettre à jour le texte et la classe
+    element.textContent = statusText;
+    
+    // Supprimer toutes les classes bg-*
+    element.classList.forEach(cls => {
+        if (cls.startsWith('bg-')) {
+            element.classList.remove(cls);
+        }
+    });
+    
+    // Ajouter la nouvelle classe
+    element.classList.add(`bg-${statusClass}`);
 } 

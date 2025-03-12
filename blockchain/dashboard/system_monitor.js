@@ -69,6 +69,16 @@ class SystemMonitor {
             }
 
             try {
+                // Ajouter l'état du serveur
+                const serverStatus = await this.checkServerStatus();
+                console.log('État serveur:', JSON.stringify(serverStatus, null, 2));
+                stats.server = serverStatus;
+            } catch (serverError) {
+                console.error('Erreur lors de la vérification du statut serveur:', serverError);
+                stats.server = { running: true, error: serverError.message };
+            }
+
+            try {
                 // Ajouter l'utilisation du disque
                 if (simulateRealisticValues) {
                     stats.disk = {
@@ -107,15 +117,31 @@ class SystemMonitor {
     async checkSFTPStatus() {
         try {
             // Vérifier le statut du service SFTP (adapté pour macOS/Linux)
-            const { stdout } = await execAsync('ps aux | grep "sftp"');
-            return {
-                running: stdout.length > 0,
-                processInfo: stdout.trim()
-            };
+            // Exclure les processus grep pour éviter les faux positifs
+            const { stdout } = await execAsync('ps aux | grep -v grep | grep -E "sftp|sshd.*sftp"');
+            
+            // Vérifier si la sortie contient des lignes non vides
+            const lines = stdout.trim().split('\n').filter(line => line.trim().length > 0);
+            
+            if (lines.length > 0) {
+                return {
+                    running: true,
+                    processCount: lines.length,
+                    processInfo: stdout.trim()
+                };
+            } else {
+                return {
+                    running: false,
+                    processCount: 0,
+                    message: 'Aucun processus SFTP trouvé'
+                };
+            }
         } catch (error) {
+            // Si la commande échoue, c'est probablement parce qu'aucun processus SFTP n'a été trouvé
             return {
                 running: false,
-                error: error.message
+                error: error.message,
+                message: 'Erreur lors de la vérification du service SFTP'
             };
         }
     }
@@ -128,8 +154,12 @@ class SystemMonitor {
             // Analyser le JSON renvoyé par pm2 jlist
             const processList = JSON.parse(stdout);
             
-            // Chercher l'application blockchain-app
-            const blockchainApp = processList.find(process => process.name === 'blockchain-app');
+            // Chercher l'application blockchain-app ou blockchain-new
+            const blockchainApp = processList.find(process => 
+                process.name === 'blockchain-app' || 
+                process.name === 'blockchain-new' || 
+                process.name === 'blockchain'
+            );
             
             if (blockchainApp) {
                 const isRunning = blockchainApp.pm2_env.status === 'online';
@@ -137,6 +167,7 @@ class SystemMonitor {
                 return {
                     running: isRunning,
                     status: blockchainApp.pm2_env.status,
+                    name: blockchainApp.name,
                     uptime: isRunning ? blockchainApp.pm2_env.pm_uptime : null,
                     restarts: blockchainApp.pm2_env.restart_time,
                     memory: blockchainApp.monit ? `${Math.round(blockchainApp.monit.memory / 1024 / 1024)}MB` : 'N/A',
@@ -144,16 +175,46 @@ class SystemMonitor {
                     lastChecked: new Date().toISOString()
                 };
             } else {
+                // Si aucun processus blockchain n'est trouvé, essayer de vérifier avec ps
+                try {
+                    const { stdout: psOutput } = await execAsync('ps aux | grep -v grep | grep -E "blockchain-app|blockchain-new|blockchain"');
+                    if (psOutput && psOutput.trim().length > 0) {
+                        return {
+                            running: true,
+                            status: 'running-outside-pm2',
+                            processInfo: psOutput.trim(),
+                            lastChecked: new Date().toISOString()
+                        };
+                    }
+                } catch (psError) {
+                    console.error('Erreur lors de la vérification du processus blockchain avec ps:', psError);
+                }
+                
                 return {
                     running: false,
                     status: 'not-found',
-                    error: 'Processus blockchain-app non trouvé dans la liste PM2',
+                    error: 'Processus blockchain non trouvé',
                     lastChecked: new Date().toISOString()
                 };
             }
         } catch (error) {
             // Gérer spécifiquement l'erreur si PM2 n'est pas installé ou accessible
             if (error.message.includes('pm2: command not found')) {
+                // Essayer de vérifier avec ps
+                try {
+                    const { stdout: psOutput } = await execAsync('ps aux | grep -v grep | grep -E "blockchain-app|blockchain-new|blockchain"');
+                    if (psOutput && psOutput.trim().length > 0) {
+                        return {
+                            running: true,
+                            status: 'running-without-pm2',
+                            processInfo: psOutput.trim(),
+                            lastChecked: new Date().toISOString()
+                        };
+                    }
+                } catch (psError) {
+                    console.error('Erreur lors de la vérification du processus blockchain avec ps:', psError);
+                }
+                
                 return {
                     running: false,
                     status: 'error',
@@ -171,6 +232,65 @@ class SystemMonitor {
             };
         }
     }
+
+    async checkServerStatus() {
+        try {
+            // Récupérer les informations système de base
+            const uptime = os.uptime();
+            const loadAvg = os.loadavg();
+            const totalMem = os.totalmem();
+            const freeMem = os.freemem();
+            const memUsage = ((totalMem - freeMem) / totalMem * 100).toFixed(2);
+            
+            // Vérifier si le serveur est surchargé
+            const isOverloaded = loadAvg[0] > os.cpus().length * 2; // Charge > 2x le nombre de CPU
+            const isLowMemory = freeMem < totalMem * 0.1; // Moins de 10% de mémoire libre
+            
+            // Déterminer le statut global
+            let status = 'normal';
+            if (isOverloaded && isLowMemory) {
+                status = 'critical';
+            } else if (isOverloaded || isLowMemory) {
+                status = 'warning';
+            }
+            
+            return {
+                running: true,
+                status: status,
+                uptime: uptime,
+                uptimeFormatted: this.formatUptime(uptime),
+                loadAverage: loadAvg,
+                memoryUsage: parseFloat(memUsage),
+                hostname: os.hostname(),
+                platform: os.platform(),
+                cpuCount: os.cpus().length,
+                lastChecked: new Date().toISOString()
+            };
+        } catch (error) {
+            console.error('Erreur lors de la vérification du statut serveur:', error);
+            return {
+                running: true, // On suppose que le serveur fonctionne puisque ce code s'exécute
+                status: 'error',
+                error: error.message,
+                lastChecked: new Date().toISOString()
+            };
+        }
+    }
+
+    // Fonction utilitaire pour formater le temps d'activité
+    formatUptime(uptime) {
+        const days = Math.floor(uptime / 86400);
+        const hours = Math.floor((uptime % 86400) / 3600);
+        const minutes = Math.floor((uptime % 3600) / 60);
+        
+        let result = '';
+        if (days > 0) result += `${days}j `;
+        if (hours > 0 || days > 0) result += `${hours}h `;
+        result += `${minutes}m`;
+        
+        return result;
+    }
+
     async getDiskUsage() {
         try {
             // Obtenir l'utilisation du disque (adapté pour macOS/Linux)

@@ -7,6 +7,7 @@ const path = require('path');
 const basicAuth = require('express-basic-auth');
 const systemMonitor = require('./system_monitor');
 const session = require('express-session');
+const os = require('os');
 
 // Configuration
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
@@ -110,12 +111,26 @@ async function getStats() {
         let cpuUsage = 0;
         let memoryUsage = 0;
         let diskUsage = 0;
+        let sftpStatus = { running: false };
+        let blockchainStatus = { running: false, status: 'unknown' };
+        let serverStatus = { running: true };
         
         try {
             systemStats = await systemMonitor.getSystemStats();
-            cpuUsage = systemStats.cpuUsage;
-            memoryUsage = systemStats.memoryUsage;
-            diskUsage = systemStats.diskUsage;
+            cpuUsage = systemStats.cpuUsage || (systemStats.cpu && systemStats.cpu.loadAverage ? systemStats.cpu.loadAverage[0] * 10 : 0);
+            memoryUsage = systemStats.memoryUsage || (systemStats.memory && systemStats.memory.usedPercentage ? parseFloat(systemStats.memory.usedPercentage) : 0);
+            diskUsage = systemStats.diskUsage || (systemStats.disk && systemStats.disk.usedPercentage ? parseFloat(systemStats.disk.usedPercentage) : 0);
+            
+            // Extraire les informations sur les services
+            sftpStatus = systemStats.sftp && typeof systemStats.sftp === 'object' ? systemStats.sftp : { running: false };
+            blockchainStatus = systemStats.blockchain && typeof systemStats.blockchain === 'object' ? systemStats.blockchain : { running: false };
+            serverStatus = systemStats.server && typeof systemStats.server === 'object' ? systemStats.server : {
+                running: true, // Par défaut, si on peut exécuter ce code, le serveur est en marche
+                uptime: os.uptime(),
+                hostname: os.hostname(),
+                platform: os.platform(),
+                lastChecked: new Date().toISOString()
+            };
         } catch (error) {
             console.error('Erreur lors de la récupération des statistiques système:', error);
         }
@@ -192,7 +207,10 @@ async function getStats() {
             recentEncryptedList: recentEncryptedList,
             recentMessages: recentMessages,
             alerts: alerts,
-            totalAlerts: totalAlertsCount
+            totalAlerts: totalAlertsCount,
+            sftpStatus: sftpStatus || { running: false },
+            blockchainStatus: blockchainStatus || { running: false, status: 'unknown' },
+            serverStatus: serverStatus || { running: true }
         };
 
         console.log('Statistiques récupérées:', {
