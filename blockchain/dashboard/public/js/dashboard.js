@@ -180,7 +180,7 @@ function updateRecentTable(tableId, items) {
                 //     <td>${formattedTime}</td>
                 // `;
                 div.innerHTML = `
-                <div class="font-medium">${fileNameCell}</div>
+                <div class="font-medium">${fileName}</div>
                 <div class="text-gray-500 text-xs">${formattedTime}</div>
                 <div class="mt-1 p-1 bg-gray-100 text-xs font-mono overflow-auto max-h-20">${hash}</div>
             `;
