@@ -64,6 +64,13 @@ function updateStats(stats) {
         updateElementSafely('encryptedPerHour', stats.encryptedPerMinute ? (stats.encryptedPerMinute * 60).toFixed(0) : '0');
         updateElementSafely('messagesPerHour', stats.messagesPerMinute ? (stats.messagesPerMinute * 60).toFixed(0) : '0');
         
+        // Mise à jour du badge d'alertes dans la barre de navigation
+        const alertsBadge = document.querySelector('.nav-link[href="/alerts"] .badge');
+        if (alertsBadge && stats.totalAlerts) {
+            alertsBadge.textContent = stats.totalAlerts;
+            alertsBadge.style.display = stats.totalAlerts > 0 ? 'inline' : 'none';
+        }
+        
         // Mise à jour des tableaux récents
         if (stats.recentHashList && Array.isArray(stats.recentHashList)) {
             console.log('Mise à jour du tableau des hash récents:', stats.recentHashList);

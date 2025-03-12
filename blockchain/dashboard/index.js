@@ -90,60 +90,35 @@ async function getStats() {
     try {
         const now = Date.now();
         
-        // Si les dernières stats ont moins de 2 secondes, les renvoyer
-        if (lastStats && (now - lastUpdate) < 2000) {
+        // Si les dernières statistiques sont récentes, les renvoyer directement
+        if (lastStats && (now - lastUpdate < UPDATE_INTERVAL)) {
             return lastStats;
         }
-
-        const db = mongoClient.db(process.env.MONGODB_DB_NAME);
         
         console.log('Récupération des statistiques...');
         
-        // Récupérer les stats système
-        const systemStats = await systemMonitor.getSystemStats();
-        console.log('Stats système récupérées:', JSON.stringify(systemStats, null, 2));
+        // Vérifier la connexion à MongoDB
+        if (!mongoClient || !mongoClient.topology || !mongoClient.topology.isConnected()) {
+            console.error('Erreur: MongoDB n\'est pas connecté');
+            return null;
+        }
         
-        // Extraire les valeurs CPU, mémoire et disque
+        const db = mongoClient.db(process.env.MONGODB_DB_NAME);
+        
+        // Récupérer les statistiques système
+        let systemStats = null;
         let cpuUsage = 0;
         let memoryUsage = 0;
         let diskUsage = 0;
         
-        if (systemStats) {
-            // Extraire la valeur CPU
-            if (systemStats.cpu && typeof systemStats.cpu === 'object') {
-                if (systemStats.cpu.loadAverage && Array.isArray(systemStats.cpu.loadAverage)) {
-                    // Utiliser la moyenne de charge sur 1 minute
-                    cpuUsage = systemStats.cpu.loadAverage[0] * 10; // Multiplier par 10 pour avoir un pourcentage approximatif
-                } else if (typeof systemStats.cpu.usage === 'number') {
-                    cpuUsage = systemStats.cpu.usage;
-                }
-            }
-            
-            // Extraire la valeur mémoire
-            if (systemStats.memory && typeof systemStats.memory === 'object') {
-                if (systemStats.memory.usedPercentage) {
-                    memoryUsage = parseFloat(systemStats.memory.usedPercentage);
-                } else if (systemStats.memory.used && systemStats.memory.total) {
-                    memoryUsage = (systemStats.memory.used / systemStats.memory.total) * 100;
-                }
-            }
-            
-            // Extraire la valeur disque
-            if (systemStats.disk && typeof systemStats.disk === 'object') {
-                if (systemStats.disk.usedPercentage) {
-                    diskUsage = parseFloat(systemStats.disk.usedPercentage);
-                } else if (systemStats.disk.used && systemStats.disk.total) {
-                    diskUsage = (systemStats.disk.used / systemStats.disk.total) * 100;
-                }
-            }
+        try {
+            systemStats = await systemMonitor.getSystemStats();
+            cpuUsage = systemStats.cpuUsage;
+            memoryUsage = systemStats.memoryUsage;
+            diskUsage = systemStats.diskUsage;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des statistiques système:', error);
         }
-        
-        // Forcer des valeurs par défaut si les valeurs sont NaN ou undefined
-        cpuUsage = isNaN(cpuUsage) ? 0 : cpuUsage;
-        memoryUsage = isNaN(memoryUsage) ? 0 : memoryUsage;
-        diskUsage = isNaN(diskUsage) ? 0 : diskUsage;
-        
-        console.log('Valeurs système extraites:', { cpuUsage, memoryUsage, diskUsage });
         
         // Obtenir les compteurs actuels
         const currentCounts = {
@@ -151,6 +126,9 @@ async function getStats() {
             encrypted: await db.collection('encrypted').countDocuments(),
             messages: await db.collection('messages').countDocuments()
         };
+
+        // Récupérer le nombre total d'alertes
+        const totalAlertsCount = await db.collection('alerts').countDocuments();
 
         // Récupérer les alertes
         const alerts = await db.collection('alerts')
@@ -213,7 +191,8 @@ async function getStats() {
             recentHashList: recentHashList,
             recentEncryptedList: recentEncryptedList,
             recentMessages: recentMessages,
-            alerts: alerts
+            alerts: alerts,
+            totalAlerts: totalAlertsCount
         };
 
         console.log('Statistiques récupérées:', {
@@ -224,6 +203,7 @@ async function getStats() {
             recentEncryptedCount: recentEncryptedList.length,
             recentMessagesCount: recentMessages.length,
             alertsCount: alerts.length,
+            totalAlertsCount: totalAlertsCount,
             systemStatus: systemStats ? 'OK' : 'Error',
             cpuUsage,
             memoryUsage,
@@ -248,6 +228,9 @@ app.get('/', async (req, res) => {
     try {
         // Récupérer les données directement ici plutôt que de s'appuyer sur getStats
         const db = mongoClient.db(process.env.MONGODB_DB_NAME);
+        
+        // Récupérer le nombre total d'alertes
+        const totalAlerts = await db.collection('alerts').countDocuments();
         
         // Récupérer les 5 dernières alertes
         const alerts = await db.collection('alerts')
@@ -279,6 +262,7 @@ app.get('/', async (req, res) => {
         
         console.log('Données récupérées pour la page d\'accueil:');
         console.log('- Alertes:', alerts.length);
+        console.log('- Total Alertes:', totalAlerts);
         console.log('- Hash:', recentHashList.length);
         console.log('- Encrypted:', recentEncryptedList.length);
         console.log('- Messages:', recentMessages.length);
@@ -289,6 +273,7 @@ app.get('/', async (req, res) => {
             active: 'home',
             user: { username: req.auth.user },
             alerts: alerts,
+            totalAlerts: totalAlerts,
             recentHashList: recentHashList,
             recentEncryptedList: recentEncryptedList,
             recentMessages: recentMessages
@@ -316,6 +301,7 @@ app.get('/alerts', async (req, res) => {
             user: { username: req.auth.user },
             active: 'alerts',
             alerts: alerts,
+            totalAlerts: alerts.length,
             error: null // Définir error comme null par défaut
         });
     } catch (error) {
@@ -325,6 +311,7 @@ app.get('/alerts', async (req, res) => {
             user: { username: req.auth.user },
             active: 'alerts',
             alerts: [],
+            totalAlerts: 0,
             error: 'Erreur lors de la récupération des alertes: ' + error.message
         });
     }
