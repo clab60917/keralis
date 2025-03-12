@@ -181,6 +181,30 @@ canvas {
     max-width: 100%;
 }
 
+/* Styles spécifiques pour le graphique d'activité */
+#activityChart {
+    min-height: 300px;
+    max-height: 400px;
+    width: 100% !important;
+}
+
+/* Conteneur du graphique d'activité */
+#activityChart-container {
+    position: relative;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+/* Animation pour le graphique */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#activityChart {
+    animation: fadeIn 0.5s ease-out;
+}
+
 /* Styles pour les indicateurs de statut */
 .status-indicator {
     display: inline-block;

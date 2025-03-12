@@ -17,16 +17,6 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Graphique d'activité -->
-            <div class="card mt-3">
-                <div class="card-header">
-                    <i class="bi bi-activity me-2"></i> Activité en Temps Réel
-                </div>
-                <div class="card-body">
-                    <canvas id="activityChart" height="200"></canvas>
-                </div>
-            </div>
         </div>
         
         <div class="col-md-4">
@@ -134,6 +124,20 @@
                             <a href="/alerts" class="btn btn-sm btn-primary">Voir toutes les alertes <i class="bi bi-arrow-right"></i></a>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Graphique d'activité (maintenant sur toute la largeur) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-activity me-2"></i> Activité des 20 derniers messages
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" height="300"></canvas>
                 </div>
             </div>
         </div>

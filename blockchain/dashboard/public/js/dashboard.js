@@ -63,7 +63,7 @@ function initActivityChart() {
     }
     
     // Définir un dégradé pour le fond du graphique
-    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, 'rgba(67, 97, 238, 0.3)');
     gradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
     
@@ -106,7 +106,8 @@ function initActivityChart() {
                             family: "'Poppins', sans-serif",
                             size: 11
                         },
-                        color: '#6c757d'
+                        color: '#6c757d',
+                        padding: 10
                     },
                     title: {
                         display: true,
@@ -116,7 +117,10 @@ function initActivityChart() {
                             size: 12,
                             weight: 'bold'
                         },
-                        color: '#495057'
+                        color: '#495057',
+                        padding: {
+                            bottom: 10
+                        }
                     }
                 },
                 x: {
@@ -131,7 +135,9 @@ function initActivityChart() {
                         },
                         color: '#6c757d',
                         maxRotation: 45,
-                        minRotation: 45
+                        minRotation: 45,
+                        autoSkip: true,
+                        maxTicksLimit: 20
                     },
                     title: {
                         display: true,
@@ -141,27 +147,20 @@ function initActivityChart() {
                             size: 12,
                             weight: 'bold'
                         },
-                        color: '#495057'
+                        color: '#495057',
+                        padding: {
+                            top: 10
+                        }
                     }
                 }
             },
             plugins: {
                 title: {
-                    display: true,
-                    text: 'Activité des 20 derniers messages',
-                    font: {
-                        family: "'Poppins', sans-serif",
-                        size: 16,
-                        weight: 'bold'
-                    },
-                    color: '#343a40',
-                    padding: {
-                        top: 10,
-                        bottom: 20
-                    }
+                    display: false,
                 },
                 legend: {
                     position: 'top',
+                    align: 'end',
                     labels: {
                         font: {
                             family: "'Poppins', sans-serif",
@@ -169,7 +168,8 @@ function initActivityChart() {
                         },
                         color: '#495057',
                         usePointStyle: true,
-                        pointStyle: 'circle'
+                        pointStyle: 'circle',
+                        padding: 20
                     }
                 },
                 tooltip: {
@@ -213,6 +213,14 @@ function initActivityChart() {
                     borderWidth: 3,
                     tension: 0.4
                 }
+            },
+            layout: {
+                padding: {
+                    top: 10,
+                    right: 20,
+                    bottom: 10,
+                    left: 10
+                }
             }
         }
     });
@@ -240,13 +248,14 @@ function updateActivityChart(stats) {
             return dateA - dateB;
         });
         
-        // Limiter aux 20 derniers messages
+        // Limiter aux MAX_DATA_POINTS derniers messages
         const recentMessages = sortedMessages.slice(-MAX_DATA_POINTS);
         
         // Extraire les labels (heures) et les données (compteur cumulatif)
         recentMessages.forEach((message, index) => {
             const date = new Date(message.timestamp || message.date || message.time || message.createdAt || Date.now());
-            labels.push(date.toLocaleTimeString());
+            // Format plus compact pour les heures sur un graphique large
+            labels.push(date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
             
             // Utiliser l'index + 1 comme valeur pour montrer la progression
             messageData.push(index + 1);
@@ -256,8 +265,10 @@ function updateActivityChart(stats) {
         activityChart.data.labels = labels;
         activityChart.data.datasets[0].data = messageData;
         
-        // Mettre à jour le titre du graphique
-        activityChart.options.plugins.title.text = `Activité des ${recentMessages.length} derniers messages`;
+        // Ajuster dynamiquement le nombre de ticks en fonction de la largeur
+        const containerWidth = document.getElementById('activityChart').parentElement.offsetWidth;
+        const maxTicks = Math.max(10, Math.min(20, Math.floor(containerWidth / 60)));
+        activityChart.options.scales.x.ticks.maxTicksLimit = maxTicks;
         
         // Redessiner le graphique
         activityChart.update();
