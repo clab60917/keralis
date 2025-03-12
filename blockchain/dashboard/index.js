@@ -168,31 +168,43 @@ async function getStats() {
         let recentAlerts = [];
         
         try {
+            // Récupérer les hash récents avec une projection pour limiter les champs
             recentHashList = await db.collection('hash')
                 .find({})
                 .sort({ timestamp: -1 })
                 .limit(5)
+                .project({ fileName: 1, hash: 1, timestamp: 1, file: 1, name: 1, filename: 1, path: 1, _id: 0 })
                 .toArray();
+                
+            console.log('Hash récents récupérés:', recentHashList);
         } catch (error) {
             console.error('Erreur lors de la récupération des hash récents:', error);
         }
         
         try {
+            // Récupérer les encrypted récents avec une projection pour limiter les champs
             recentEncryptedList = await db.collection('encrypted')
                 .find({})
                 .sort({ timestamp: -1 })
                 .limit(5)
+                .project({ fileName: 1, status: 1, timestamp: 1, file: 1, name: 1, filename: 1, path: 1, _id: 0 })
                 .toArray();
+                
+            console.log('Encrypted récents récupérés:', recentEncryptedList);
         } catch (error) {
             console.error('Erreur lors de la récupération des encrypted récents:', error);
         }
         
         try {
+            // Récupérer les messages récents avec une projection pour limiter les champs
             recentMessages = await db.collection('messages')
                 .find({})
                 .sort({ timestamp: -1 })
                 .limit(5)
+                .project({ type: 1, message: 1, timestamp: 1, content: 1, text: 1, data: 1, _id: 0 })
                 .toArray();
+                
+            console.log('Messages récents récupérés:', recentMessages);
         } catch (error) {
             console.error('Erreur lors de la récupération des messages récents:', error);
         }
@@ -230,6 +242,11 @@ async function getStats() {
                 fileName = pathParts[pathParts.length - 1];
             }
             
+            // S'assurer que le nom du fichier a l'extension .hash si ce n'est pas déjà le cas
+            if (fileName !== 'N/A' && !fileName.toLowerCase().endsWith('.hash')) {
+                fileName = fileName + '.hash';
+            }
+            
             // Rechercher les champs possibles pour le hash
             let hash = 'N/A';
             if (item.hash) hash = item.hash;
@@ -265,6 +282,11 @@ async function getStats() {
                 // Extraire le nom du fichier à partir du chemin
                 const pathParts = item.path.split(/[\/\\]/);
                 fileName = pathParts[pathParts.length - 1];
+            }
+            
+            // S'assurer que le nom du fichier a l'extension .enc si ce n'est pas déjà le cas
+            if (fileName !== 'N/A' && !fileName.toLowerCase().endsWith('.enc')) {
+                fileName = fileName + '.enc';
             }
             
             // Rechercher les champs possibles pour le statut

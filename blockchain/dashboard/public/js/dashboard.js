@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
         socket.on('connect', function() {
             console.log('Connecté au serveur Socket.IO - ID:', socket.id);
             document.getElementById('lastUpdated').textContent = 'Connecté';
+            
+            // Demander immédiatement les statistiques au serveur
+            socket.emit('requestStats');
         });
         
         socket.on('connect_error', function(error) {
@@ -57,21 +60,30 @@ function updateStats(stats) {
         document.getElementById('totalMessagesCount').textContent = stats.totalMessages || '0';
         
         // Mise à jour des taux par heure (au lieu de par minute)
-        document.getElementById('hashesPerHour').textContent = stats.hashesPerMinute ? (stats.hashesPerMinute * 60).toFixed(2) : '0';
-        document.getElementById('encryptedPerHour').textContent = stats.encryptedPerMinute ? (stats.encryptedPerMinute * 60).toFixed(2) : '0';
-        document.getElementById('messagesPerHour').textContent = stats.messagesPerMinute ? (stats.messagesPerMinute * 60).toFixed(2) : '0';
+        document.getElementById('hashesPerHour').textContent = stats.hashesPerMinute ? (stats.hashesPerMinute * 60).toFixed(0) : '0';
+        document.getElementById('encryptedPerHour').textContent = stats.encryptedPerMinute ? (stats.encryptedPerMinute * 60).toFixed(0) : '0';
+        document.getElementById('messagesPerHour').textContent = stats.messagesPerMinute ? (stats.messagesPerMinute * 60).toFixed(0) : '0';
         
         // Mise à jour des tableaux récents
         if (stats.recentHashList && Array.isArray(stats.recentHashList)) {
+            console.log('Mise à jour du tableau des hash récents:', stats.recentHashList);
             updateRecentTable('recentHashTableBody', stats.recentHashList);
+        } else {
+            console.warn('Aucune donnée de hash récente disponible');
         }
         
         if (stats.recentEncryptedList && Array.isArray(stats.recentEncryptedList)) {
+            console.log('Mise à jour du tableau des encrypted récents:', stats.recentEncryptedList);
             updateRecentTable('recentEncryptedTableBody', stats.recentEncryptedList);
+        } else {
+            console.warn('Aucune donnée encrypted récente disponible');
         }
         
         if (stats.recentMessages && Array.isArray(stats.recentMessages)) {
+            console.log('Mise à jour du tableau des messages récents:', stats.recentMessages);
             updateRecentTable('recentMessagesTableBody', stats.recentMessages);
+        } else {
+            console.warn('Aucun message récent disponible');
         }
         
         // Mise à jour des alertes
@@ -141,7 +153,10 @@ function updateRecentTable(tableId, items) {
             let formattedTime = 'N/A';
             try {
                 if (item.timestamp) {
-                    formattedTime = new Date(item.timestamp).toLocaleTimeString();
+                    const date = new Date(item.timestamp);
+                    if (!isNaN(date.getTime())) {
+                        formattedTime = date.toLocaleTimeString();
+                    }
                 }
             } catch (error) {
                 console.error('Erreur lors du formatage de la date:', error);
@@ -212,9 +227,13 @@ function updateRecentTable(tableId, items) {
                     else if (type === 'info') typeClass = 'info';
                 }
                 
+                // Tronquer le message s'il est trop long
+                const message = item.message || 'N/A';
+                const displayMessage = message.length > 30 ? message.substring(0, 27) + '...' : message;
+                
                 tr.innerHTML = `
                     <td><span class="badge bg-${typeClass}">${item.type || 'N/A'}</span></td>
-                    <td>${item.message || 'N/A'}</td>
+                    <td title="${message}">${displayMessage}</td>
                     <td>${formattedTime}</td>
                 `;
             } else {

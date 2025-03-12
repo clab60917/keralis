@@ -6,8 +6,8 @@ const execAsync = util.promisify(exec);
 class SystemMonitor {
     async getSystemStats() {
         try {
-            // Simuler des valeurs plus réalistes pour le développement
-            const simulateRealisticValues = true;
+            // Désactiver la simulation des valeurs
+            const simulateRealisticValues = false;
             
             let cpuLoad, memUsage, diskUsage;
             
