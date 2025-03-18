@@ -42,12 +42,9 @@
                 lastUpdatedElement.textContent = now;
             }
         }
+            updateLastUpdated();
     
-        // Met à jour immédiatement au chargement de la page
-        updateLastUpdated();
-    
-        // Met à jour toutes les 5 secondes
-        setInterval(updateLastUpdated, 5000);
+        setInterval(updateLastUpdated, 3000);
     </script>
 </body>
 </html> 
