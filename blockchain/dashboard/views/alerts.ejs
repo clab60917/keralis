@@ -42,32 +42,6 @@
                                         <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#alertModal<%= alert._id %>">
                                             Détails
                                         </button>
-                                        
-                                        <!-- Modal pour les détails -->
-                                        <div class="modal fade" id="alertModal<%= alert._id %>" tabindex="-1">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Détails de l'Alerte</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <p><strong>Fichier:</strong> <%= alert.fileName %></p>
-                                                        <p><strong>Date de détection:</strong> <%= new Date(alert.timestamp).toLocaleString('fr-FR') %></p>
-                                                        <p><strong>Statut:</strong> <%= alert.status %></p>
-                                                        <p><strong>Hash Original:</strong> <%= alert.oldHash || alert.originalHash %></p>
-                                                        <p><strong>Nouveau Hash:</strong> <%= alert.newHash || alert.currentHash %></p>
-                                                        <p><strong>Email envoyé:</strong> <%= alert.emailSent ? 'Oui' : 'Non' %></p>
-                                                        <% if (alert.details) { %>
-                                                            <p><strong>Serveur:</strong> <%= alert.details.serverUrl %></p>
-                                                        <% } %>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </td>
                                 </tr>
                             <% }); %>
@@ -81,6 +55,36 @@
             </div>
         </div>
     </div>
+    
+    <!-- Modales déplacées ici, en dehors du tableau -->
+    <% if (alerts && alerts.length > 0) { %>
+        <% alerts.forEach(function(alert) { %>
+            <div class="modal fade" id="alertModal<%= alert._id %>" tabindex="-1" aria-labelledby="alertModalLabel<%= alert._id %>" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="alertModalLabel<%= alert._id %>">Détails de l'Alerte</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Fichier:</strong> <%= alert.fileName %></p>
+                            <p><strong>Date de détection:</strong> <%= new Date(alert.timestamp).toLocaleString('fr-FR') %></p>
+                            <p><strong>Statut:</strong> <%= alert.status %></p>
+                            <p><strong>Hash Original:</strong> <%= alert.oldHash || alert.originalHash %></p>
+                            <p><strong>Nouveau Hash:</strong> <%= alert.newHash || alert.currentHash %></p>
+                            <p><strong>Email envoyé:</strong> <%= alert.emailSent ? 'Oui' : 'Non' %></p>
+                            <% if (alert.details) { %>
+                                <p><strong>Serveur:</strong> <%= alert.details.serverUrl %></p>
+                            <% } %>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% }); %>
+    <% } %>
 </div>
 
-<%- include('partials/footer') %> 
+<%- include('partials/footer') %>
