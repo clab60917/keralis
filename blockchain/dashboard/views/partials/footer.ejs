@@ -34,5 +34,20 @@
     <script src="/socket.io/socket.io.js"></script>
     <!-- Custom JS -->
     <script src="/js/dashboard.js"></script>
+    <script>
+        function updateLastUpdated() {
+            const now = new Date().toLocaleTimeString();
+            const lastUpdatedElement = document.getElementById('lastUpdated');
+            if (lastUpdatedElement) {
+                lastUpdatedElement.textContent = now;
+            }
+        }
+    
+        // Met à jour immédiatement au chargement de la page
+        updateLastUpdated();
+    
+        // Met à jour toutes les 5 secondes
+        setInterval(updateLastUpdated, 5000);
+    </script>
 </body>
 </html> 
