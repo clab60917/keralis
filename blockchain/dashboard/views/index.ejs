@@ -396,10 +396,10 @@
         // Ajouter un élément pour l'horodatage de la dernière mise à jour
         const footer = document.querySelector('footer .container');
         if (footer) {
-            const lastUpdatedSpan = document.createElement('div');
-            lastUpdatedSpan.className = 'mt-2';
-            lastUpdatedSpan.innerHTML = 'Dernière mise à jour: <span id="lastUpdated">-</span>';
-            footer.appendChild(lastUpdatedSpan);
+            <div class="me-3">
+                            <small class="text-muted me-2">Dernière mise à jour:</small>
+                            <span id="lastUpdated" class="badge bg-secondary">-</span>
+                        </div>
         }
     });
 </script>
