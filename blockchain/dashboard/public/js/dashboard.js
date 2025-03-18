@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         socket.on('connect', function() {
             console.log('Connecté au serveur Socket.IO - ID:', socket.id);
-            document.getElementById('lastUpdated').textContent = 'Connecté';
+           // document.getElementById('lastUpdated').textContent = 'Connecté';
             
             // Demander immédiatement les statistiques au serveur
             socket.emit('requestStats');
