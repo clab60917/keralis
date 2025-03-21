@@ -536,6 +536,9 @@ function updateRecentTable(tableId, items) {
                 } else if (status.toLowerCase() === 'pending' || status.toLowerCase() === 'processing') {
                     statusClass = 'warning';
                 }
+                else if (status.toLowerCase() === 'unrestored' ) {
+                    statusClass = 'unrestored';
+                }
                 
                 // Tronquer le nom du fichier s'il est trop long
                 const displayFileName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
@@ -555,6 +558,7 @@ function updateRecentTable(tableId, items) {
                 
                 // Ajouter une classe en fonction du type de message
                 const typeClass = type.toLowerCase() === 'error' ? 'danger' :
+                                 type.toLowerCase() === 'unrestored' ? 'unrestored' :
                                  type.toLowerCase() === 'warning' ? 'warning' :
                                  type.toLowerCase() === 'success' ? 'success' :
                                  'info';
@@ -676,7 +680,7 @@ function updateAlertsTable(tableId, alerts) {
             let statusClass = 'secondary';
             const statusLower = status.toLowerCase();
             
-            if (statusLower === 'error' || statusLower === 'danger' || statusLower === 'failed'|| statusLower === 'unrestored') {
+            if (statusLower === 'error' || statusLower === 'unrestored' || statusLower === 'failed'|| statusLower === 'danger') {
                 statusClass = 'danger';
                 tr.classList.add('table-danger');
             } else if (statusLower === 'warning') {
@@ -738,7 +742,7 @@ function updateSystemStatus(elementId, value) {
     element.style.width = `${displayWidth}%`;
     
     // Supprimer les classes existantes
-    element.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-secondary');
+    element.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-secondary', 'bg-unrestored');
     
     // Ajouter la classe appropriée en fonction de la valeur
     if (typeof value !== 'number' || isNaN(value)) {
@@ -749,6 +753,9 @@ function updateSystemStatus(elementId, value) {
         element.classList.add('bg-warning');
     } else {
         element.classList.add('bg-danger');
+    }
+    else {
+        element.classList.add('bg-unrestored');
     }
     
     console.log(`Mise à jour de ${elementId} avec la valeur ${numericValue}%, affichage: ${displayWidth}%, classe: ${element.className}`);
