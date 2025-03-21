@@ -566,8 +566,24 @@ footer {
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7'/%3E%3C/svg%3E");
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7'/%3E%3C/svg%3E");
 } 
+
 #alertCard {
-    max-width: 95%; /* Augmente la largeur jusqu'à 95% de l’écran */
-    width: 1200px; /* Largeur fixe pour les grands écrans */
-    margin: auto; /* Centre la carte horizontalement */
+    max-width: 90%; /* Augmente la largeur jusqu'à 90% de l'écran */
+    width: 90vw; /* S'assure que la largeur s'adapte bien */
+    margin: auto; /* Centre la carte */
+}
+
+#alertCard .card-body {
+    width: 100%; /* Prend toute la largeur disponible */
+    padding: 20px; /* Ajoute un peu d'espace autour */
+}
+
+#alertCard .table-responsive {
+    width: 100%; /* La table prend toute la largeur de la carte */
+    overflow-x: auto; /* Permet de scroller horizontalement si nécessaire */
+}
+
+#alertCard .table {
+    width: 100%; /* La table occupe toute la largeur disponible */
+    table-layout: fixed; /* Évite les colonnes trop compactes */
 }
