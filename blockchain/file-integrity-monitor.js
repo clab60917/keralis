@@ -3,7 +3,7 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const axios = require('axios');
 const nodemailer = require('nodemailer');
 const { MongoClient } = require('mongodb');
-const CHECK_INTERVAL = parseInt(process.env.CHECK_INTERVAL_MS || 4 * 60 * 1000); 
+const CHECK_INTERVAL = parseInt(process.env.CHECK_INTERVAL_MS || 4 * 60 * 1000);  //check toutes les 4 minutes par défaut 
 
 const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3001';
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
