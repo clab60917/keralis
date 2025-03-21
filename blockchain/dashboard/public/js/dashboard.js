@@ -753,7 +753,7 @@ function updateSystemStatus(elementId, value) {
     } else if (value < 90) {
         element.classList.add('bg-warning');
     } else {
-        element.classList.add('bg-danger');
+        element.classList.add('bg-unrestored');
     } 
     
     console.log(`Mise à jour de ${elementId} avec la valeur ${numericValue}%, affichage: ${displayWidth}%, classe: ${element.className}`);
