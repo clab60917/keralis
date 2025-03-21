@@ -3,11 +3,11 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const axios = require('axios');
 const nodemailer = require('nodemailer');
 const { MongoClient } = require('mongodb');
-const cron = require('node-cron');
 
 const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3001';
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
-const CHECK_INTERVAL = process.env.CHECK_INTERVAL || '*/15 * * * *'; // Toutes les 15 minutes par défaut
+// Définir l'intervalle en millisecondes (15 minutes par défaut)
+const CHECK_INTERVAL_MS = parseInt(process.env.CHECK_INTERVAL_MS || 15 * 60 * 1000);
 
 // Configuration MongoDB
 const MONGODB_URI = `mongodb://${process.env.MONGODB_USER}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DB_NAME}?authSource=${process.env.MONGODB_AUTH_SOURCE}`;
@@ -26,6 +26,7 @@ const transporter = nodemailer.createTransport({
 
 // Cache des hash pour comparer avec les valeurs précédentes
 const hashCache = new Map();
+let monitoringTimer = null;
 
 // Fonction pour se connecter à MongoDB
 async function connectToMongoDB() {
@@ -254,8 +255,14 @@ async function checkAllFilesIntegrity() {
         }
         
         console.log('✓ Vérification terminée');
+        
+        // Planifier la prochaine vérification
+        monitoringTimer = setTimeout(checkAllFilesIntegrity, CHECK_INTERVAL_MS);
+        console.log(`Prochaine vérification prévue dans ${CHECK_INTERVAL_MS/1000} secondes (${new Date(Date.now() + CHECK_INTERVAL_MS).toISOString()})`);
     } catch (error) {
         console.error('❌ Erreur lors de la vérification des fichiers:', error.message);
+        // En cas d'erreur, planifier quand même la prochaine vérification pour assurer la continuité
+        monitoringTimer = setTimeout(checkAllFilesIntegrity, CHECK_INTERVAL_MS);
     }
 }
 
@@ -267,15 +274,11 @@ async function startMonitoring() {
         // Initialiser le cache des hash
         await initializeHashCache();
         
-        // Configurer la tâche cron pour vérifier régulièrement les fichiers
-        cron.schedule(CHECK_INTERVAL, async () => {
-            await checkAllFilesIntegrity();
-        });
-        
-        console.log(`✓ Système de surveillance démarré. Intervalle de vérification: ${CHECK_INTERVAL}`);
+        console.log(`✓ Système de surveillance démarré. Intervalle de vérification: ${CHECK_INTERVAL_MS/1000} secondes`);
         
         // Exécuter une première vérification immédiatement
         await checkAllFilesIntegrity();
+        // La fonction checkAllFilesIntegrity planifie elle-même la prochaine exécution
     } catch (error) {
         console.error('❌ Erreur lors du démarrage du système de surveillance:', error.message);
     }
@@ -284,10 +287,17 @@ async function startMonitoring() {
 // Gérer la fermeture propre
 process.on('SIGINT', async () => {
     console.log('Fermeture du système de surveillance...');
+    // Annuler le timer en cours s'il existe
+    if (monitoringTimer) {
+        clearTimeout(monitoringTimer);
+    }
+    
+    // Fermer les connexions
     if (mongoClient) {
         await mongoClient.close();
         console.log('Connexion MongoDB fermée');
     }
+    
     process.exit(0);
 });
 
