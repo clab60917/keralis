@@ -41,36 +41,59 @@ if (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD) {
 //     challenge: true,
 //     realm: 'Keralis Dashboard'
 // }));
+
+
+
 // Configuration de l'authentification basique
 let users = {};
 
-// Format par défaut pour un seul utilisateur
-if (process.env.DASHBOARD_USER && process.env.DASHBOARD_PASSWORD) {
-    users[process.env.DASHBOARD_USER] = process.env.DASHBOARD_PASSWORD;
-} 
-// Format pour plusieurs utilisateurs (DASHBOARD_USERS=user1:password1,user2:password2)
-else if (process.env.DASHBOARD_USERS) {
-    const userPairs = process.env.DASHBOARD_USERS.split(',');
-    userPairs.forEach(pair => {
+// Vérifier si nous avons une liste d'utilisateurs au format user:pass;user:pass
+if (process.env.DASHBOARD_USERS) {
+    const userPairs = process.env.DASHBOARD_USERS.split(';');
+    for (const pair of userPairs) {
         const [username, password] = pair.split(':');
         if (username && password) {
-            users[username] = password;
+            users[username.trim()] = password.trim();
         }
-    });
-}
-// Valeur par défaut
-if (Object.keys(users).length === 0) {
-    users['admin'] = 'changeme';
-    console.log('ATTENTION: Utilisation des identifiants par défaut');
+    }
+    console.log(`${Object.keys(users).length} utilisateurs chargés depuis DASHBOARD_USERS`);
+} 
+// Vérifier les variables numérotées (DASHBOARD_USER_1, DASHBOARD_PASSWORD_1, etc.)
+else {
+    let index = 1;
+    let continueChecking = true;
+    
+    while (continueChecking) {
+        const userVar = `DASHBOARD_USER_${index}`;
+        const passVar = `DASHBOARD_PASSWORD_${index}`;
+        
+        if (process.env[userVar] && process.env[passVar]) {
+            users[process.env[userVar]] = process.env[passVar];
+            index++;
+        } else {
+            continueChecking = false;
+        }
+    }
+    
+    console.log(`${Object.keys(users).length} utilisateurs chargés depuis les variables numérotées`);
 }
 
-console.log(`Configuration de ${Object.keys(users).length} utilisateur(s)`);
+// Si aucun utilisateur n'est défini, utiliser l'authentification simple
+if (Object.keys(users).length === 0) {
+    users[process.env.DASHBOARD_USER || 'admin'] = process.env.DASHBOARD_PASSWORD || 'changeme';
+    console.log('Utilisation de l\'authentification simple avec un seul utilisateur');
+}
 
 app.use(basicAuth({
     users: users,
     challenge: true,
     realm: 'Keralis Dashboard'
 }));
+
+
+
+
+
 
 
 // Configuration de l'application
