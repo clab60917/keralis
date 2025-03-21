@@ -48,7 +48,7 @@ async function saveAlert(fileName, oldHash, newHash) {
             fileName,
             oldHash,
             newHash,
-            status: 'new',
+            status: 'unrestored',
             emailSent: true,
             type: 'modification',
             details: {
