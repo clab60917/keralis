@@ -7,7 +7,7 @@ const { MongoClient } = require('mongodb');
 
 const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3001';
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
-const CHECK_INTERVAL_MS = parseInt(process.env.CHECK_INTERVAL_MS || 15 * 60 * 1000); // 15 minutes par défaut
+const CHECK_INTERVAL_MS = parseInt(process.env.CHECK_INTERVAL_MS || 4 * 60 * 1000); // 15 minutes par défaut
 
 // Configuration MongoDB
 const MONGODB_URI = `mongodb://${process.env.MONGODB_USER}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DB_NAME}?authSource=${process.env.MONGODB_AUTH_SOURCE}`;
