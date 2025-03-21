@@ -392,6 +392,10 @@ footer {
     background-color: rgba(239, 68, 68, 0.1);
     color: #ef4444;
 }
+.status-message-unrestored {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
 
 /* Styles pour les info-bulles */
 .info-tooltip {
