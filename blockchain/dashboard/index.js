@@ -32,15 +32,46 @@ if (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD) {
     console.log('ATTENTION: Connexion MongoDB sans authentification');
 }
 
+// // Configuration de l'authentification basique
+// const users = {};
+// users[process.env.DASHBOARD_USER || 'admin'] = process.env.DASHBOARD_PASSWORD || 'changeme';
+
+// app.use(basicAuth({
+//     users: users,
+//     challenge: true,
+//     realm: 'Keralis Dashboard'
+// }));
 // Configuration de l'authentification basique
-const users = {};
-users[process.env.DASHBOARD_USER || 'admin'] = process.env.DASHBOARD_PASSWORD || 'changeme';
+let users = {};
+
+// Format par défaut pour un seul utilisateur
+if (process.env.DASHBOARD_USER && process.env.DASHBOARD_PASSWORD) {
+    users[process.env.DASHBOARD_USER] = process.env.DASHBOARD_PASSWORD;
+} 
+// Format pour plusieurs utilisateurs (DASHBOARD_USERS=user1:password1,user2:password2)
+else if (process.env.DASHBOARD_USERS) {
+    const userPairs = process.env.DASHBOARD_USERS.split(',');
+    userPairs.forEach(pair => {
+        const [username, password] = pair.split(':');
+        if (username && password) {
+            users[username] = password;
+        }
+    });
+}
+// Valeur par défaut
+if (Object.keys(users).length === 0) {
+    users['admin'] = 'changeme';
+    console.log('ATTENTION: Utilisation des identifiants par défaut');
+}
+
+console.log(`Configuration de ${Object.keys(users).length} utilisateur(s)`);
 
 app.use(basicAuth({
     users: users,
     challenge: true,
     realm: 'Keralis Dashboard'
 }));
+
 
 // Configuration de l'application
 app.set('view engine', 'ejs');
