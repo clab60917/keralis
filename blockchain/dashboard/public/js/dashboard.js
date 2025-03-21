@@ -676,7 +676,7 @@ function updateAlertsTable(tableId, alerts) {
             let statusClass = 'secondary';
             const statusLower = status.toLowerCase();
             
-            if (statusLower === 'error' || statusLower === 'danger' || statusLower === 'failed') {
+            if (statusLower === 'error' || statusLower === 'danger' || statusLower === 'failed'| statusLower==='unrestored') {
                 statusClass = 'danger';
                 tr.classList.add('table-danger');
             } else if (statusLower === 'warning') {
@@ -689,11 +689,7 @@ function updateAlertsTable(tableId, alerts) {
                 statusClass = 'info';
                 tr.classList.add('table-info');
             }
-            else if (statusLower === 'unrestored') {
-                statusClass = 'unrestored';
-                tr.classList.add('table-unrestored');
-            }
-            
+          
             
             tr.innerHTML = `
                 <td>${formattedTime}</td>
@@ -743,7 +739,7 @@ function updateSystemStatus(elementId, value) {
     element.style.width = `${displayWidth}%`;
     
     // Supprimer les classes existantes
-    element.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-secondary', 'bg-unrestored');
+    element.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-secondary');
     
     // Ajouter la classe appropriée en fonction de la valeur
     if (typeof value !== 'number' || isNaN(value)) {
