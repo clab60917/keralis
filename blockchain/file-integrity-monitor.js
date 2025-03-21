@@ -58,7 +58,7 @@ async function saveAlert(fileName, oldHash, newHash, type = 'modification') {
             fileName,
             oldHash,
             newHash,
-            status: 'new',
+            status: 'unrestored',
             emailSent: false,
             type, // 'modification' ou 'deletion'
             details: {
