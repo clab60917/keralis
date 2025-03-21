@@ -335,8 +335,13 @@ async function startMonitoring() {
         await initializeHashCache();
         
         // Configurer la tâche cron pour vérifier régulièrement les fichiers
-        setTimeout(startMonitoring, 60000);
-
+        const monitoringTimer = setTimeout(() => {
+            checkAllFilesIntegrity().then(() => {
+                // Après chaque vérification, programmer la suivante
+                startMonitoring();
+            });
+        }, CHECK_INTERVAL);
+        
         console.log(`✓ Système de surveillance démarré. Intervalle de vérification: ${CHECK_INTERVAL}`);
         
         // Exécuter une première vérification immédiatement
