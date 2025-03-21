@@ -31,13 +31,10 @@ const hashCache = new Map();
 const knownFiles = new Set();
 
 // Fonction pour se connecter à MongoDB
+// Fonction pour se connecter à MongoDB
 async function connectToMongoDB() {
     try {
-        if (mongoClient && mongoClient.isConnected()) {
-            return mongoClient.db(process.env.MONGODB_DB_NAME);
-        }
-        
-        mongoClient = new MongoClient(MONGODB_URI, { useUnifiedTopology: true });
+        mongoClient = new MongoClient(MONGODB_URI);
         await mongoClient.connect();
         console.log('✓ Connexion à MongoDB établie');
         return mongoClient.db(process.env.MONGODB_DB_NAME);
