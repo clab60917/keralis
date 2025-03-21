@@ -567,5 +567,7 @@ footer {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7'/%3E%3C/svg%3E");
 } 
 #alertCard {
-    min-height: 80vh; 
+    max-width: 95%; /* Augmente la largeur jusqu'à 95% de l’écran */
+    width: 1200px; /* Largeur fixe pour les grands écrans */
+    margin: auto; /* Centre la carte horizontalement */
 }
