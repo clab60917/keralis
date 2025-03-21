@@ -49,7 +49,7 @@ let users = {};
 
 // Vérifier si nous avons une liste d'utilisateurs au format user:pass;user:pass
 if (process.env.DASHBOARD_USERS) {
-    const userPairs = process.env.DASHBOARD_USERS.split(';');
+    const userPairs = process.env.DASHBOARD_USERS.split(',');
     for (const pair of userPairs) {
         const [username, password] = pair.split(':');
         if (username && password) {
