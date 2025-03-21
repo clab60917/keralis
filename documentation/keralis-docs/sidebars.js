@@ -24,9 +24,9 @@ const sidebars = {
       type: 'category',
       label: 'Architecture',
       items: [
-        'architecture/sender-service',
-        'architecture/client-server',
+        'architecture/sender-client_server',
         'architecture/blockchain-server',
+        'architecture/monitoring',
       ],
     },
     {

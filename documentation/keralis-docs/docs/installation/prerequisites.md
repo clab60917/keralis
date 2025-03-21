@@ -41,6 +41,10 @@ Assurez-vous que les ports suivants sont accessibles:
 
 ## Préparation des Serveurs
 
+:::tip
+Il est possible de mettre les 2 serveurs dans une même VLAN pour plus de simplicité au niveau de la gestion réseau.
+:::
+
 Nous recommandons d'utiliser deux serveurs distincts:
 
 - Serveur Client: Pour la gestion des logs et le calcul des hashs
