@@ -32,7 +32,7 @@
                                     <td><%= alert.fileName %></td>
                                     <td><span class="badge bg-warning"><%= alert.type || 'modification' %></span></td>
                                     <td>
-                                        <span class="badge bg-<%= alert.status === 'restored' ? 'success' : 'danger' %>">
+                                        <span class="badge bg-<%= alert.status === 'restored' ? 'success' : 'unrestored' %>">
                                             <%= alert.status %>
                                         </span>
                                     </td>
