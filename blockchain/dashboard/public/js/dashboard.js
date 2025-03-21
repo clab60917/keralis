@@ -676,7 +676,7 @@ function updateAlertsTable(tableId, alerts) {
             let statusClass = 'secondary';
             const statusLower = status.toLowerCase();
             
-            if (statusLower === 'error' || statusLower === 'danger' || statusLower === 'failed') {
+            if (statusLower === 'error' || statusLower === 'danger' || statusLower === 'failed'||statusLower==='unrestored') {
                 statusClass = 'danger';
                 tr.classList.add('table-danger');
             } else if (statusLower === 'warning') {
