@@ -19,7 +19,7 @@ function HomepageHeader() {
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
             <h1 className={styles.heroTitle}>
-              <span className={styles.titleHighlight}>Complémentaire à vôtre EDR.</span>
+              <span className={styles.titleHighlight}>Complémentaire à votre EDR.</span>
               <br />
               <span className={styles.titleAccent}>Sécurisez vos logs avec la blockchain.</span>
             </h1>
