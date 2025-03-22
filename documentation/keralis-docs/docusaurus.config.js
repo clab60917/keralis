@@ -45,7 +45,7 @@ const config = {
         title: 'Keralis',
         logo: {
           alt: 'Logo Keralis',
-          src: 'img/logo.svg',
+          src: 'img/logo-keralis.png',
         },
         items: [
           {
