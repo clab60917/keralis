@@ -30,7 +30,7 @@ Le dashboard fournit des statistiques détaillées sur l'état global du systèm
 Le système de monitoring conserve un historique complet des alertes levées:
 
 <div className="screenshot-container">
-  <img src="/img/mesimages/KersalisAlertes.png" alt="Liste des alertes de modification" width="1000" />
+  <img src="/img/mesimages/KeralisAlertes.png" alt="Liste des alertes de modification" width="1000" />
   <p className="caption">**Tableau de toutes les alertes**</p>
 </div>
 
