@@ -31,7 +31,7 @@ Le programme principal qui traite les hashs, les fichiers de logs chiffrés et l
 
 <div className="screenshot-container">
   <img src="/img/mesimages/auto3.png" alt="Description de l'image" width="800" />
-  <p className="caption">Schema envoi SFTP</p>
+  <p className="caption">Journal d'activité de auto3.js</p>
 </div>
 
 ### file-integrity-checker.js
@@ -43,7 +43,7 @@ Service de monitoring qui:
 
 <div className="screenshot-container">
   <img src="/img/mesimages/check.png" alt="Description de l'image" width="600" />
-  <p className="caption">Schema envoi SFTP</p>
+  <p className="caption">Journal d'activité de file-integrity-checker.js pour la vérification des logs</p>
 </div>
 
 ### test-integrity-system.js
