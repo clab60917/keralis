@@ -27,7 +27,7 @@ npm install
 
 ## Configuration de MongoDB
 
-Assurez-vous que MongoDB est installé et en cours d'exécution:
+Assurez-vous que MongoDB soit installé et en cours d'exécution:
 
 ```bash
 # Installation de MongoDB (si nécessaire)
@@ -38,7 +38,7 @@ sudo systemctl enable mongod
 ```
 <div className="screenshot-container">
   <img src="/img/mesimages/mongo.png" alt="Liste des alertes reçues par email" width="600" />
-  <p className="caption">**Schema d'architecture de la DB mongoDB**</p>
+  <p className="caption">**Schéma d'architecture de la DB mongoDB**</p>
 </div>
 
 

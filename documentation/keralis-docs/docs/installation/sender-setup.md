@@ -27,7 +27,7 @@ npm install
 
 ### Variables d'Environnement
 
-Créez un fichier `.env` dans le dossier `/root/keralis/sender/` (creation automatique via script automatisé):
+Créez un fichier `.env` dans le dossier `/root/keralis/sender/` (création automatique via script automatisé):
 
 ```bash
 ./setup.sh

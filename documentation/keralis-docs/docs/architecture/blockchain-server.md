@@ -12,7 +12,7 @@ Le serveur blockchain est responsable de la vérification de l'intégrité des l
 ├── blockchain/
 │   ├── test-integrity-system.js     # Tests d'intégrité
 │   ├── auto3.js                     # Script d'envoi des messages sur la blockchain + 
-│   ├── blockchain-integrity-checker.js  # Vérificateur principal
+│   ├── file-integrity-checker.js  # Vérificateur principal
 │   ├── dashboard.js                 # Interface web
 │   ├── ecosystem.config.js          # Configuration PM2
 │   └── .env                         # Variables d'environnement
@@ -34,7 +34,7 @@ Le programme principal qui traite les hashs, les fichiers de logs chiffrés et l
   <p className="caption">Schema envoi SFTP</p>
 </div>
 
-### blockchain-integrity-checker.js
+### file-integrity-checker.js
 
 Service de monitoring qui:
 - Surveille périodiquement les fichiers de logs

@@ -52,7 +52,7 @@ Ce serveur constitue le cœur du système de sécurité, assurant la vérificati
 1. Le script `auto3.js` reçoit les fichiers envoyés par SFTP
 2. Les fichiers .hash et .log.enc sont stockés dans des collections MongoDB dédiées
 3. Chaque hash est publié sur la blockchain Hedera comme message immuable dans le topic
-4. Le service `blockchain-integrity-checker.js` surveille périodiquement l'intégrité:
+4. Le service `file-integrity-checker.js` surveille périodiquement l'intégrité:
    - Il interroge l'API du serveur client pour obtenir les hashs actuels
    - Il compare ces valeurs avec celles stockées dans MongoDB et sur la blockchain
    - En cas de différence, il génère une alerte par email
