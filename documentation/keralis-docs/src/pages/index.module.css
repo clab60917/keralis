@@ -4,20 +4,162 @@
  */
 
 .heroBanner {
-  padding: 4rem 0;
-  text-align: center;
+  padding: 6rem 0;
+  text-align: left;
   position: relative;
   overflow: hidden;
+  background: linear-gradient(135deg, var(--ifm-color-primary-darker) 0%, var(--ifm-color-primary-darkest) 100%);
 }
 
-@media screen and (max-width: 966px) {
-  .heroBanner {
-    padding: 2rem;
-  }
+.heroContent {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.hero__title {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  color: var(--ifm-color-white);
+}
+
+.hero__subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: var(--ifm-color-white);
+  opacity: 0.9;
+}
+
+.heroSlogan {
+  margin: 3rem 0;
+  padding: 2rem;
+  background: var(--ifm-background-surface-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.sloganHighlight {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--ifm-color-primary);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.sloganText {
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--ifm-color-emphasis-800);
+  line-height: 1.4;
 }
 
 .buttons {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 2rem;
+}
+
+.buttons :global(.button) {
+  min-width: 200px;
+}
+
+.mainFeatures {
+  padding: 4rem 0;
+  background-color: var(--ifm-background-surface-color);
+}
+
+.featureCard {
+  padding: 2rem;
+  border-radius: 8px;
+  background: var(--ifm-background-color);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 100%;
+  text-align: center;
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.featureCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--ifm-color-primary);
+}
+
+.featureIcon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.featureCard h3 {
+  margin-bottom: 1rem;
+  color: var(--ifm-color-primary);
+}
+
+.featureCard p {
+  margin: 0;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.main {
+  padding: 4rem 0;
+}
+
+/* Styles spécifiques pour le thème sombre */
+:global([data-theme='dark']) .heroSlogan {
+  background: var(--ifm-background-color);
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+:global([data-theme='dark']) .featureCard {
+  background: var(--ifm-background-surface-color);
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+:global([data-theme='dark']) .featureCard:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 4rem 2rem;
+  }
+
+  .heroContent {
+    max-width: 100%;
+  }
+
+  .hero__title {
+    font-size: 2.5rem;
+  }
+
+  .hero__subtitle {
+    font-size: 1.2rem;
+  }
+
+  .sloganHighlight {
+    font-size: 1.5rem;
+  }
+
+  .sloganText {
+    font-size: 1.2rem;
+  }
+
+  .buttons {
+    justify-content: center;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .buttons {
+    flex-direction: column;
+  }
+
+  .buttons :global(.button) {
+    width: 100%;
+  }
 }
