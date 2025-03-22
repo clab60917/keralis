@@ -35,7 +35,6 @@ const sidebars = {
       items: [
         'installation/prerequisites',
         'installation/sender-setup',
-        'installation/client-setup',
         'installation/blockchain-setup',
       ],
     },

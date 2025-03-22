@@ -45,7 +45,7 @@ Assurez-vous que les ports suivants sont accessibles:
 Il est possible de mettre les 2 serveurs dans une même VLAN pour plus de simplicité au niveau de la gestion réseau.
 :::
 
-Nous recommandons d'utiliser deux serveurs distincts:
+**Il est necessaire d'utiliser deux serveurs distincts:**
 
 - Serveur Client: Pour la gestion des logs et le calcul des hashs
 - Serveur Blockchain: Pour la vérification de l'intégrité et le dashboard

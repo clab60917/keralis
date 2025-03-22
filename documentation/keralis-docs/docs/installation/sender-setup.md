@@ -27,15 +27,10 @@ npm install
 
 ### Variables d'Environnement
 
-Créez un fichier `.env` dans le dossier `/root/keralis/sender/`:
+Créez un fichier `.env` dans le dossier `/root/keralis/sender/` (creation automatique via script automatisé):
 
 ```bash
-cat > .env << EOL
-LOG_INTERVAL=300000          # 5 minutes
-MAX_FILE_SIZE=500           # Taille en octets
-RETENTION_DAYS=7            # Durée de conservation
-OUTPUT_DIR=/root/keralis/logs
-EOL
+./setup.sh
 ```
 
 ### Configuration PM2
@@ -46,7 +41,7 @@ Créez un fichier `ecosystem.config.js` pour gérer le service avec PM2:
 cat > ecosystem.config.js << EOL
 module.exports = {
   apps: [{
-    name: 'auto-sender',
+    name: 'senderV1.py',
     script: 'auto3.js',
     watch: true,
     env: {

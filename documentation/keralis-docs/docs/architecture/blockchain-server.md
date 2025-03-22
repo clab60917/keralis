@@ -29,22 +29,10 @@ Le programme principal qui traite les hashs, les fichiers de logs chiffrés et l
 - Enregistre le message envoyé dans la blockchain (ici le hash) dans la DB
 - Enregistre le fichier .log.enc dans la DB
 
-### ecosystem.config.js
-
-Configuration PM2 pour le service Sender:
-
-```javascript
-module.exports = {
-  apps: [{
-    name: 'auto-sender',
-    script: 'auto3.js',
-    watch: true,
-    env: {
-      NODE_ENV: 'production'
-    }
-  }]
-}
-```
+<div className="screenshot-container">
+  <img src="/img/mesimages/auto3.png" alt="Description de l'image" width="800" />
+  <p className="caption">Schema envoi SFTP</p>
+</div>
 
 ### blockchain-integrity-checker.js
 
@@ -52,6 +40,11 @@ Service de monitoring qui:
 - Surveille périodiquement les fichiers de logs
 - Recalcule et compare les hashs du serveur Sender avec les hashs enregistrés sur la blockchain
 - Génère des alertes email en cas de modification
+
+<div className="screenshot-container">
+  <img src="/img/mesimages/check.png" alt="Description de l'image" width="600" />
+  <p className="caption">Schema envoi SFTP</p>
+</div>
 
 ### test-integrity-system.js
 
@@ -61,6 +54,10 @@ Utilitaire de test qui permet de:
 - Vérifier le fonctionnement des alertes
 - Tester la configuration email
 
+:::tip
+Faire `node test-integrity-system.js`peut s'averer très utile !
+:::
+
 ### dashboard.js
 
 Interface web de monitoring qui offre:
@@ -69,12 +66,41 @@ Interface web de monitoring qui offre:
 - Historique des modifications détectées
 - Statistiques de surveillance
 
-### Variables d'Environnement
+Run : `node dashboard.js`ou utiliser la config pm2 ci-dessous.
 
-Le fichier .env contient les configurations suivantes:
+### ecosystem.config.js - 1
+
+Configuration PM2 pour l'envoi blockchain auto3.js:
+
+```javascript
+module.exports = {
+  apps: [{
+    name: 'blockchain-app',
+    script: 'auto3.js',
+    watch: true,
+    env: {
+      NODE_ENV: 'production'
+    }
+  }]
+}
 ```
-LOG_INTERVAL=300000         # 5 minutes
-MAX_FILE_SIZE=500           # Taille en octets
-RETENTION_DAYS=7            # Durée de conservation
-OUTPUT_DIR=/root/keralis/logs
+
+### ecosystem.config.js - 2
+
+Configuration PM2 pour le check integrity:
+
+```javascript
+module.exports = {
+  apps: [{
+    name: 'integrity-checker',
+    script: 'auto3.js',
+    watch: true,
+    env: {
+      NODE_ENV: 'production'
+    }
+  }]
+}
 ```
+:::tip
+Penser à faire `pm2 save`pour sauvegarder les config pm2 !
+:::
