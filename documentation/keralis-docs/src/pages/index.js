@@ -82,8 +82,8 @@ function HomepageStats() {
           <div className={styles.statCard}>
             <div className={styles.statContent}>
               <div className={styles.statIcon}>⚡</div>
-              <div className={styles.statNumber}>0ms</div>
-              <div className={styles.statLabel}>Détection en Temps Réel</div>
+              <div className={styles.statNumber}>4min</div>
+              <div className={styles.statLabel}>Temps maximal de détection</div>
               <div className={styles.statDetails}>
                 <div className={styles.statDetail}>
                   <span className={styles.detailIcon}>🔔</span>
