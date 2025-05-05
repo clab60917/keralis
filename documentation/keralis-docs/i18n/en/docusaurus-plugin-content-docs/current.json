@@ -1,0 +1,34 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorialSidebar.category.Vue d'ensemble": {
+    "message": "Vue d'ensemble",
+    "description": "The label for category Vue d'ensemble in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Architecture": {
+    "message": "Architecture",
+    "description": "The label for category Architecture in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Installation": {
+    "message": "Installation",
+    "description": "The label for category Installation in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Maintenance": {
+    "message": "Maintenance",
+    "description": "The label for category Maintenance in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Sécurité": {
+    "message": "Sécurité",
+    "description": "The label for category Sécurité in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Dépannage": {
+    "message": "Dépannage",
+    "description": "The label for category Dépannage in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Roadmap": {
+    "message": "Roadmap",
+    "description": "The label for category Roadmap in sidebar tutorialSidebar"
+  }
+}

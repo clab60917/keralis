@@ -17,7 +17,15 @@ const config = {
 
   i18n: {
     defaultLocale: 'fr',
-    locales: ['fr'],
+    locales: ['fr', 'en'],
+    localeConfigs: {
+      fr: {
+        label: 'Français',
+      },
+      en: {
+        label: 'English',
+      },
+    },
   },
 
   presets: [
@@ -51,6 +59,10 @@ const config = {
             sidebarId: 'tutorialSidebar',
             position: 'left',
             label: 'Documentation',
+          },
+          {
+            type: 'localeDropdown',
+            position: 'right',
           },
           {
             href: 'https://github.com/clab60917/keralis',
