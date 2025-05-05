@@ -67,7 +67,7 @@ if (Object.keys(users).length === 0) {
 
 app.use(basicAuth({
     users: users,
-    challenge: true,
+    challenge: false,
     realm: 'Keralis Dashboard'
 }));
 
@@ -303,7 +303,7 @@ app.get('/', async (req, res) => {
         res.render('index', {
             title: 'Dashboard',
             active: 'home',
-            user: { username: req.auth.user },
+            user: { username: Visiteur },
             alerts: alerts,
             totalAlerts: totalAlerts,
             recentHashList: recentHashList,
