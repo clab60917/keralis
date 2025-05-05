@@ -98,11 +98,9 @@
 </head>
 <body class="p-6 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
     <div class="max-w-7xl mx-auto">
-        <!-- En-tête avec statut -->
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Keralis Dashboard</h1>
             <div class="flex items-center space-x-6">
-                <!-- Statuts des services test -->
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center tooltip" data-tooltip="Service d'envoi Blockchain">
                         <div id="blockchainStatus" class="status-dot inactive mr-2"></div>
@@ -123,7 +121,6 @@
             </div>
         </div>
 
-        <!-- Métriques Système -->
         <div class="system-metrics mb-8">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Métriques Système</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -164,62 +161,7 @@
             </div>
         </div>
         
-        <!-- <div class="bg-white rounded-lg shadow p-4 mb-8">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <button id="dayView" class="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors">Jour</button>
-                    <button id="weekView" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Semaine</button>
-                    <button id="monthView" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Mois</button>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button id="prevPeriod" class="p-2 rounded-lg bg-gray-200 hover:bg-gray-300">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <span id="currentPeriod" class="text-lg font-semibold text-gray-700">Aujourd'hui</span>
-                    <button id="nextPeriod" class="p-2 rounded-lg bg-gray-200 hover:bg-gray-300">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
 
-        <div class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Statistiques avancées</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500 mb-2">Taux de traitement</h3>
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Hash</span>
-                            <span id="hashRate" class="font-semibold text-blue-600">0/min</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Encrypted</span>
-                            <span id="encryptedRate" class="font-semibold text-green-600">0/min</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Messages</span>
-                            <span id="messagesRate" class="font-semibold text-purple-600">0/min</span>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500 mb-2">Temps moyen de traitement</h3>
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Hash</span>
-                            <span id="hashProcessingTime" class="font-semibold text-blue-600">0ms</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Encrypted</span>
-                            <span id="encryptedProcessingTime" class="font-semibold text-green-600">0ms</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>  -->
-
-        <!-- Cartes des statistiques -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="card bg-white rounded-lg shadow p-6" id="hashCard">
                 <div class="flex items-center justify-between mb-4">
@@ -252,32 +194,17 @@
                 </div>
             </div>
         </div>
-        <!-- Reset du graphique d'activité -->
         <button onclick="resetChartHistory()" class="ml-2 text-gray-500 hover:text-gray-700">
             <i class="fas fa-trash-alt"></i> Réinitialiser
         </button>
-        <!-- Graphique d'activité -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Activité des dernières 24 heures</h2>
             <div style="height: 400px;">
                 <canvas id="activityChart"></canvas>
             </div>
         </div>
-        <!-- <div class="flex items-center ml-4">
-            <label for="timeOffset" class="mr-2 text-sm text-gray-600">Ajustement horaire:</label>
-            <select id="timeOffset" class="px-2 py-1 border rounded text-sm" onchange="updateTimeOffset(this.value)">
-                <option value="0">+0h</option>
-                <option value="1">+1h</option>
-                <option value="2" selected>+2h</option>
-                <option value="3">+3h</option>
-                <option value="-1">-1h</option>
-                <option value="-2">-2h</option>
-            </select>
-        </div> -->
-
-        <!-- Dernières activités -->
+       
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Derniers Hash -->
             <div class="card bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-700">Derniers Hash</h2>
@@ -288,7 +215,6 @@
                 <div id="recentHash" class="space-y-3"></div>
             </div>
 
-            <!-- Derniers Encrypted -->
             <div class="card bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-700">Derniers Encrypted</h2>
@@ -299,7 +225,6 @@
                 <div id="recentEncrypted" class="space-y-3"></div>
             </div>
 
-            <!-- Derniers Messages -->
             <div class="card bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-700">Derniers Messages Blockchain</h2>
@@ -336,90 +261,9 @@
             lastUpdatedHour: new Date().getHours()
         };
 
-//             function initChart() {
-//     const ctx = document.getElementById('activityChart').getContext('2d');
-//     const timeLabels = Array(24).fill('').map((_, i) => {
-//         // Ajouter 2 heures pour corriger le décalage
-//         const adjustedTime = moment().subtract(23-i, 'hours').add(0, 'hours');
-//         return adjustedTime.format('HH:mm');
-//     });
-//     activityChart = new Chart(ctx, {
-//         type: 'line',
-//         data: {
-//             labels: Array(24).fill('').map((_, i) => moment().subtract(23-i, 'hours').format('HH:mm')),
-//             datasets: [{
-//                 label: 'Hash',
-//                 data: [...chartHistory.hash],
-//                 borderColor: '#3B82F6',
-//                 tension: 0.4,
-//                 fill: false,
-//                 pointRadius: 0
-//             }, {
-//                 label: 'Encrypted',
-//                 data: [...chartHistory.encrypted],
-//                 borderColor: '#10B981',
-//                 tension: 0.4,
-//                 fill: false,
-//                 pointRadius: 0
-//             }, {
-//                 label: 'Messages',
-//                 data: [...chartHistory.messages],
-//                 borderColor: '#8B5CF6',
-//                 tension: 0.4,
-//                 fill: false,
-//                 pointRadius: 0
-//             }]
-//         },
-//         options: {
-//             responsive: true,
-//             maintainAspectRatio: false,
-//             animation: {
-//                 duration: 500
-//             },
-//             hover: {
-//                 animationDuration: 200
-//             },
-//             responsiveAnimationDuration: 0,
-//             elements: {
-//                 line: {
-//                     tension: 0.4
-//                 }
-//             },
-//             plugins: {
-//                 legend: {
-//                     position: 'top'
-//                 },
-//                 tooltip: {
-//                     mode: 'index',
-//                     intersect: false
-//                 }
-//             },
-//             scales: {
-//                 y: {
-//                     beginAtZero: true,
-//                     ticks: {
-//                         precision: 0,
-//                         maxTicksLimit: 5
-//                     }
-//                 },
-//                 x: {
-//                     ticks: {
-//                         maxRotation: 0,
-//                         autoSkip: true,
-//                         maxTicksLimit: 8
-//                     }
-//                 }
-//             }
-//         }
-//     });
-    
-//     // Charger les données stockées dans localStorage si disponibles
-//     loadChartHistoryFromStorage();
-// }
 function initChart() {
     const ctx = document.getElementById('activityChart').getContext('2d');
     
-    // Générer les étiquettes d'heure pour les dernières 24 heures
     const timeLabels = Array(24).fill('').map((_, i) => {
         return moment().subtract(23-i, 'hours').format('HH:mm');
     });
@@ -509,35 +353,29 @@ function initChart() {
         }
     });
     
-    // Charger les données stockées dans localStorage si disponibles
     loadChartHistoryFromStorage();
 }
 function updateSystemInfo(stats) {
             if (stats.system) {
-                // CPU
                 const cpuLoad = stats.system.cpu.loadAverage[0].toFixed(2);
                 document.getElementById('cpuLoad').textContent = 
                     `${cpuLoad} (${stats.system.cpu.cpuCount} cœurs)`;
 
-                // Mémoire
                 document.getElementById('memoryUsage').textContent = 
                     `${stats.system.memory.usedPercentage}% utilisé`;
 
-                // Disque
                 if (stats.system.disk && !stats.system.disk.error) {
                     document.getElementById('diskUsage').textContent = 
                         `${stats.system.disk.percentage} utilisé (${stats.system.disk.available} disponible)`;
                 }
 
-                // SFTP Status
                 const sftpDot = document.getElementById('sftpStatus');
                 if (stats.system.sftp.running) {
                     sftpDot.className = 'status-dot active mr-2';
                 } else {
                     sftpDot.className = 'status-dot inactive mr-2';
                 }
-                //Blockchain Status
-                  const blockchainDot = document.getElementById('blockchainStatus');
+                const blockchainDot = document.getElementById('blockchainStatus');
                 if (stats.system.blockchain.running) {
                     blockchainDot.className = 'status-dot active mr-2';
                 } else {
@@ -545,22 +383,18 @@ function updateSystemInfo(stats) {
                 }
 
                 
-                // Hostname et autres infos système
                 document.getElementById('hostname').textContent = stats.system.hostname;
                 document.getElementById('uptime').textContent = formatUptime(stats.system.cpu.uptime);
                 document.getElementById('platform').textContent = stats.system.platform;
             }
         }
-       // Sauvegarder l'historique du graphique dans localStorage
 function saveChartHistoryToStorage() {
     localStorage.setItem('chartHistory', JSON.stringify(chartHistory));
 }
-// Charger l'historique du graphique depuis localStorage
 function loadChartHistoryFromStorage() {
     const savedHistory = localStorage.getItem('chartHistory');
     if (savedHistory) {
         const parsedHistory = JSON.parse(savedHistory);
-        // Vérifier si les données sauvegardées sont valides
         if (parsedHistory && 
             Array.isArray(parsedHistory.hash) && 
             Array.isArray(parsedHistory.encrypted) && 
@@ -568,7 +402,6 @@ function loadChartHistoryFromStorage() {
             
             chartHistory = parsedHistory;
             
-            // Mettre à jour le graphique avec les données chargées
             activityChart.data.datasets[0].data = [...chartHistory.hash];
             activityChart.data.datasets[1].data = [...chartHistory.encrypted];
             activityChart.data.datasets[2].data = [...chartHistory.messages];
@@ -576,10 +409,8 @@ function loadChartHistoryFromStorage() {
         }
     }
     
-    // Mettre à jour l'heure de dernière mise à jour
     chartHistory.lastUpdatedHour = new Date().getHours();
 }
-// Fonction pour réinitialiser l'historique du graphique
 function resetChartHistory() {
     chartHistory = {
         hash: Array(24).fill(0),
@@ -595,64 +426,7 @@ function resetChartHistory() {
     
     saveChartHistoryToStorage();
 }
-// Mettre à jour le graphique avec les nouvelles données
-// function updateChart(stats) {
-//     if (!activityChart) return;
 
-//     const now = new Date();
-//     const currentHour = now.getHours();
-    
-//     // Réinitialiser les compteurs de l'heure actuelle si nécessaire
-//     if (currentHour !== chartHistory.lastUpdatedHour) {
-//         // Mettre à jour les étiquettes des heures pour refléter le temps actuel
-//         activityChart.data.labels = Array(24).fill('').map((_, i) => 
-//             moment().subtract(23-i, 'hours').format('HH:mm')
-//         );
-        
-//         // Si on a changé d'heure, décaler les données d'une position
-//         if (chartHistory.lastUpdatedHour !== -1) {
-//             // Décaler toutes les données d'une position vers la gauche
-//             chartHistory.hash.shift();
-//             chartHistory.hash.push(0);
-            
-//             chartHistory.encrypted.shift();
-//             chartHistory.encrypted.push(0);
-            
-//             chartHistory.messages.shift();
-//             chartHistory.messages.push(0);
-//         }
-        
-//         chartHistory.lastUpdatedHour = currentHour;
-//     }
-    
-//     // Traiter les fichiers récents pour mettre à jour le graphique par heure
-//     if (stats.recentHash && stats.recentHash.length > 0) {
-//         processRecentFiles(stats.recentHash, 'hash');
-//     }
-    
-//     if (stats.recentEncrypted && stats.recentEncrypted.length > 0) {
-//         processRecentFiles(stats.recentEncrypted, 'encrypted');
-//     }
-    
-//     if (stats.recentMessages && stats.recentMessages.length > 0) {
-//         processRecentFiles(stats.recentMessages, 'messages');
-//     }
-    
-//     // Mettre à jour le graphique avec les nouvelles données
-//     activityChart.data.datasets[0].data = [...chartHistory.hash];
-//     activityChart.data.datasets[1].data = [...chartHistory.encrypted];
-//     activityChart.data.datasets[2].data = [...chartHistory.messages];
-    
-//     activityChart.update();
-    
-//     // Sauvegarder l'historique dans localStorage
-//     saveChartHistoryToStorage();
-// } const div = document.createElement('div');
-        //         div.className = 'text-sm p-2 bg-gray-50 rounded';
-        //         const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
-        //         const time = new Date(item.timestamp).toLocaleString();
-        //         div.textContent = `${fileName} (${time})`;
-        //         container.appendChild(div);
 function updateRecentItems(items, containerId) {
     const container = document.getElementById(containerId);
     if (!container || !items) return;
@@ -668,10 +442,8 @@ function updateRecentItems(items, containerId) {
         const div = document.createElement('div');
         div.className = 'text-sm p-2 bg-gray-50 rounded';
         
-        // Extraire le nom du fichier du chemin complet
         const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
         
-        // Formatage de l'horodatage
         const time = new Date(item.timestamp).toLocaleString('fr-FR', {
             hour: '2-digit',
             minute: '2-digit',
@@ -680,7 +452,6 @@ function updateRecentItems(items, containerId) {
             month: '2-digit',
             year: 'numeric'
         });
-        //containerId=='recentHash' && 
        
         if (containerId === 'recentHash' && item.content) { 
             div.innerHTML = `
@@ -697,88 +468,17 @@ function updateRecentItems(items, containerId) {
                container.appendChild(div);
     });
 }
-// function updateChart(stats) {
-//     if (!activityChart) return;
-
-//     const now = new Date();
-//     const adjustedNow = new Date(now);
-//     adjustedNow.setHours(now.getHours() );
-//     const currentHour = adjustedNow.getHours();
-    
-//     // Si on est passé à une nouvelle heure depuis la dernière mise à jour
-//     if (currentHour !== chartHistory.lastUpdatedHour) {
-//         // Mettre à jour les étiquettes des heures pour refléter le temps actuel
-//         activityChart.data.labels = Array(24).fill('').map((_, i) => 
-//             moment().subtract(23-i, 'hours').format('HH:mm')
-//         );
-        
-//         // Si on a changé d'heure, décaler les données d'une position
-//         if (chartHistory.lastUpdatedHour !== -1) {
-//             // Décaler toutes les données d'une position vers la gauche
-//             chartHistory.hash.shift();
-//             chartHistory.hash.push(0);
-            
-//             chartHistory.encrypted.shift();
-//             chartHistory.encrypted.push(0);
-            
-//             chartHistory.messages.shift();
-//             chartHistory.messages.push(0);
-//         }
-        
-//         chartHistory.lastUpdatedHour = currentHour;
-//     }
-    
-//     // Accumuler les nouvelles données plutôt que de les écraser
-//     chartHistory.hash[23] += stats.hash - previousStats.hash > 0 ? stats.hash - previousStats.hash : 0;
-//     chartHistory.encrypted[23] += stats.encrypted - previousStats.encrypted > 0 ? stats.encrypted - previousStats.encrypted : 0;
-//     chartHistory.messages[23] += stats.messages - previousStats.messages > 0 ? stats.messages - previousStats.messages : 0;
-    
-//     // Mettre à jour le graphique avec les nouvelles données
-//     activityChart.data.datasets[0].data = [...chartHistory.hash];
-//     activityChart.data.datasets[1].data = [...chartHistory.encrypted];
-//     activityChart.data.datasets[2].data = [...chartHistory.messages];
-    
-//     activityChart.update();
-    
-//     // Sauvegarder l'historique dans localStorage
-//     saveChartHistoryToStorage();
-// }
-// function processRecentFiles(files, type) {
-//     // Réinitialiser les compteurs temporaires pour chaque heure
-//     const hourlyCount = Array(24).fill(0);
-    
-//     files.forEach(file => {
-//         // Utiliser le timestamp du fichier s'il existe
-//         if (file.timestamp) {
-//             const fileTime = new Date(file.timestamp);
-//             const now = new Date();
-            
-//             // Vérifier si le fichier est dans les dernières 24 heures
-//             const hoursDiff = Math.floor((now - fileTime) / (1000 * 60 * 60));
-            
-//             if (hoursDiff < 24) {
-//                 const hourIndex = 23 - hoursDiff;
-//                 hourlyCount[hourIndex]++;
-//             }
-//         }
-//     });
 function processRecentFiles(files, type) {
-    // Créer un tableau pour compter les fichiers par heure
     const hourlyCount = Array(24).fill(0);
     
-    // Pour chaque fichier récent
     files.forEach(file => {
         if (file.timestamp) {
             const fileTime = new Date(file.timestamp);
             const now = new Date();
             
-            // Calculer combien d'heures se sont écoulées depuis la création du fichier
             const hoursDiff = Math.floor((now - fileTime) / (1000 * 60 * 60));
             
-            // Si le fichier est dans les dernières 24 heures
             if (hoursDiff < 24) {
-                // Calculer l'index dans notre tableau de 24 heures
-                // 0 = il y a 24h, 23 = heure actuelle
                 const hourIndex = 23 - hoursDiff;
                 hourlyCount[hourIndex]++;
             }
@@ -786,20 +486,9 @@ function processRecentFiles(files, type) {
     });
     
     
-    // Mettre à jour les valeurs dans l'historique du graphique
     chartHistory[type] = hourlyCount;
 }
     
-    // // Mettre à jour l'historique du graphique avec les nouvelles données
-    // // Pour chaque heure, ajouter les nouveaux fichiers qui n'ont pas encore été comptés
-    // for (let i = 0; i < 24; i++) {
-    //     // Comparer avec les valeurs précédentes pour ne pas compter deux fois les mêmes fichiers
-    //     if (hourlyCount[i] > chartHistory[type][i]) {
-    //         chartHistory[type][i] = hourlyCount[i];
-    //     }
-    // }
-
-
 
         function updateTrend(currentValue, previousValue, elementId) {
             const element = document.getElementById(elementId);
@@ -823,16 +512,12 @@ function processRecentFiles(files, type) {
     const now = new Date();
     const currentHour = now.getHours();
     
-    // Si on est passé à une nouvelle heure depuis la dernière mise à jour
     if (currentHour !== chartHistory.lastUpdatedHour) {
-        // Mettre à jour les étiquettes des heures pour refléter le temps actuel
         activityChart.data.labels = Array(24).fill('').map((_, i) => 
             moment().subtract(23-i, 'hours').format('HH:mm')
         );
         
-        // Si on a changé d'heure, décaler les données d'une position
         if (chartHistory.lastUpdatedHour !== -1) {
-            // Décaler toutes les données d'une position vers la gauche
             chartHistory.hash.shift();
             chartHistory.hash.push(0);
             
@@ -846,7 +531,6 @@ function processRecentFiles(files, type) {
         chartHistory.lastUpdatedHour = currentHour;
     }
     
-    // Traiter les données récentes pour mettre à jour le graphique
     if (stats.recentHash && stats.recentHash.length > 0) {
         processRecentFiles(stats.recentHash, 'hash');
     }
@@ -859,37 +543,15 @@ function processRecentFiles(files, type) {
         processRecentFiles(stats.recentMessages, 'messages');
     }
     
-    // Mettre à jour le graphique avec les nouvelles données
     activityChart.data.datasets[0].data = [...chartHistory.hash];
     activityChart.data.datasets[1].data = [...chartHistory.encrypted];
     activityChart.data.datasets[2].data = [...chartHistory.messages];
     
     activityChart.update();
     
-    // Sauvegarder l'historique dans localStorage
     saveChartHistoryToStorage();
 }
 
-        // function updateRecentItems(items, containerId) {
-        //     const container = document.getElementById(containerId);
-        //     if (!container || !items) return;
-
-        //   //  container.innerHTML = '';
-            
-        //     if (items.length === 0) {
-        //         container.innerHTML = '<div class="text-sm text-gray-500 text-center">Aucune donnée</div>';
-        //         return;
-        //     }
-
-        //     items.forEach(item => {
-        //         const div = document.createElement('div');
-        //         div.className = 'text-sm p-2 bg-gray-50 rounded';
-        //         const fileName = item.filePath ? item.filePath.split('/').pop() : 'N/A';
-        //         const time = new Date(item.timestamp).toLocaleString();
-        //         div.textContent = `${fileName} (${time})`;
-        //         container.appendChild(div);
-        //     });
-        // }
 
         socket.on('connect', () => {
             document.getElementById('connectionStatus').className = 'status-dot active mr-2';
@@ -902,35 +564,28 @@ function processRecentFiles(files, type) {
         });
 
         socket.on('stats', (stats) => {
-    // Mise à jour des compteurs
     document.getElementById('hashCount').textContent = stats.hash;
     document.getElementById('encryptedCount').textContent = stats.encrypted;
     document.getElementById('messagesCount').textContent = stats.messages;
     document.getElementById('lastUpdated').textContent = stats.lastUpdated;
 
-    // Mise à jour des tendances
     updateTrend(stats.hash, previousStats.hash, 'hashTrend');
     updateTrend(stats.encrypted, previousStats.encrypted, 'encryptedTrend');
     updateTrend(stats.messages, previousStats.messages, 'messagesTrend');
 
-    // Mise à jour du graphique avec les nouvelles données
     updateChart(stats);
 
-    // Vider les conteneurs avant d'ajouter les nouveaux éléments
     document.getElementById('recentHash').innerHTML = '';
     document.getElementById('recentEncrypted').innerHTML = '';
     document.getElementById('recentMessages').innerHTML = '';
     const recentHashArray = Object.values(stats.recentHash);
 
-    // Mise à jour des listes récentes
     updateRecentItems(recentHashArray, 'recentHash');
     updateRecentItems(stats.recentEncrypted, 'recentEncrypted');
     updateRecentItems(stats.recentMessages, 'recentMessages');
 
-    // Mise à jour des informations système
     updateSystemInfo(stats);
 
-    // Sauvegarder les stats actuelles
     previousStats = {
         hash: stats.hash,
         encrypted: stats.encrypted,
@@ -938,20 +593,11 @@ function processRecentFiles(files, type) {
     };
 });
 
-        // Initialisation
         initChart();
 
-        // Demander une mise à jour toutes les 5 secondes
         setInterval(() => {
             socket.emit('requestStats');
         }, 5000);
-
-        // Gestionnaires pour le sélecteur de période
-        // document.getElementById('dayView').addEventListener('click', () => switchView('day'));
-        // document.getElementById('weekView').addEventListener('click', () => switchView('week'));
-        // document.getElementById('monthView').addEventListener('click', () => switchView('month'));
-        // document.getElementById('prevPeriod').addEventListener('click', () => navigatePeriod(-1));
-        // document.getElementById('nextPeriod').addEventListener('click', () => navigatePeriod(1));
 
         let currentView = 'day';
         let currentDate = new Date();
@@ -1005,9 +651,7 @@ function processRecentFiles(files, type) {
         }
         function updateTimeOffset(offset) {
     const newOffset = parseInt(offset);
-    // Stocker le nouveau décalage
     localStorage.setItem('timeOffsetSetting', newOffset);
-    // Recharger le graphique avec le nouveau décalage
     resetChartHistory();
     initChart();
 }

@@ -49,7 +49,7 @@ body {
     border-radius: var(--border-radius);
 }
 
-/* Styles des cartes */
+
 .card {
     border: none;
     border-radius: var(--border-radius);
@@ -87,7 +87,6 @@ body {
     padding: 1.25rem;
 }
 
-/* Styles des tableaux */
 .table {
     margin-bottom: 0;
 }
@@ -110,14 +109,12 @@ body {
     padding: 0.5rem;
 }
 
-/* Styles des badges */
 .badge {
     font-weight: 500;
     padding: 0.35em 0.65em;
     border-radius: 0.25rem;
 }
 
-/* Styles des barres de progression */
 .progress {
     height: 0.75rem;
     border-radius: 1rem;
@@ -130,7 +127,6 @@ body {
     transition: width 0.6s ease;
 }
 
-/* Styles pour le Topic ID */
 #topicIdLink {
     display: inline-flex !important;
     align-items: center !important;
@@ -159,7 +155,6 @@ body {
     opacity: 1 !important;
 }
 
-/* Styles pour les statistiques */
 #stats p {
     display: flex;
     align-items: center;
@@ -177,26 +172,22 @@ body {
     margin-left: 0.5rem;
 }
 
-/* Styles pour le graphique */
 canvas {
     max-width: 100%;
 }
 
-/* Styles spécifiques pour le graphique d'activité */
 #activityChart {
     min-height: 300px;
     max-height: 400px;
     width: 100% !important;
 }
 
-/* Conteneur du graphique d'activité */
 #activityChart-container {
     position: relative;
     padding: 10px;
     transition: all 0.3s ease;
 }
 
-/* Animation pour le graphique */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -206,7 +197,6 @@ canvas {
     animation: fadeIn 0.5s ease-out;
 }
 
-/* Styles pour les indicateurs de statut */
 .status-indicator {
     display: inline-block;
     width: 0.75rem;
@@ -230,7 +220,6 @@ canvas {
     box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
-/* Styles pour le pied de page */
 footer {
     margin-top: auto;
     padding: 1rem 0;
@@ -239,13 +228,11 @@ footer {
     font-size: 0.875rem;
 }
 
-/* Styles pour les valeurs numériques */
 .stat-value {
     font-family: 'Roboto Mono', monospace;
     font-weight: 500;
 }
 
-/* Styles pour les icônes */
 .bi {
     vertical-align: -0.125em;
     display: inline-block !important;
@@ -255,7 +242,6 @@ footer {
     overflow: visible;
 }
 
-/* Styles spécifiques pour certaines icônes */
 .bi-shield-lock-fill,
 .bi-graph-up,
 .bi-hash,
@@ -275,24 +261,20 @@ footer {
     display: inline-block !important;
 }
 
-/* Correction pour les icônes dans les badges */
 .badge .bi {
     margin-right: 0.25rem;
 }
 
-/* Correction pour les icônes dans les boutons */
 .btn .bi {
     margin-right: 0.25rem;
 }
 
-/* Styles pour les alertes */
 .alert {
     border-radius: var(--border-radius);
     border: none;
     box-shadow: var(--box-shadow);
 }
 
-/* Styles pour les écrans plus petits */
 @media (max-width: 768px) {
     .card-header {
         padding: 0.75rem 1rem;
@@ -307,7 +289,6 @@ footer {
     }
 }
 
-/* Animation de pulsation pour les indicateurs de statut */
 @keyframes pulse {
     0% {
         box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
@@ -324,7 +305,6 @@ footer {
     animation: pulse 2s infinite;
 }
 
-/* Styles pour les boutons */
 .btn {
     border-radius: var(--border-radius);
     font-weight: 500;
@@ -342,12 +322,10 @@ footer {
     border-color: var(--secondary-color);
 }
 
-/* Styles pour les tooltips */
 [data-bs-toggle="tooltip"] {
     cursor: help;
 }
 
-/* Styles pour les éléments de statut système */
 .system-status-item {
     display: flex;
     align-items: center;
@@ -365,7 +343,6 @@ footer {
     font-weight: 500;
 }
 
-/* Styles pour les messages de statut */
 .status-message {
     padding: 0.5rem 0.75rem;
     border-radius: var(--border-radius);
@@ -398,33 +375,28 @@ footer {
     color: #ef4444;
 }
 
-/* Styles pour les info-bulles */
 .info-tooltip {
     color: var(--gray-color);
     margin-left: 0.25rem;
     cursor: help;
 }
 
-/* Styles pour les éléments de données monospace */
 .monospace {
     font-family: 'Roboto Mono', monospace;
     font-size: 0.875rem;
 }
 
-/* Styles pour les hash tronqués */
 .hash-truncated {
     font-family: 'Roboto Mono', monospace;
     font-size: 0.75rem;
     color: var(--gray-color);
 }
 
-/* Styles pour les timestamps */
 .timestamp {
     font-size: 0.75rem;
     color: var(--gray-color);
 }
 
-/* Styles pour les éléments de navigation */
 .pagination {
     margin-bottom: 0;
 }
@@ -439,7 +411,6 @@ footer {
     border-color: var(--primary-color);
 }
 
-/* Styles pour les boutons d'action */
 .action-button {
     width: 2rem;
     height: 2rem;
@@ -457,7 +428,6 @@ footer {
     color: #fff;
 }
 
-/* Styles pour les éléments de chargement */
 .loading-spinner {
     width: 1.5rem;
     height: 1.5rem;
@@ -473,7 +443,6 @@ footer {
     }
 }
 
-/* Styles pour les éléments de statut en temps réel */
 .realtime-status {
     display: flex;
     align-items: center;
@@ -491,7 +460,6 @@ footer {
     font-weight: 500;
 }
 
-/* Styles pour les éléments de données */
 .data-item {
     display: flex;
     justify-content: space-between;
@@ -513,14 +481,12 @@ footer {
     color: var(--primary-color);
 }
 
-/* Styles pour les éléments de sécurité */
 .security-icon {
     font-size: 1.5rem;
     color: var(--primary-color);
     margin-right: 1rem;
 }
 
-/* Styles pour les éléments de notification */
 .notification-badge {
     position: absolute;
     top: -5px;
@@ -532,7 +498,6 @@ footer {
     border: 2px solid #fff;
 }
 
-/* Styles pour les icônes de secours */
 .icon-fallback {
     position: relative;
     display: inline-block !important;
@@ -555,7 +520,6 @@ footer {
     -webkit-mask-size: cover;
 }
 
-/* Masques spécifiques pour les icônes courantes */
 .bi-shield-lock-fill.icon-fallback::before {
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-shield-lock-fill' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5z'/%3E%3C/svg%3E");
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-shield-lock-fill' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5z'/%3E%3C/svg%3E");
@@ -566,7 +530,6 @@ footer {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-graph-up' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M0 0h1v15h15v1H0V0Zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07Z'/%3E%3C/svg%3E");
 }
 
-/* Fallback générique pour toutes les autres icônes */
 .icon-fallback:not(.bi-shield-lock-fill):not(.bi-graph-up)::before {
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7'/%3E%3C/svg%3E");
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7'/%3E%3C/svg%3E");

@@ -15,29 +15,24 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Script de secours pour les icônes -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Vérifier si les icônes Bootstrap sont chargées correctement
             setTimeout(function() {
                 const icons = document.querySelectorAll('.bi');
                 icons.forEach(function(icon) {
-                    // Vérifier si l'icône a une largeur/hauteur
                     const style = window.getComputedStyle(icon);
                     if (parseInt(style.width) === 0 || parseInt(style.height) === 0) {
                         console.warn('Icône non chargée correctement:', icon.className);
                         
-                        // Ajouter une classe pour le style de secours
                         icon.classList.add('icon-fallback');
                         
-                        // Ajouter un style inline pour s'assurer que l'icône est visible
                         icon.style.display = 'inline-block';
                         icon.style.width = '1em';
                         icon.style.height = '1em';
                         icon.style.backgroundColor = 'transparent';
                     }
                 });
-            }, 1000); // Vérifier après 1 seconde pour laisser le temps aux icônes de se charger
+            }, 1000);
         });
     </script>
 </head>

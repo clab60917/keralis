@@ -6,28 +6,23 @@ const execAsync = util.promisify(exec);
 class SystemMonitor {
     async getSystemStats() {
         try {
-            // Désactiver la simulation des valeurs
             const simulateRealisticValues = false;
             
             let cpuLoad, memUsage, diskUsage;
             
             if (simulateRealisticValues) {
-                // Simuler des valeurs CPU entre 10% et 60%
                 cpuLoad = [
                     Math.random() * 5 + 5, // 5-10%
                     Math.random() * 3 + 2, // 2-5%
                     Math.random() * 2 + 1  // 1-3%
                 ];
                 
-                // Simuler une utilisation mémoire entre 40% et 80%
                 memUsage = Math.random() * 40 + 40;
                 
-                // Simuler une utilisation disque entre 30% et 70%
                 diskUsage = Math.random() * 40 + 30;
             } else {
                 cpuLoad = os.loadavg();
                 memUsage = ((os.totalmem() - os.freemem()) / os.totalmem() * 100);
-                // diskUsage sera récupéré plus tard
             }
             
             const stats = {
@@ -49,7 +44,6 @@ class SystemMonitor {
             console.log('Stats système de base:', JSON.stringify(stats, null, 2));
 
             try {
-                // Ajouter l'état du service SFTP
                 const sftpStatus = await this.checkSFTPStatus();
                 console.log('État SFTP:', JSON.stringify(sftpStatus, null, 2));
                 stats.sftp = sftpStatus;
@@ -59,7 +53,6 @@ class SystemMonitor {
             }
 
             try {
-                // Ajouter l'état du service blockchain
                 const blockchainStatus = await this.checkBlockchainStatus();
                 console.log('État blockchain:', JSON.stringify(blockchainStatus, null, 2));
                 stats.blockchain = blockchainStatus;
@@ -69,7 +62,6 @@ class SystemMonitor {
             }
 
             try {
-                // Ajouter l'état du serveur
                 const serverStatus = await this.checkServerStatus();
                 console.log('État serveur:', JSON.stringify(serverStatus, null, 2));
                 stats.server = serverStatus;
@@ -79,7 +71,6 @@ class SystemMonitor {
             }
 
             try {
-                // Ajouter l'utilisation du disque
                 if (simulateRealisticValues) {
                     stats.disk = {
                         filesystem: '/dev/disk1s1',
@@ -103,7 +94,6 @@ class SystemMonitor {
             return stats;
         } catch (error) {
             console.error('Erreur lors de la récupération des stats système:', error);
-            // Renvoyer un objet avec des valeurs par défaut en cas d'erreur
             return {
                 cpu: { loadAverage: [0, 0, 0], cpuCount: 0, uptime: 0 },
                 memory: { total: 0, free: 0, usedPercentage: 0 },
@@ -116,14 +106,10 @@ class SystemMonitor {
 
     async checkSFTPStatus() {
         try {
-            // Sur un serveur de production, le service SFTP est généralement intégré à SSH
-            // et est donc presque toujours actif. Nous allons vérifier si le service SSH est actif.
             const { stdout } = await execAsync('ps aux | grep -v grep | grep -E "sshd|ssh"');
             
-            // Si nous trouvons un processus SSH, considérons que SFTP est actif
             const lines = stdout.trim().split('\n').filter(line => line.trim().length > 0);
             
-            // Considérer le service comme actif par défaut, sauf si nous avons une preuve du contraire
             return {
                 running: true,
                 status: 'online',
@@ -131,7 +117,6 @@ class SystemMonitor {
             };
         } catch (error) {
             console.error('Erreur lors de la vérification du service SFTP:', error);
-            // Même en cas d'erreur, considérer le service comme actif
             return {
                 running: true,
                 status: 'online',
@@ -148,7 +133,6 @@ class SystemMonitor {
             // Analyser le JSON renvoyé par pm2 jlist
             const processList = JSON.parse(stdout);
             
-            // Chercher l'application blockchain-app ou blockchain-new
             const blockchainApp = processList.find(process => 
                 process.name === 'blockchain-app' || 
                 process.name === 'blockchain-new' || 
@@ -164,7 +148,6 @@ class SystemMonitor {
                     lastChecked: new Date().toISOString()
                 };
             } else {
-                // Si aucun processus blockchain n'est trouvé, essayer de vérifier avec ps
                 try {
                     const { stdout: psOutput } = await execAsync('ps aux | grep -v grep | grep -E "blockchain-app|blockchain-new|blockchain"');
                     if (psOutput && psOutput.trim().length > 0) {
@@ -185,9 +168,7 @@ class SystemMonitor {
                 };
             }
         } catch (error) {
-            // Gérer spécifiquement l'erreur si PM2 n'est pas installé ou accessible
             if (error.message.includes('pm2: command not found')) {
-                // Essayer de vérifier avec ps
                 try {
                     const { stdout: psOutput } = await execAsync('ps aux | grep -v grep | grep -E "blockchain-app|blockchain-new|blockchain"');
                     if (psOutput && psOutput.trim().length > 0) {
@@ -212,18 +193,15 @@ class SystemMonitor {
 
     async checkServerStatus() {
         try {
-            // Récupérer les informations système de base
             const uptime = os.uptime();
             const loadAvg = os.loadavg();
             const totalMem = os.totalmem();
             const freeMem = os.freemem();
             const memUsage = ((totalMem - freeMem) / totalMem * 100).toFixed(2);
             
-            // Vérifier si le serveur est surchargé
             const isOverloaded = loadAvg[0] > os.cpus().length * 2; // Charge > 2x le nombre de CPU
             const isLowMemory = freeMem < totalMem * 0.1; // Moins de 10% de mémoire libre
             
-            // Déterminer le statut global
             let status = 'normal';
             if (isOverloaded && isLowMemory) {
                 status = 'critical';
@@ -246,7 +224,7 @@ class SystemMonitor {
         } catch (error) {
             console.error('Erreur lors de la vérification du statut serveur:', error);
             return {
-                running: true, // On suppose que le serveur fonctionne puisque ce code s'exécute
+                running: true, 
                 status: 'error',
                 error: error.message,
                 lastChecked: new Date().toISOString()
@@ -254,7 +232,6 @@ class SystemMonitor {
         }
     }
 
-    // Fonction utilitaire pour formater le temps d'activité
     formatUptime(uptime) {
         const days = Math.floor(uptime / 86400);
         const hours = Math.floor((uptime % 86400) / 3600);
@@ -270,7 +247,6 @@ class SystemMonitor {
 
     async getDiskUsage() {
         try {
-            // Obtenir l'utilisation du disque (adapté pour macOS/Linux)
             const { stdout } = await execAsync('df -h /');
             console.log('Résultat de df -h /:', stdout);
             
@@ -296,7 +272,6 @@ class SystemMonitor {
             
             const [filesystem, size, used, available, percentage, mountpoint] = parts;
             
-            // Extraire la valeur numérique du pourcentage (enlever le %)
             const usedPercentage = percentage ? parseFloat(percentage.replace('%', '')) : 0;
             
             console.log('Pourcentage d\'utilisation du disque extrait:', usedPercentage);

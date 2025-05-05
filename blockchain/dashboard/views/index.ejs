@@ -1,7 +1,6 @@
 <%- include('partials/header') %>
 
 <div class="container-fluid mt-4">
-    <!-- Section des statistiques -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card">
@@ -129,7 +128,6 @@
         </div>
     </div>
     
-    <!-- Graphique d'activité (maintenant sur toute la largeur) -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
@@ -143,7 +141,6 @@
         </div>
     </div>
 
-    <!-- Section des derniers messages -->
     <div class="row">
         <div class="col-md-4">
             <div class="card">
@@ -360,22 +357,17 @@
     </div>
 </div>
 
-<!-- Script d'initialisation pour les performances système -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialiser les barres de progression du système
         const initSystemStatus = function(elementId, value) {
             const element = document.getElementById(elementId);
             if (!element) return;
             
-            // Valeur par défaut si non définie ou non numérique
             const numericValue = typeof value === 'number' && !isNaN(value) ? value : 0;
             
-            // Définir la largeur de la barre de progression (minimum 5% pour la visibilité)
             const displayWidth = Math.max(5, numericValue);
             element.style.width = `${displayWidth}%`;
             
-            // Ajouter la classe appropriée en fonction de la valeur
             if (typeof value !== 'number' || isNaN(value)) {
                 element.classList.add('bg-secondary');
             } else if (value < 70) {
@@ -387,8 +379,6 @@
             }
         };
         
-        // Initialiser les barres de progression avec des valeurs par défaut
-        // Ces valeurs seront remplacées par les vraies valeurs via Socket.IO
         initSystemStatus('cpuStatus', 0);
         initSystemStatus('memoryStatus', 0);
         initSystemStatus('diskStatus', 0);
@@ -399,9 +389,7 @@
 <%- include('partials/footer') %>
 
 <script>
-// Script d'initialisation immédiate pour le lien Topic ID
 (function() {
-    // Fonction pour initialiser le lien Topic ID
     function initTopicIdLink() {
         const topicIdLink = document.getElementById('topicIdLink');
         if (!topicIdLink) {
@@ -409,7 +397,6 @@
             return;
         }
         
-        // Appliquer les styles directement avec !important
         topicIdLink.setAttribute('style', `
             display: inline-flex !important;
             align-items: center !important;
@@ -422,7 +409,6 @@
             transition: all 0.2s ease !important;
         `);
         
-        // S'assurer que l'icône est présente et correctement stylisée
         let icon = topicIdLink.querySelector('.bi');
         if (!icon) {
             icon = document.createElement('i');
@@ -430,7 +416,6 @@
             topicIdLink.appendChild(icon);
         }
         
-        // Appliquer les styles à l'icône directement
         icon.setAttribute('style', `
             font-size: 0.8rem !important;
             opacity: 0.7 !important;
@@ -438,7 +423,6 @@
             transition: opacity 0.2s ease !important;
         `);
         
-        // Ajouter les événements
         topicIdLink.addEventListener('mouseover', function() {
             this.setAttribute('style', `
                 display: inline-flex !important;
@@ -472,16 +456,12 @@
         });
     }
     
-    // Exécuter immédiatement
     initTopicIdLink();
     
-    // Réexécuter après un court délai pour s'assurer que les styles sont appliqués
     setTimeout(initTopicIdLink, 500);
     
-    // Réexécuter lorsque le DOM est complètement chargé
     document.addEventListener('DOMContentLoaded', initTopicIdLink);
     
-    // Réexécuter périodiquement pour s'assurer que les styles sont maintenus
     setInterval(initTopicIdLink, 2000);
 })();
 </script>

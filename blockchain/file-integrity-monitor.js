@@ -7,13 +7,10 @@ const CHECK_INTERVAL = parseInt(process.env.CHECK_INTERVAL_MS || 4 * 60 * 1000);
 
 const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3001';
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
-//const CHECK_INTERVAL = process.env.CHECK_INTERVAL || '*/15 * * * *'; // Toutes les 15 minutes par défaut
 
-// Configuration MongoDB
 const MONGODB_URI = `mongodb://${process.env.MONGODB_USER}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DB_NAME}?authSource=${process.env.MONGODB_AUTH_SOURCE}`;
 let mongoClient;
 
-// Configuration email avec Elastic Email
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
@@ -24,14 +21,10 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Cache des hash pour comparer avec les valeurs précédentes
 const hashCache = new Map();
 
-// Ensemble pour stocker la liste des fichiers connus
 const knownFiles = new Set();
 
-// Fonction pour se connecter à MongoDB
-// Fonction pour se connecter à MongoDB
 async function connectToMongoDB() {
     try {
         mongoClient = new MongoClient(MONGODB_URI);
@@ -44,7 +37,6 @@ async function connectToMongoDB() {
     }
 }
 
-// Fonction pour sauvegarder une alerte dans MongoDB
 async function saveAlert(fileName, oldHash, newHash, type = 'modification') {
     try {
         const db = await connectToMongoDB();
@@ -74,7 +66,6 @@ async function saveAlert(fileName, oldHash, newHash, type = 'modification') {
     }
 }
 
-// Vérification de la configuration avant utilisation
 async function verifyEmailConfig() {
     try {
         await transporter.verify();
@@ -90,7 +81,6 @@ async function verifyEmailConfig() {
 }
 
 async function sendAlertEmail(fileName, oldHash, newHash, alertId, type = 'modification') {
-    // Vérifier la configuration avant d'envoyer
     if (!await verifyEmailConfig()) {
         console.log('⚠️ Envoi d\'email désactivé en raison d\'une configuration invalide');
         return false;
@@ -154,7 +144,6 @@ async function sendAlertEmail(fileName, oldHash, newHash, alertId, type = 'modif
         await transporter.sendMail(mailOptions);
         console.log('✓ Email d\'alerte envoyé avec succès');
         
-        // Mettre à jour le statut de l'email dans MongoDB
         try {
             const db = await connectToMongoDB();
             await db.collection('alerts').updateOne(
@@ -175,7 +164,6 @@ async function sendAlertEmail(fileName, oldHash, newHash, alertId, type = 'modif
     }
 }
 
-// Initialiser le cache avec les valeurs actuelles
 async function initializeHashCache() {
     console.log('Initialisation du cache des hash...');
     const axiosConfig = {
@@ -192,7 +180,6 @@ async function initializeHashCache() {
         
         console.log(`Récupération des hash initiaux pour ${files.length} fichiers...`);
         
-        // Pour chaque fichier, récupérer et stocker le hash
         for (const fileName of files) {
             try {
                 const hashResponse = await axios.get(`${HASH_SERVER_URL}/api/hash/${fileName}`, axiosConfig);
@@ -212,7 +199,6 @@ async function initializeHashCache() {
     }
 }
 
-// Vérifier l'intégrité d'un fichier spécifique
 async function checkFileIntegrity(fileName) {
     const axiosConfig = {
         headers: {
@@ -222,33 +208,26 @@ async function checkFileIntegrity(fileName) {
     };
 
     try {
-        // Récupérer le hash actuel
         const hashResponse = await axios.get(`${HASH_SERVER_URL}/api/hash/${fileName}`, axiosConfig);
         const currentHash = hashResponse.data.hash;
         
-        // Récupérer le hash précédent du cache
         const previousHash = hashCache.get(fileName);
         
-        // Si c'est la première vérification, simplement stocker le hash
         if (!previousHash) {
             hashCache.set(fileName, currentHash);
             console.log(`Premier hash enregistré pour ${fileName}: ${currentHash}`);
             return;
         }
         
-        // Comparer les hash
         if (currentHash !== previousHash) {
             console.log(`⚠️ Modification détectée dans ${fileName}`);
             console.log(`  - Ancien hash: ${previousHash}`);
             console.log(`  - Nouveau hash: ${currentHash}`);
             
-            // Sauvegarder l'alerte
             const alertId = await saveAlert(fileName, previousHash, currentHash, 'modification');
             
-            // Envoyer un email d'alerte
             await sendAlertEmail(fileName, previousHash, currentHash, alertId, 'modification');
             
-            // Mettre à jour le cache avec la nouvelle valeur
             hashCache.set(fileName, currentHash);
         } else {
             console.log(`✓ Intégrité vérifiée pour ${fileName}`);
@@ -258,27 +237,19 @@ async function checkFileIntegrity(fileName) {
     }
 }
 
-// Détecter et gérer les fichiers supprimés
 async function handleDeletedFiles(currentFiles) {
-    // Convertir la liste actuelle en Set pour faciliter les comparaisons
     const currentFilesSet = new Set(currentFiles);
     
-    // Vérifier chaque fichier connu
     for (const fileName of knownFiles) {
-        // Si un fichier connu n'est plus dans la liste actuelle, il a été supprimé
         if (!currentFilesSet.has(fileName)) {
             console.log(`🗑️ Fichier supprimé détecté: ${fileName}`);
             
-            // Obtenir le dernier hash connu
             const lastHash = hashCache.get(fileName);
             
-            // Sauvegarder l'alerte
             const alertId = await saveAlert(fileName, lastHash, null, 'deletion');
             
-            // Envoyer un email d'alerte
             await sendAlertEmail(fileName, lastHash, null, alertId, 'deletion');
             
-            // Supprimer le fichier du cache et de la liste des fichiers connus
             hashCache.delete(fileName);
             knownFiles.delete(fileName);
             
@@ -287,7 +258,6 @@ async function handleDeletedFiles(currentFiles) {
     }
 }
 
-// Vérifier l'intégrité de tous les fichiers
 async function checkAllFilesIntegrity() {
     console.log(`\n[${new Date().toISOString()}] Vérification de l'intégrité des fichiers...`);
     
@@ -299,23 +269,19 @@ async function checkAllFilesIntegrity() {
     };
 
     try {
-        // Récupérer la liste actuelle des fichiers
         const filesResponse = await axios.get(`${HASH_SERVER_URL}/api/logs`, axiosConfig);
         const files = filesResponse.data.files || [];
         
         console.log(`Vérification de ${files.length} fichiers...`);
         
-        // Vérifier s'il y a des fichiers supprimés
         await handleDeletedFiles(files);
         
-        // Mettre à jour la liste des fichiers connus avec les nouveaux fichiers
         for (const fileName of files) {
             if (!knownFiles.has(fileName)) {
                 knownFiles.add(fileName);
             }
         }
         
-        // Vérifier chaque fichier
         for (const fileName of files) {
             await checkFileIntegrity(fileName);
         }
@@ -326,32 +292,26 @@ async function checkAllFilesIntegrity() {
     }
 }
 
-// Démarrer le système de surveillance
 async function startMonitoring() {
     console.log('Démarrage du système de surveillance d\'intégrité...');
     
     try {
-        // Initialiser le cache des hash
         await initializeHashCache();
         
-        // Configurer la tâche cron pour vérifier régulièrement les fichiers
         const monitoringTimer = setTimeout(() => {
             checkAllFilesIntegrity().then(() => {
-                // Après chaque vérification, programmer la suivante
                 startMonitoring();
             });
         }, CHECK_INTERVAL);
         
         console.log(`✓ Système de surveillance démarré. Intervalle de vérification: ${CHECK_INTERVAL}`);
         
-        // Exécuter une première vérification immédiatement
         await checkAllFilesIntegrity();
     } catch (error) {
         console.error('❌ Erreur lors du démarrage du système de surveillance:', error.message);
     }
 }
 
-// Gérer la fermeture propre
 process.on('SIGINT', async () => {
     console.log('Fermeture du système de surveillance...');
     if (monitoringTimer) {
@@ -364,5 +324,4 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
-// Démarrer le système
 startMonitoring();

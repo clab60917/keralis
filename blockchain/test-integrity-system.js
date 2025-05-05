@@ -7,13 +7,11 @@ const { MongoClient } = require('mongodb');
 
 const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://172.233.245.220:3001';
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
-const TEST_FILE_NAME = '20250305012039.log';  // Un des fichiers existants
+const TEST_FILE_NAME = '20250305012039.log';  
 
-// Configuration MongoDB
 const MONGODB_URI = `mongodb://${process.env.MONGODB_USER}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DB_NAME}?authSource=${process.env.MONGODB_AUTH_SOURCE}`;
 let mongoClient;
 
-// Configuration email avec Elastic Email
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
@@ -24,7 +22,6 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Fonction pour se connecter à MongoDB
 async function connectToMongoDB() {
     try {
         mongoClient = new MongoClient(MONGODB_URI);
@@ -37,7 +34,6 @@ async function connectToMongoDB() {
     }
 }
 
-// Fonction pour sauvegarder une alerte dans MongoDB
 async function saveAlert(fileName, oldHash, newHash) {
     try {
         const db = await connectToMongoDB();
@@ -67,7 +63,6 @@ async function saveAlert(fileName, oldHash, newHash) {
     }
 }
 
-// Fonction pour mettre à jour le statut d'une alerte
 async function updateAlertStatus(alertId, status) {
     try {
         const db = await connectToMongoDB();
@@ -83,7 +78,6 @@ async function updateAlertStatus(alertId, status) {
     }
 }
 
-// Vérification de la configuration avant utilisation
 async function verifyEmailConfig() {
     try {
         console.log('Vérification de la configuration email...');
@@ -100,7 +94,6 @@ async function verifyEmailConfig() {
 }
 
 async function sendAlertEmail(fileName, oldHash, newHash) {
-    // Vérifier la configuration avant d'envoyer
     if (!await verifyEmailConfig()) {
         console.log('⚠️ Envoi d\'email désactivé en raison d\'une configuration invalide');
         return;
@@ -148,7 +141,6 @@ async function sendAlertEmail(fileName, oldHash, newHash) {
     }
 }
 
-// Fonction pour afficher les informations de debug
 function debugInfo() {
     console.log('Debug Info:');
     console.log('HASH_SERVER_URL:', HASH_SERVER_URL);
@@ -161,7 +153,6 @@ async function runTests() {
 
     let alertId = null;
 
-    // Configuration Axios avec les headers par défaut
     const axiosConfig = {
         headers: {
             'x-api-key': HASH_SERVER_API_KEY,
@@ -170,40 +161,33 @@ async function runTests() {
     };
 
     try {
-        // 1. Tester l'API du serveur hash
         console.log('\nTest de l\'API du serveur hash...');
         
-        // Test de la liste des fichiers
         console.log('Envoi de la requête GET /api/logs avec la clé API...');
         const filesResponse = await axios.get(`${HASH_SERVER_URL}/api/logs`, axiosConfig);
         console.log('✓ Liste des fichiers récupérée:', filesResponse.data);
 
-        // Test du calcul de hash initial
         const hashResponse = await axios.get(`${HASH_SERVER_URL}/api/hash/${TEST_FILE_NAME}`, axiosConfig);
         console.log('✓ Hash initial calculé:', hashResponse.data);
 
-        // 2. Simuler une modification de fichier
         console.log('\nSimulation d\'une modification de fichier...');
         const modifyResponse = await axios.post(`${HASH_SERVER_URL}/api/modify/${TEST_FILE_NAME}`, {
             modification: `Test modification ${Date.now()}`
         }, axiosConfig);
         console.log('✓ Fichier modifié:', modifyResponse.data);
         
-        // 3. Vérifier que le changement est détecté
         const newHashResponse = await axios.get(`${HASH_SERVER_URL}/api/hash/${TEST_FILE_NAME}`, axiosConfig);
         console.log('✓ Nouveau hash calculé:', newHashResponse.data);
 
         if (hashResponse.data.hash !== newHashResponse.data.hash) {
             console.log('✓ Modification correctement détectée');
             
-            // Sauvegarder l'alerte dans MongoDB
             alertId = await saveAlert(
                 TEST_FILE_NAME,
                 hashResponse.data.hash,
                 newHashResponse.data.hash
             );
             
-            // Envoyer l'email d'alerte
             await sendAlertEmail(
                 TEST_FILE_NAME,
                 hashResponse.data.hash,
@@ -213,11 +197,9 @@ async function runTests() {
             console.log('❌ Erreur: La modification n\'a pas été détectée');
         }
 
-        // 4. Restaurer le contenu original
         const restoreResponse = await axios.post(`${HASH_SERVER_URL}/api/restore/${TEST_FILE_NAME}`, {}, axiosConfig);
         console.log('✓ Contenu original restauré:', restoreResponse.data);
 
-        // Mettre à jour le statut de l'alerte si elle existe
         if (alertId) {
             await updateAlertStatus(alertId, 'restored');
         }
@@ -231,7 +213,6 @@ async function runTests() {
             console.error('Status:', error.response.status);
         }
     } finally {
-        // Fermer la connexion MongoDB
         if (mongoClient) {
             await mongoClient.close();
             console.log('Connexion MongoDB fermée');

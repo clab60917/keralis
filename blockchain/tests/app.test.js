@@ -11,7 +11,6 @@ const {
   config
 } = require('../auto3');
 
-// Configuration de test
 const testConfig = {
   ...config,
   mongodb: {
@@ -29,7 +28,7 @@ const testConfig = {
 };
 
 describe('HashLogBackupApp', function() {
-  this.timeout(10000); // Augmenter le timeout pour les tests asynchrones
+  this.timeout(10000); 
   
   let sandbox;
   let app;
@@ -38,10 +37,8 @@ describe('HashLogBackupApp', function() {
   let fileServiceStub;
   
   beforeEach(() => {
-    // Créer un sandbox pour les stubs
     sandbox = sinon.createSandbox();
     
-    // Créer des stubs pour les services
     hederaServiceStub = {
       createTopic: sandbox.stub().resolves('0.0.123456'),
       sendMessage: sandbox.stub().resolves({ status: 'SUCCESS' })
@@ -62,7 +59,6 @@ describe('HashLogBackupApp', function() {
       ensureWatchDirExists: sandbox.stub()
     };
     
-    // Créer l'application avec les stubs
     app = new HashLogBackupApp(testConfig);
     app.hederaService = hederaServiceStub;
     app.mongoDBService = mongoDBServiceStub;
@@ -146,10 +142,8 @@ describe('HederaService', function() {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     
-    // Créer une instance réelle de HederaService avec une configuration de test
     hederaService = new HederaService(testConfig);
     
-    // Remplacer les méthodes de l'instance par des stubs
     sandbox.stub(hederaService, 'createTopic').resolves('0.0.123456');
     sandbox.stub(hederaService, 'sendMessage').resolves({ status: 'SUCCESS' });
   });
@@ -187,7 +181,6 @@ describe('MongoDBService', function() {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     
-    // Stubs pour MongoDB
     collectionStub = {
       insertOne: sandbox.stub().resolves({ insertedId: 'mockId123' })
     };
@@ -202,7 +195,6 @@ describe('MongoDBService', function() {
       close: sandbox.stub().resolves()
     };
     
-    // Remplacer le constructeur MongoClient
     sandbox.stub(MongoClient.prototype, 'connect').resolves();
     sandbox.stub(MongoClient.prototype, 'db').returns(dbStub);
     sandbox.stub(MongoClient.prototype, 'close').resolves();
@@ -243,7 +235,6 @@ describe('MongoDBService', function() {
       expect(result.insertedId).to.equal('mockId123');
       expect(collectionStub.insertOne.calledOnce).to.be.true;
       
-      // Vérifier que le timestamp a été ajouté
       const insertedData = collectionStub.insertOne.firstCall.args[0];
       expect(insertedData).to.have.property('timestamp');
       expect(insertedData.timestamp).to.be.an.instanceOf(Date);
@@ -258,7 +249,6 @@ describe('FileService', function() {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     
-    // Stubs pour fs
     sandbox.stub(fs, 'readFileSync');
     sandbox.stub(fs, 'writeFileSync');
     sandbox.stub(fs, 'existsSync');

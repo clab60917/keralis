@@ -6,11 +6,9 @@ const config = {
   tagline: 'Système de Surveillance d\'Intégrité des Logs',
   favicon: 'img/favicon.ico',
 
-  // Définir l'URL de base pour le déploiement
   url: 'https://keralis-docs.netlify.app',
   baseUrl: '/',
 
-  // Lien vers votre répertoire GitHub
   organizationName: 'clab60917',
   projectName: 'keralis',
 
@@ -90,7 +88,6 @@ const config = {
         copyright: `Copyright © ${new Date().getFullYear()} Projet Keralis. Built with Docusaurus.`,
       },
       prism: {
-        // Suppression des configurations spécifiques des thèmes pour utiliser les valeurs par défaut
         additionalLanguages: ['bash', 'javascript'],
       },
     }),
