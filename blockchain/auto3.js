@@ -19,7 +19,7 @@ const config = {
   hedera: {
     accountId: process.env.MY_ACCOUNT_ID,
     privateKey: process.env.MY_PRIVATE_KEY,
-    network: 'testnet' // ou 'mainnet' selon vos besoins
+    network: 'testnet' // ou 'mainnet' $
   },
   mongodb: {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017',

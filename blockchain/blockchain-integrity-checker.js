@@ -5,16 +5,14 @@
  * sur le Serveur 1 (client).
  */
 
-// Charger les variables d'environnement depuis le fichier .env
 require('dotenv').config();
 
 const mongoose = require('mongoose');
 const axios = require('axios');
 const winston = require('winston');
-const nodemailer = require('nodemailer'); // Facultatif pour les alertes par e-mail
+const nodemailer = require('nodemailer'); 
 const { MongoClient } = require('mongodb');
 
-// Configuration depuis le fichier .env
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/hedera_logs';
 const CLIENT_API_URL = process.env.CLIENT_API_URL || 'http://serveur1-client:3030';
 const API_SECRET_KEY = process.env.API_SECRET_KEY || 'changez-moi-en-production';
@@ -23,7 +21,6 @@ const EMAIL_ALERTS = process.env.EMAIL_ALERTS === 'true' || false;
 const HASH_SERVER_URL = process.env.HASH_SERVER_URL || 'http://client-server:3001';
 const HASH_SERVER_API_KEY = process.env.HASH_SERVER_API_KEY;
 
-// Configuration du logger
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -42,7 +39,6 @@ if (process.env.NODE_ENV !== 'production') {
     }));
 }
 
-// Configuration optionnelle pour les alertes par e-mail
 let transporter;
 if (EMAIL_ALERTS) {
   transporter = nodemailer.createTransport({
@@ -65,7 +61,6 @@ mongoose.connect(MONGO_URI, {
   process.exit(1);
 });
 
-// Définition du schéma pour les messages blockchain
 const messageSchema = new mongoose.Schema({
   fileHash: String,
   fileName: String,
@@ -74,10 +69,8 @@ const messageSchema = new mongoose.Schema({
   messageId: String
 }, { collection: 'messages' });
 
-// Création du modèle
 const BlockchainMessage = mongoose.model('BlockchainMessage', messageSchema);
 
-// Configuration pour l'API du client
 const clientApi = axios.create({
   baseURL: CLIENT_API_URL,
   headers: {
@@ -146,20 +139,17 @@ async function getCurrentHashFromClient(fileName) {
     return response.data;
   } catch (error) {
     if (error.response) {
-      // La requête a été faite et le serveur a répondu avec un code d'erreur
       logger.error('Erreur API client', {
         fileName,
         status: error.response.status,
         data: error.response.data
       });
     } else if (error.request) {
-      // La requête a été faite mais aucune réponse n'a été reçue
       logger.error('Pas de réponse de l\'API client', {
         fileName,
         error: error.message
       });
     } else {
-      // Une erreur s'est produite lors de la configuration de la requête
       logger.error('Erreur lors de la configuration de la requête API', {
         fileName,
         error: error.message
@@ -176,7 +166,6 @@ async function getCurrentHashFromClient(fileName) {
  */
 async function checkFileIntegrity(fileName) {
   try {
-    // Récupérer le dernier message pour ce fichier dans MongoDB
     const latestMessage = await BlockchainMessage.findOne({ 
       fileName: fileName 
     }).sort({ timestamp: -1 }).exec();
@@ -192,11 +181,9 @@ async function checkFileIntegrity(fileName) {
     
     const storedHash = latestMessage.fileHash;
     
-    // Récupérer le hash actuel depuis l'API du client
     const clientHashData = await getCurrentHashFromClient(fileName);
     const currentHash = clientHashData.hash;
     
-    // Comparer les hash
     const isIntact = currentHash === storedHash;
     
     if (!isIntact) {
@@ -269,10 +256,8 @@ async function checkAllFilesIntegrity() {
   try {
     logger.info('Démarrage de la vérification d\'intégrité');
     
-    // Stratégie 1: Vérifier tous les fichiers connus dans MongoDB
     const dbLogFiles = await BlockchainMessage.distinct('fileName');
     
-    // Stratégie 2: Obtenir aussi la liste des fichiers depuis le client
     let clientLogFiles = [];
     try {
       clientLogFiles = await getLogFilesFromClient();
@@ -280,7 +265,6 @@ async function checkAllFilesIntegrity() {
       logger.warn('Impossible de récupérer la liste des fichiers depuis le client, utilisation uniquement de la liste depuis MongoDB');
     }
     
-    // Fusionner les deux listes pour ne pas manquer de fichiers
     const uniqueLogFiles = [...new Set([...dbLogFiles, ...clientLogFiles])];
     
     if (uniqueLogFiles.length === 0) {
@@ -290,22 +274,18 @@ async function checkAllFilesIntegrity() {
     
     logger.info(`Vérification de ${uniqueLogFiles.length} fichiers`);
     
-    // Vérifier l'intégrité de chaque fichier
     const results = await Promise.all(
       uniqueLogFiles.map(fileName => checkFileIntegrity(fileName))
     );
     
-    // Extraire les fichiers compromis
     const compromisedFiles = results.filter(r => r && r.isIntact === false);
     
-    // Journaliser les résultats
     if (compromisedFiles.length > 0) {
       logger.error(`${compromisedFiles.length} fichier(s) compromis détectés`, { 
         compromisedFiles: compromisedFiles.map(f => f.fileName),
         timestamp: new Date()
       });
       
-      // Envoyer une alerte par e-mail si configuré
       await sendEmailAlert(compromisedFiles);
     } else {
       logger.info(`Tous les ${results.length} fichiers vérifiés sont intacts`, {
@@ -326,20 +306,16 @@ async function checkAllFilesIntegrity() {
   }
 }
 
-// Exécution immédiate lors du démarrage
 checkAllFilesIntegrity();
 
-// Programmation de l'exécution périodique
 setInterval(checkAllFilesIntegrity, CHECK_INTERVAL);
 
-// Gestion propre de la fermeture
 process.on('SIGINT', async () => {
   logger.info('Arrêt du service de vérification d\'intégrité');
   await mongoose.connection.close();
   process.exit(0);
 });
 
-// Fonction pour envoyer une alerte par email
 async function sendAlert(message, details) {
     try {
         await transporter.sendMail({
@@ -355,7 +331,6 @@ async function sendAlert(message, details) {
     }
 }
 
-// Fonction pour mettre à jour le statut dans le dashboard
 async function updateDashboardStatus(alerts) {
     try {
         const db = await connectMongo();
@@ -369,27 +344,22 @@ async function updateDashboardStatus(alerts) {
     }
 }
 
-// Fonction principale de vérification
 async function checkIntegrity() {
     try {
         logger.info('Début de la vérification d\'intégrité');
         const alerts = [];
 
-        // Récupérer la liste des fichiers depuis le serveur client
         const filesResponse = await axios.get(`${HASH_SERVER_URL}/api/logs`, {
             headers: { 'x-api-key': HASH_SERVER_API_KEY }
         });
 
         const db = await connectMongo();
         
-        // Vérifier chaque fichier
         for (const fileName of filesResponse.data.files) {
-            // Récupérer le hash actuel
             const hashResponse = await axios.get(`${HASH_SERVER_URL}/api/hash/${fileName}`, {
                 headers: { 'x-api-key': HASH_SERVER_API_KEY }
             });
             
-            // Récupérer le hash stocké dans MongoDB
             const storedHash = await db.collection('hash').findOne({ fileName });
 
             if (!storedHash) {
@@ -409,7 +379,6 @@ async function checkIntegrity() {
             }
         }
 
-        // S'il y a des alertes, envoyer un email et mettre à jour le dashboard
         if (alerts.length > 0) {
             await sendAlert('Modifications non autorisées détectées', alerts);
             await updateDashboardStatus(alerts);
@@ -423,11 +392,9 @@ async function checkIntegrity() {
     }
 }
 
-// Démarrage des vérifications périodiques
 setInterval(checkIntegrity, CHECK_INTERVAL);
-checkIntegrity(); // Première vérification au démarrage
+checkIntegrity(); 
 
-// Gestion des erreurs non capturées
 process.on('uncaughtException', (error) => {
     logger.error('Erreur non capturée:', error);
 });

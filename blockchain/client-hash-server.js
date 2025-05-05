@@ -19,7 +19,6 @@ const PORT = process.env.HASH_SERVER_PORT || 3001;
 const API_KEY = process.env.HASH_SERVER_API_KEY;
 const LOGS_DIR = '/root/keralis/logs';  // Chemin absolu vers le répertoire des logs
 
-// Configuration du logger
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -41,12 +40,10 @@ if (process.env.NODE_ENV !== 'production') {
 // Cache pour les hashs précalculés
 const hashCache = new Map();
 
-// Middleware
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Middleware pour vérifier la clé API
 const validateApiKey = (req, res, next) => {
     const apiKey = req.headers['x-api-key'];
     if (!apiKey || apiKey !== API_KEY) {
@@ -151,20 +148,16 @@ app.post('/api/modify/:fileName', validateApiKey, async (req, res) => {
     const fileName = req.params.fileName;
     const filePath = path.join(LOGS_DIR, fileName);
     
-    // Lire le contenu actuel
     const originalContent = await fs.readFile(filePath, 'utf8');
     
-    // Sauvegarder le contenu original dans le cache
     hashCache.set(`${fileName}_original`, {
       content: originalContent,
       timestamp: Date.now()
     });
     
-    // Ajouter la modification
     const newContent = originalContent + '\n' + req.body.modification;
     await fs.writeFile(filePath, newContent);
     
-    // Invalider le cache du hash
     hashCache.delete(fileName);
     
     logger.info(`Fichier ${fileName} modifié pour les tests`);
@@ -183,16 +176,13 @@ app.post('/api/restore/:fileName', validateApiKey, async (req, res) => {
     const fileName = req.params.fileName;
     const filePath = path.join(LOGS_DIR, fileName);
     
-    // Récupérer le contenu original depuis le cache
     const originalData = hashCache.get(`${fileName}_original`);
     if (!originalData) {
       throw new Error('Contenu original non trouvé dans le cache');
     }
     
-    // Restaurer le contenu original
     await fs.writeFile(filePath, originalData.content);
     
-    // Nettoyer le cache
     hashCache.delete(`${fileName}_original`);
     hashCache.delete(fileName);
     
@@ -204,17 +194,13 @@ app.post('/api/restore/:fileName', validateApiKey, async (req, res) => {
   }
 });
 
-// Démarrage du serveur
 app.listen(PORT, '0.0.0.0', () => {
   logger.info(`Serveur hash démarré sur le port ${PORT}`);
-  // Préchauffer le cache au démarrage
   warmupCache();
 });
 
-// Préchauffer le cache toutes les 15 minutes
 setInterval(warmupCache, 900000);
 
-// Gestion des erreurs non capturées
 process.on('uncaughtException', (error) => {
     logger.error('Erreur non capturée:', error);
 });
