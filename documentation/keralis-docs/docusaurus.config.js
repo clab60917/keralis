@@ -63,6 +63,10 @@ const config = {
             label: 'Documentation',
           },
           {
+            type: 'localeDropdown',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/clab60917/keralis',
             label: 'GitHub',
             position: 'right',
