@@ -4,7 +4,7 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const { MongoClient } = require('mongodb');
 const path = require('path');
-const basicAuth = require('express-basic-auth');
+//const basicAuth = require('express-basic-auth');
 const systemMonitor = require('./system_monitor');
 const session = require('express-session');
 const os = require('os');
@@ -29,47 +29,47 @@ if (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD) {
 }
 
 
-let users = {};
+// let users = {};
 
-if (process.env.DASHBOARD_USERS) {
-    const userPairs = process.env.DASHBOARD_USERS.split(',');
-    for (const pair of userPairs) {
-        const [username, password] = pair.split(':');
-        if (username && password) {
-            users[username.trim()] = password.trim();
-        }
-    }
-    console.log(`${Object.keys(users).length} utilisateurs chargés depuis DASHBOARD_USERS`);
-} 
-else {
-    let index = 1;
-    let continueChecking = true;
+// if (process.env.DASHBOARD_USERS) {
+//     const userPairs = process.env.DASHBOARD_USERS.split(',');
+//     for (const pair of userPairs) {
+//         const [username, password] = pair.split(':');
+//         if (username && password) {
+//             users[username.trim()] = password.trim();
+//         }
+//     }
+//     console.log(`${Object.keys(users).length} utilisateurs chargés depuis DASHBOARD_USERS`);
+// } 
+// else {
+//     let index = 1;
+//     let continueChecking = true;
     
-    while (continueChecking) {
-        const userVar = `DASHBOARD_USER_${index}`;
-        const passVar = `DASHBOARD_PASSWORD_${index}`;
+//     while (continueChecking) {
+//         const userVar = `DASHBOARD_USER_${index}`;
+//         const passVar = `DASHBOARD_PASSWORD_${index}`;
         
-        if (process.env[userVar] && process.env[passVar]) {
-            users[process.env[userVar]] = process.env[passVar];
-            index++;
-        } else {
-            continueChecking = false;
-        }
-    }
+//         if (process.env[userVar] && process.env[passVar]) {
+//             users[process.env[userVar]] = process.env[passVar];
+//             index++;
+//         } else {
+//             continueChecking = false;
+//         }
+//     }
     
-    console.log(`${Object.keys(users).length} utilisateurs chargés depuis les variables numérotées`);
-}
+//     console.log(`${Object.keys(users).length} utilisateurs chargés depuis les variables numérotées`);
+// }
 
-if (Object.keys(users).length === 0) {
-    users[process.env.DASHBOARD_USER || 'admin'] = process.env.DASHBOARD_PASSWORD || 'changeme';
-    console.log('Utilisation de l\'authentification simple avec un seul utilisateur');
-}
+// if (Object.keys(users).length === 0) {
+//     users[process.env.DASHBOARD_USER || 'admin'] = process.env.DASHBOARD_PASSWORD || 'changeme';
+//     console.log('Utilisation de l\'authentification simple avec un seul utilisateur');
+// }
 
-app.use(basicAuth({
-    users: users,
-    challenge: true,
-    realm: 'Keralis Dashboard'
-}));
+// app.use(basicAuth({
+//     users: users,
+//     challenge: true,
+//     realm: 'Keralis Dashboard'
+// }));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -303,7 +303,7 @@ app.get('/', async (req, res) => {
         res.render('index', {
             title: 'Dashboard',
             active: 'home',
-            user: { username: req.auth.user },
+            user: { username: Visiteur},
             alerts: alerts,
             totalAlerts: totalAlerts,
             recentHashList: recentHashList,
@@ -329,7 +329,7 @@ app.get('/alerts', async (req, res) => {
         
         res.render('alerts', {
             title: 'Alertes',
-            user: { username: req.auth.user },
+            user: { username: Visiteur },
             active: 'alerts',
             alerts: alerts,
             totalAlerts: alerts.length,
@@ -339,7 +339,7 @@ app.get('/alerts', async (req, res) => {
         console.error('Erreur lors de la récupération des alertes:', error);
         res.render('alerts', {
             title: 'Alertes',
-            user: { username: req.auth.user },
+            user: { username: Visiteur },
             active: 'alerts',
             alerts: [],
             totalAlerts: 0,
