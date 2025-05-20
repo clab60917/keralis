@@ -303,7 +303,7 @@ app.get('/', async (req, res) => {
         res.render('index', {
             title: 'Dashboard',
             active: 'home',
-            user: { username: Visiteur},
+            user: { username: 'Visiteur'},
             alerts: alerts,
             totalAlerts: totalAlerts,
             recentHashList: recentHashList,
@@ -329,7 +329,7 @@ app.get('/alerts', async (req, res) => {
         
         res.render('alerts', {
             title: 'Alertes',
-            user: { username: Visiteur },
+            user: { username: 'Visiteur' },
             active: 'alerts',
             alerts: alerts,
             totalAlerts: alerts.length,
@@ -339,7 +339,7 @@ app.get('/alerts', async (req, res) => {
         console.error('Erreur lors de la récupération des alertes:', error);
         res.render('alerts', {
             title: 'Alertes',
-            user: { username: Visiteur },
+            user: { username: 'Visiteur' },
             active: 'alerts',
             alerts: [],
             totalAlerts: 0,
