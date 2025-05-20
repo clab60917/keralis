@@ -300,10 +300,10 @@ app.get('/', async (req, res) => {
         console.log('- Encrypted:', recentEncryptedList.length);
         console.log('- Messages:', recentMessages.length);
         
-        res.render('index.js', {
+        res.render('index', {
             title: 'Dashboard',
             active: 'home',
-            user: { username: Visiteur },
+            user: { username: req.auth.user },
             alerts: alerts,
             totalAlerts: totalAlerts,
             recentHashList: recentHashList,
