@@ -67,7 +67,7 @@ if (Object.keys(users).length === 0) {
 
 app.use(basicAuth({
     users: users,
-    challenge: false,
+    challenge: true,
     realm: 'Keralis Dashboard'
 }));
 
