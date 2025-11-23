@@ -40,16 +40,23 @@ class ColoredFormatter(logging.Formatter):
 load_dotenv()
 
 # Configuration
+# Configuration
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOG_DIR = os.path.join(os.path.dirname(BASE_DIR), os.getenv("LOG_DIR", "logs"))
-HASH_DIR = os.path.join(os.path.dirname(BASE_DIR), os.getenv("HASH_DIR", "hash"))
-ENCRYPTED_DIR = os.path.join(os.path.dirname(BASE_DIR), os.getenv("ENCRYPTED_DIR", "encrypted"))
+# Docker paths defaults
+DEFAULT_LOG_DIR = "/app/logs_mount"
+DEFAULT_HASH_DIR = "/app/hash"
+DEFAULT_ENCRYPTED_DIR = "/app/encrypted"
+
+LOG_DIR = os.getenv("LOG_DIR", DEFAULT_LOG_DIR)
+HASH_DIR = os.getenv("HASH_DIR", DEFAULT_HASH_DIR)
+ENCRYPTED_DIR = os.getenv("ENCRYPTED_DIR", DEFAULT_ENCRYPTED_DIR)
+
 SFTP_HOST = os.getenv("SFTP_HOST")  # Doit être défini dans le .env
-SFTP_PORT = int(os.getenv("SFTP_PORT", "22"))  # Port SFTP standard
-SFTP_USERNAME = os.getenv("SFTP_USERNAME")  # Doit être défini dans le .env
+SFTP_PORT = int(os.getenv("SFTP_PORT", "2222"))  # Port SFTP standard (2222 pour le conteneur sftp)
+SFTP_USERNAME = os.getenv("SFTP_USERNAME", "keralis")
 SFTP_PASSWORD = os.getenv("SFTP_PASSWORD")  # Doit être défini dans le .env
-SFTP_HASH_DIR = os.getenv("SFTP_HASH_DIR")  # Doit être défini dans le .env
-SFTP_ENCRYPTED_DIR = os.getenv("SFTP_ENCRYPTED_DIR")  # Doit être défini dans le .env
+SFTP_HASH_DIR = os.getenv("SFTP_HASH_DIR", "/upload/hash")  # Chemin interne au conteneur SFTP
+SFTP_ENCRYPTED_DIR = os.getenv("SFTP_ENCRYPTED_DIR", "/upload/encrypted")
 
 # Vérification des variables obligatoires
 required_vars = ["SFTP_HOST", "SFTP_USERNAME", "SFTP_PASSWORD", "SFTP_HASH_DIR", "SFTP_ENCRYPTED_DIR"]

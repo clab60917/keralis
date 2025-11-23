@@ -1,0 +1,24 @@
+# Image Node.js légère
+FROM node:18-alpine
+
+# Dossier de travail
+WORKDIR /app
+
+# Installation des dépendances
+# On copie le package.json du dossier blockchain
+COPY blockchain/package*.json ./
+RUN npm ci --only=production
+
+# Copie du code source
+COPY blockchain/auto3.js ./blockchain/auto3.js
+
+# Création des dossiers nécessaires
+RUN mkdir -p /app/received_logs /app/data
+
+# Variables d'environnement par défaut
+ENV NODE_ENV=production
+ENV UPLOAD_DIR=/app/received_logs
+ENV DATA_DIR=/app/data
+
+# Commande de lancement
+CMD ["node", "blockchain/auto3.js"]

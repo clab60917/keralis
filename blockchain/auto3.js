@@ -15,17 +15,19 @@ const {
 } = require('@hashgraph/sdk');
 
 // Configuration
+// Configuration
 const config = {
   hedera: {
-    accountId: process.env.MY_ACCOUNT_ID,
-    privateKey: process.env.MY_PRIVATE_KEY,
-    network: 'testnet' // ou 'mainnet' $
+    accountId: process.env.HEDERA_ACCOUNT_ID,
+    privateKey: process.env.HEDERA_PRIVATE_KEY,
+    network: process.env.HEDERA_NETWORK || 'testnet'
   },
   mongodb: {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017',
-    dbName: process.env.MONGODB_DB_NAME || 'Blockchain',
+    uri: process.env.DB_URI || 'mongodb://localhost:27017/keralis',
+    dbName: process.env.DB_NAME || 'keralis',
     hashCollection: 'hash',
     encryptedCollection: 'encrypted',
+    // Options legacy pour compatibilité si DB_URI n'est pas utilisé
     user: process.env.MONGODB_USER,
     password: process.env.MONGODB_PASSWORD,
     host: process.env.MONGODB_HOST || 'localhost',
@@ -33,10 +35,12 @@ const config = {
     authSource: process.env.MONGODB_AUTH_SOURCE || 'admin'
   },
   files: {
-    processedFilesPath: path.join(__dirname, 'processedFiles.json'),
-    topicIdPath: path.join(__dirname, 'topicId.txt'),
-    hashDir: '/sender/hash',
-    encryptedDir: '/sender/encrypted'
+    // Chemins persistants pour Docker
+    processedFilesPath: path.join(process.env.DATA_DIR || __dirname, 'processedFiles.json'),
+    topicIdPath: path.join(process.env.DATA_DIR || __dirname, 'topicId.txt'),
+    // Dossiers partagés avec le SFTP
+    hashDir: path.join(process.env.UPLOAD_DIR || '/app/received_logs', 'hash'),
+    encryptedDir: path.join(process.env.UPLOAD_DIR || '/app/received_logs', 'encrypted')
   },
   app: {
     logLevel: process.env.LOG_LEVEL || 'info'
@@ -94,8 +98,8 @@ class HederaService {
   }
 
   getNewClient() {
-    const client = this.network === 'mainnet' 
-      ? Client.forMainnet() 
+    const client = this.network === 'mainnet'
+      ? Client.forMainnet()
       : Client.forTestnet();
     client.setOperator(this.accountId, this.privateKey);
     return client;
@@ -118,22 +122,22 @@ class HederaService {
     await this.waitForLock();
     this.transactionLock = true;
     let client = null;
-    
+
     try {
       client = this.getNewClient();
-      
+
       const transaction = new TopicCreateTransaction()
         .setMaxTransactionFee(new Hbar(2));
-      
+
       const frozenTx = transaction.freezeWith(client);
-      
+
       const txResponse = await frozenTx.execute(client);
-      
+
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       const receipt = await txResponse.getReceipt(client);
       const topicId = receipt.topicId.toString();
-      
+
       logger.info(`Nouveau topic créé avec ID: ${topicId}`);
       return topicId;
     } catch (error) {
@@ -149,28 +153,28 @@ class HederaService {
     await this.waitForLock();
     this.transactionLock = true;
     let client = null;
-    
+
     try {
       client = this.getNewClient();
-      
+
       const transaction = new TopicMessageSubmitTransaction();
       transaction.setTopicId(topicId);
       transaction.setMessage(message);
       transaction.setMaxTransactionFee(new Hbar(2));
-      
+
       logger.debug('Gel de la transaction...');
       const frozenTx = transaction.freezeWith(client);
-      
+
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       logger.debug('Exécution de la transaction...');
       const txResponse = await frozenTx.execute(client);
-      
+
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       const receiptClient = this.getNewClient();
       const receipt = await txResponse.getReceipt(receiptClient);
-      
+
       logger.info(`Message envoyé au Topic ID ${topicId}: Statut ${receipt.status}`);
       return receipt;
     } catch (error) {
@@ -326,16 +330,16 @@ class HashLogBackupApp {
     try {
       // S'assurer que les répertoires à surveiller existent
       this.fileService.ensureWatchDirsExist();
-      
+
       // Connexion à MongoDB
       await this.mongoDBService.connect();
-      
+
       // Chargement des fichiers traités
       this.processedFiles = this.fileService.loadProcessedFiles();
-      
+
       // Vérification/création du topic
       await this.ensureTopicExists();
-      
+
       logger.info('Application initialisée avec succès');
     } catch (error) {
       logger.error('Erreur lors de l\'initialisation de l\'application', error);
@@ -361,15 +365,15 @@ class HashLogBackupApp {
       this.processNextInQueue();
     });
   }
-  
+
   async processNextInQueue() {
     if (this.isProcessing || this.processingQueue.length === 0) {
       return;
     }
-    
+
     this.isProcessing = true;
     const { filePath, resolve } = this.processingQueue.shift();
-    
+
     try {
       if (this.processedFiles.has(filePath)) {
         logger.info(`Le fichier ${filePath} a déjà été traité.`, 'FILE');
@@ -395,7 +399,7 @@ class HashLogBackupApp {
       if (fileType === 'hash') {
         logger.hedera(`Envoi du hash ${filePath} vers le topic ${this.topicId}`);
         const receipt = await this.hederaService.sendMessage(this.topicId, fileContent);
-        
+
         // Sauvegarder dans la collection messages
         await this.mongoDBService.saveHederaMessage({
           filePath,
@@ -403,7 +407,7 @@ class HashLogBackupApp {
           topicId: this.topicId,
           status: receipt.status.toString()
         });
-        
+
         // Sauvegarder aussi dans la collection hash
         await this.mongoDBService.saveFile({
           filePath,
@@ -418,27 +422,27 @@ class HashLogBackupApp {
           content: fileContent
         }, fileType);
       }
-      
+
       this.processedFiles.add(filePath);
       this.fileService.saveProcessedFiles(this.processedFiles);
-      
+
       logger.info(`Traitement terminé pour ${filePath}`, fileType.toUpperCase());
       this.isProcessing = false;
       resolve(true);
-      
+
       setTimeout(() => this.processNextInQueue(), 2000);
     } catch (error) {
       logger.error(`Erreur lors du traitement du fichier ${filePath}`, error);
       this.isProcessing = false;
       resolve(false);
-      
+
       setTimeout(() => this.processNextInQueue(), 5000);
     }
   }
 
   startWatching() {
     logger.info(`Surveillance des répertoires: ${this.fileService.hashDir} et ${this.fileService.encryptedDir}`);
-    
+
     this.watcher = chokidar.watch([this.fileService.hashDir, this.fileService.encryptedDir], {
       persistent: true,
       ignoreInitial: false,
@@ -471,24 +475,24 @@ class HashLogBackupApp {
 // Exécution de l'application
 async function main() {
   const app = new HashLogBackupApp(config);
-  
+
   try {
     await app.initialize();
     app.startWatching();
-    
+
     // Gestion de l'arrêt propre
     process.on('SIGINT', async () => {
       logger.info('Signal d\'interruption reçu, arrêt en cours...');
       await app.stop();
       process.exit(0);
     });
-    
+
     process.on('SIGTERM', async () => {
       logger.info('Signal de terminaison reçu, arrêt en cours...');
       await app.stop();
       process.exit(0);
     });
-    
+
   } catch (error) {
     logger.error('Erreur fatale dans l\'application', error);
     process.exit(1);

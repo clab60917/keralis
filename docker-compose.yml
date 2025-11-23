@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # 1. Base de données MongoDB
+  mongo:
+    image: mongo:5
+    container_name: keralis_mongo
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - keralis_net
+
+  # 2. Serveur SFTP (Sidecar)
+  # Reçoit les fichiers du Sender et les partage avec le Server
+  sftp:
+    image: atmoz/sftp
+    container_name: keralis_sftp
+    restart: always
+    volumes:
+      # On map le dossier upload du SFTP vers un volume partagé
+      # Le dossier 'upload' est créé automatiquement par l'image atmoz/sftp pour l'utilisateur
+      - keralis_uploads:/home/keralis/upload
+    ports:
+      - "2222:22"
+    environment:
+      # Format: user:password:uid
+      - SFTP_USERS=keralis:keralissecurepass:1000
+    networks:
+      - keralis_net
+
+  # 3. Keralis Backend (Server)
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    image: keralis-server:latest
+    container_name: keralis_core
+    restart: always
+    depends_on:
+      - mongo
+    environment:
+      - DB_URI=mongodb://mongo:27017/keralis
+      - UPLOAD_DIR=/app/received_logs
+      - DATA_DIR=/app/data
+      # Variables Hedera injectées depuis le .env de l'utilisateur (hôte)
+      - HEDERA_ACCOUNT_ID=${HEDERA_ACCOUNT_ID}
+      - HEDERA_PRIVATE_KEY=${HEDERA_PRIVATE_KEY}
+      - HEDERA_NETWORK=${HEDERA_NETWORK:-testnet}
+    volumes:
+      # PARTAGE CRITIQUE : Le serveur Node voit ce que le SFTP reçoit
+      # L'image sftp met les fichiers dans /home/keralis/upload
+      # Le serveur Node les lit dans /app/received_logs
+      - keralis_uploads:/app/received_logs
+      # Persistance des données (topicId, processedFiles)
+      - keralis_data:/app/data
+    networks:
+      - keralis_net
+
+volumes:
+  mongo_data:
+  keralis_uploads:
+  keralis_data:
+
+networks:
+  keralis_net:

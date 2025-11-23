@@ -1,0 +1,33 @@
+# Image Python légère
+FROM python:3.9-slim
+
+# Dossier de travail
+WORKDIR /app
+
+# Installation des dépendances système si nécessaire (pour cryptography/paramiko)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copie des fichiers de dépendances
+# Note: On assume qu'il n'y a pas de requirements.txt, donc on installe directement
+RUN pip install --no-cache-dir paramiko cryptography python-dotenv watchdog
+
+# Copie du code source
+COPY sender/senderV1.py /app/sender/senderV1.py
+COPY sender/encryption.key /app/sender/encryption.key 
+# (Optionnel) Copier la clé si elle existe, sinon le script la générera
+
+# Création des points de montage
+RUN mkdir -p /app/logs_mount /app/hash /app/encrypted
+
+# Variables d'environnement par défaut
+ENV PYTHONUNBUFFERED=1
+ENV LOG_DIR=/app/logs_mount
+ENV HASH_DIR=/app/hash
+ENV ENCRYPTED_DIR=/app/encrypted
+
+# Commande de lancement
+CMD ["python3", "/app/sender/senderV1.py"]
