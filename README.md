@@ -11,6 +11,52 @@
   [![Demo](https://img.shields.io/badge/Live-Dashboard-red)](https://dashboard.keralis.org)
 </div>
 
+
+## 🚀 Quick Install (Docker)
+
+The easiest way to deploy Keralis is using our official Docker images.
+
+### Official Images
+- **Server**: [`clemarz/keralis-server`](https://hub.docker.com/r/clemarz/keralis-server)
+- **Client**: [`clemarz/keralis-sender`](https://hub.docker.com/r/clemarz/keralis-sender)
+
+### 1. Deploy Server (Backend)
+Create a `docker-compose.yml` file and start the stack:
+
+```bash
+# Download docker-compose.yml
+curl -O https://raw.githubusercontent.com/clab60917/keralis/feature/docker-migration/docker-compose.yml
+
+# Configure your Hedera keys
+echo "HEDERA_ACCOUNT_ID=0.0.xxxx" >> .env
+echo "HEDERA_PRIVATE_KEY=302e..." >> .env
+
+# Start
+docker compose up -d
+```
+
+### 2. Deploy Client (Sender)
+On the machine where you want to monitor logs:
+
+```bash
+docker run -d \
+  --name keralis-sender \
+  --restart always \
+  -v /var/log/nginx:/app/logs_mount \
+  -e SFTP_HOST=server_ip \
+  -e SFTP_PORT=2222 \
+  -e SFTP_USERNAME=keralis \
+  -e SFTP_PASSWORD=keralissecurepass \
+  clemarz/keralis-sender:latest
+```
+
+---
+
+## 📚 Detailed Documentation
+- [Full Deployment Guide](DEPLOYMENT_GUIDE.md)
+
+---
+
 ## Overview
 
 Keralis is a distributed security system that ensures log file integrity using Hedera blockchain technology. It detects unauthorized modifications to system logs in real-time, providing tamper-evident monitoring for critical infrastructure.
