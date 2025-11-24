@@ -12,38 +12,38 @@
 </div>
 
 
-## 🚀 Installation Rapide (Docker)
+## 🚀 Quick Install (Docker)
 
-La façon la plus simple de déployer Keralis est d'utiliser nos images Docker officielles.
+The easiest way to deploy Keralis is using our official Docker images.
 
-### Images Officielles
-- **Serveur** : [`clemarz/keralis-server`](https://hub.docker.com/r/clemarz/keralis-server)
-- **Client** : [`clemarz/keralis-sender`](https://hub.docker.com/r/clemarz/keralis-sender)
+### Official Images
+- **Server**: [`clemarz/keralis-server`](https://hub.docker.com/r/clemarz/keralis-server)
+- **Client**: [`clemarz/keralis-sender`](https://hub.docker.com/r/clemarz/keralis-sender)
 
-### 1. Déployer le Serveur (Backend)
-Créez un fichier `docker-compose.yml` et lancez la stack :
+### 1. Deploy Server (Backend)
+Create a `docker-compose.yml` file and start the stack:
 
 ```bash
-# Télécharger le docker-compose.yml
+# Download docker-compose.yml
 curl -O https://raw.githubusercontent.com/clab60917/keralis/feature/docker-migration/docker-compose.yml
 
-# Configurer vos clés Hedera
+# Configure your Hedera keys
 echo "HEDERA_ACCOUNT_ID=0.0.xxxx" >> .env
 echo "HEDERA_PRIVATE_KEY=302e..." >> .env
 
-# Lancer
+# Start
 docker compose up -d
 ```
 
-### 2. Déployer le Client (Sender)
-Sur la machine dont vous voulez surveiller les logs :
+### 2. Deploy Client (Sender)
+On the machine where you want to monitor logs:
 
 ```bash
 docker run -d \
   --name keralis-sender \
   --restart always \
   -v /var/log/nginx:/app/logs_mount \
-  -e SFTP_HOST=ip_du_serveur \
+  -e SFTP_HOST=server_ip \
   -e SFTP_PORT=2222 \
   -e SFTP_USERNAME=keralis \
   -e SFTP_PASSWORD=keralissecurepass \
@@ -52,9 +52,8 @@ docker run -d \
 
 ---
 
-## 📚 Documentation Détaillée
-- [Guide de Déploiement Complet](DEPLOYMENT_GUIDE.md)
-- [Guide de Publication Docker Hub](PUBLISHING.md)
+## 📚 Detailed Documentation
+- [Full Deployment Guide](DEPLOYMENT_GUIDE.md)
 
 ---
 

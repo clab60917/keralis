@@ -1,63 +1,63 @@
-# Guide de Déploiement Keralis (Docker)
+# Keralis Deployment Guide (Docker)
 
-Ce guide explique comment déployer l'infrastructure Keralis en utilisant les images Docker.
+This guide explains how to deploy the Keralis infrastructure using Docker images.
 
 ## Architecture
-- **Serveur (Backend)** : Reçoit les logs, les stocke et les ancre sur Hedera.
-- **Client (Sender)** : Installé sur la machine source, chiffre et envoie les logs au serveur.
+- **Server (Backend)**: Receives logs, stores them, and anchors hashes on Hedera.
+- **Client (Sender)**: Installed on the source machine, encrypts and sends logs to the server.
 
 ---
 
-## 1. Installation du Serveur (Backend)
+## 1. Server Installation (Backend)
 
-Sur la machine qui fera office de serveur central :
+On the machine acting as the central server:
 
-### Pré-requis
-- Docker et Docker Compose installés.
-- Un fichier `.env` avec vos clés Hedera.
+### Prerequisites
+- Docker and Docker Compose installed.
+- A `.env` file with your Hedera keys.
 
-### Démarrage
-1. Créez un dossier pour Keralis.
-2. Copiez-y le fichier `docker-compose.yml`.
-3. Créez un fichier `.env` à côté :
+### Start
+1. Create a directory for Keralis.
+2. Copy the `docker-compose.yml` file into it.
+3. Create a `.env` file alongside it:
    ```bash
    HEDERA_ACCOUNT_ID=0.0.xxxx
    HEDERA_PRIVATE_KEY=302...
    HEDERA_NETWORK=testnet
    ```
-4. Lancez la stack :
+4. Start the stack:
    ```bash
    docker compose up -d
    ```
 
-Cela va démarrer :
-- **MongoDB** (Base de données)
-- **SFTP** (Port 2222 - Pour recevoir les fichiers)
-- **Keralis Server** (Backend Node.js)
+This will start:
+- **MongoDB** (Database)
+- **SFTP** (Port 2222 - To receive files)
+- **Keralis Server** (Node.js Backend)
 
 ---
 
-## 2. Installation du Client (Sender)
+## 2. Client Installation (Sender)
 
-Sur la machine source (celle qui génère les logs à sécuriser) :
+On the source machine (the one generating logs to secure):
 
-### Démarrage
-Utilisez la commande `docker run` pour lancer l'agent. Vous devez lui monter le dossier de logs à surveiller.
+### Start
+Use the `docker run` command to launch the agent. You must mount the log directory to monitor.
 
 ```bash
 docker run -d \
   --name keralis-sender \
   --restart always \
-  # Montage du dossier de logs de l'hôte vers le conteneur
+  # Mount host log directory to container
   -v /var/log/nginx:/app/logs_mount \
-  # Configuration SFTP (vers votre Serveur Keralis)
-  -e SFTP_HOST=ip_de_votre_serveur \
+  # SFTP Configuration (to your Keralis Server)
+  -e SFTP_HOST=your_server_ip \
   -e SFTP_PORT=2222 \
   -e SFTP_USERNAME=keralis \
   -e SFTP_PASSWORD=keralissecurepass \
-  # Nom de l'image sur le Hub
-  mon-user-dockerhub/keralis-sender:latest
+  # Image name on Hub
+  clemarz/keralis-sender:latest
 ```
 
-### Vérification
-Le client va commencer à surveiller `/var/log/nginx` (ou tout autre dossier monté). Dès qu'un fichier `.log` est créé ou modifié (selon la logique du script), il sera chiffré et envoyé au serveur.
+### Verification
+The client will start monitoring `/var/log/nginx` (or any other mounted directory). As soon as a `.log` file is created or modified (depending on script logic), it will be encrypted and sent to the server.
