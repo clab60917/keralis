@@ -7,7 +7,7 @@ WORKDIR /app
 # Installation des dépendances
 # On copie le package.json du dossier blockchain
 COPY blockchain/package*.json ./
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Copie du code source
 COPY blockchain/auto3.js ./blockchain/auto3.js

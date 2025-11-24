@@ -31,10 +31,7 @@ services:
 
   # 3. Keralis Backend (Server)
   server:
-    build:
-      context: .
-      dockerfile: Dockerfile.server
-    image: keralis-server:latest
+    image: clemarz/keralis-server:latest
     container_name: keralis_core
     restart: always
     depends_on:
